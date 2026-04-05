@@ -33,10 +33,11 @@ export async function createTeam(params: any) {
   try {
     await requireSession(params)
     const d = params.teamData || params
-    if (!d.name) return { success: false, message: 'Team navn er påkrævet' }
+    const name = d.name || d.teamName || params.teamName
+    if (!name) return { success: false, message: 'Team navn er påkrævet' }
     const team = await db.team.create({
       data: {
-        name: d.name,
+        name,
         description: d.description || '',
         leader: d.leader || '',
       }
