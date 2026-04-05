@@ -67,6 +67,8 @@ export function serveHtmlPage(page: string): Response {
       '<script src="/CommonJS.js"></script>')
     // Replace Sidebar include
     .replace(/\<\?!=\s*include\(['"]Sidebar['"]\)\s*;\s*\?>/g, sidebarHtml)
+    // Replace JSON.stringify(scriptUrl) with empty string (was used for GAS navigation)
+    .replace(/\<\?!=\s*JSON\.stringify\([^?]*\)\s*\?>/g, "''")
     // Remove any remaining GAS template tags (safety cleanup)
     .replace(/\<\?[!=]?[^>]*\?>/g, '')
     // Remove base target="_top" (not needed outside GAS)
