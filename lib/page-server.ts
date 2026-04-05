@@ -73,6 +73,32 @@ export function serveHtmlPage(page: string): Response {
     .replace(/\<\?[!=]?[^>]*\?>/g, '')
     // Remove base target="_top" (not needed outside GAS)
     .replace(/<base\s+target="_top"\s*\/?>/gi, '')
+    // Replace hardcoded GAS script URL with empty string
+    .replace(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec/g, '')
+    // Replace direct navigation to old GAS app: scriptUrl + '?page=' + page
+    .replace(/window\.top\.location\.href\s*=\s*scriptUrl\s*\+\s*'[?]page=[^']*'\s*\+\s*page\s*;/g,
+      'window.navigateToPage(page);')
+    // Replace direct navigation to login on old GAS app
+    .replace(/window\.top\.location\.href\s*=\s*scriptUrl\s*\+\s*'[?]page=login'\s*;/g,
+      'window.navigateToPage("login");')
+    // Replace any remaining window.top.location.href with window.location.href
+    .replace(/window\.top\.location\.href/g, 'window.location.href')
+    // Inject navigation override before </body> to ensure Railway navigation is always used
+    .replace(/<\/body>/i, `<script>
+// Safety override: ensure navigateToPage always uses Railway app
+(function() {
+  var _nav = window.navigateToPage;
+  window.navigateToPage = function(page) {
+    if (page && page.indexOf('script.google.com') !== -1) return; // block GAS redirects
+    var token = '';
+    try { token = (window.sessionManager && window.sessionManager.getToken()) || window.sessionToken || ''; } catch(e) {}
+    var params = new URLSearchParams();
+    params.set('page', page || 'dashboard');
+    if (token) params.set('sessionToken', token);
+    window.location.href = '/?' + params.toString();
+  };
+})();
+</script></body>`)
 
   return new Response(html, {
     status: 200,
