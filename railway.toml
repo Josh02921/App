@@ -3,7 +3,7 @@ builder = "NIXPACKS"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npm run start"
+startCommand = "npx prisma db push && node prisma/seed.js && npm run start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
