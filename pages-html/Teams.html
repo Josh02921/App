@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teams - Horsens Pinsekirke Admin</title>
+  <?!= include('CommonJS'); ?>
+  
+  <!-- Fallback definitions if CommonJS hasn't loaded yet -->
+  <script>
+    if (typeof sessionManager === 'undefined') {
+      window.sessionManager = {
+        storageKey: 'sessionToken',
+        getToken() {
+          try {
+            if (typeof window === 'undefined') return '';
+            if (window.sessionToken) return window.sessionToken;
+            const token = window.localStorage.getItem(this.storageKey);
+            if (token) {
+              window.sessionToken = token;
+              return token;
+            }
+            return '';
+          } catch (error) {
+            return window.sessionToken || '';
+          }
+        },
+        setToken(value) {
+          try {
+            if (typeof window !== 'undefined') {
+              if (value) {
+                window.localStorage.setItem(this.storageKey, value);
+              } else {
+                window.localStorage.removeItem(this.storageKey);
+              }
+            }
+          } catch (error) {
+            console.error('Error persisting session token:', error);
+          }
+          window.sessionToken = value || '';
+        },
+        clearToken() {
+          this.setToken('');
+        }
+      };
+    }
+    if (typeof callApi !== 'function') {
+      window.callApi = function(functionName, params = {}, successHandler = null, failureHandler = null) {
+        const token = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : '';
+        const payload = { ...params };
+        if (token) {
+          payload.sessionToken = token;
+        }
+        let runner = google.script.run;
+        if (failureHandler) {
+          runner = runner.withFailureHandler(failureHandler);
+        }
+        if (successHandler) {
+          runner = runner.withSuccessHandler(successHandler);
+        }
+        runner[functionName](payload);
+      };
+    }
+    if (typeof navigateToPage !== 'function') {
+      window.navigateToPage = function(page) {
+        function ensureExecUrl(url) {
+          if (!url) return null;
+          let cleanUrl = url.split('?')[0].split('#')[0];
+          cleanUrl = cleanUrl.replace(/\/$/, '');
+          if (!cleanUrl.endsWith('/exec')) {
+            if (cleanUrl.indexOf('script.google.com') !== -1) {
+              cleanUrl = cleanUrl + '/exec';
+            } else {
+              cleanUrl = cleanUrl.replace(/\/(home|dev)$/, '/exec');
+              if (!cleanUrl.endsWith('/exec')) {
+                cleanUrl = cleanUrl + '/exec';
+              }
+            }
+          }
+          return cleanUrl;
+        }
+        
+        try {
+          const baseUrl = <?!= JSON.stringify(scriptUrl || '') ?>;
+          if (baseUrl) {
+            const finalUrl = ensureExecUrl(baseUrl);
+            if (finalUrl) {
+              window.top.location.href = `${finalUrl}?page=${page}`;
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('Error getting baseUrl:', e);
+        }
+        
+        google.script.run.withSuccessHandler(function(url) {
+          if (url) {
+            const finalUrl = ensureExecUrl(url);
+            if (finalUrl) {
+              window.top.location.href = `${finalUrl}?page=${page}`;
+            }
+          }
+        }).getScriptUrl();
+      };
+    }
+  </script>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #3b71ca;
+      --primary-light: #edf4ff;
+      --secondary: #6c757d;
+      --success: #14a44d;
+      --danger: #dc4c64;
+      --warning: #e4a11b;
+      --light: #fbfbfb;
+      --dark: #332d2d;
+      --sidebar-width: 250px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--dark);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .sidebar-menu {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 10px 0;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .sidebar-item i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-item:hover, .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .sidebar-footer {
+      padding: 15px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      flex-grow: 1;
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+      width: calc(100% - var(--sidebar-width));
+    }
+
+    .header {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      color: var(--secondary);
+    }
+
+    /* Action Bar */
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .filter-dropdown {
+      display: flex;
+      align-items: center;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Button Styles */
+    .btn {
+      padding: 8px 15px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .btn i {
+      margin-right: 5px;
+    }
+
+    .btn:hover {
+      background-color: #3264b7;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+    }
+
+    .btn-success:hover {
+      background-color: #118f43;
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+    }
+
+    .btn-warning {
+      background-color: var(--warning);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+    }
+
+    .btn-sm {
+      font-size: 12px;
+      padding: 5px 10px;
+    }
+
+    /* Form Controls */
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    /* Teams Grid */
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .team-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .team-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .team-header {
+      background-color: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 60px;
+    }
+
+    .team-name {
+      font-size: 20px;
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      word-break: break-word;
+    }
+
+    .team-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .team-action-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .team-action-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .team-leader {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      font-weight: 500;
+      border-bottom: 1px solid #eee;
+    }
+
+    .team-leader .leader-label {
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .team-leader .leader-label i {
+      margin-right: 5px;
+    }
+
+    .team-leader .edit-leader {
+      margin-left: auto;
+      font-size: 14px;
+      color: var(--secondary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+
+    .team-leader .edit-leader:hover {
+      color: var(--primary);
+    }
+
+    .team-members {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .team-member {
+      padding: 10px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .team-member:last-child {
+      border-bottom: none;
+    }
+
+    .team-member-name {
+      display: flex;
+      align-items: center;
+    }
+
+    .team-member-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .team-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: center;
+    }
+
+    .remove-member-btn {
+      color: var(--danger);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      width: 80%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .close-modal {
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--secondary);
+    }
+
+    .modal-body {
+      padding: 15px 0;
+    }
+
+    .modal-footer {
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .search-box {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .search-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      padding: 0 15px;
+      cursor: pointer;
+    }
+
+    .available-members {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 4px;
+    }
+
+    .available-member {
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .available-member:hover {
+      background-color: var(--primary-light);
+    }
+
+    .available-member:last-child {
+      border-bottom: none;
+    }
+
+    .available-member-name {
+      display: flex;
+      align-items: center;
+    }
+
+    .available-member-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .add-member-btn {
+      color: var(--success);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-danger {
+      color: var(--danger);
+    }
+
+    .loading-indicator {
+      text-align: center;
+      padding: 20px;
+      color: var(--secondary);
+    }
+
+    @media (max-width: 768px) {
+      .teams-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .modal-content {
+        width: 95%;
+        margin: 5% auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <?!= include('Sidebar'); ?>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h1 class="page-title">Teams</h1>
+      <div class="user-info">
+        <span id="teams-header-username"><?= user && user.username ? user.username : 'Admin' ?></span>
+      </div>
+    </div>
+    
+    <!-- Teams Content -->
+    <div class="teams-container">
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <div class="filter-dropdown">
+          <select id="team-filter" class="form-control">
+            <option value="all">Alle teams</option>
+            <!-- Team options will be populated dynamically -->
+          </select>
+        </div>
+        
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="refresh-teams-btn">
+            <i class="fas fa-sync-alt"></i> Opdater
+          </button>
+          <button class="btn btn-success" onclick="exportTeamsToExcel()">
+            <i class="fas fa-file-excel"></i> Eksporter Excel
+          </button>
+          <button class="btn btn-info" onclick="downloadTeamsTemplate()">
+            <i class="fas fa-download"></i> Download Skabelon
+          </button>
+          <button class="btn btn-warning" onclick="showModal('import-excel-modal')">
+            <i class="fas fa-upload"></i> Importer Excel
+          </button>
+          <button class="btn btn-success" onclick="showCreateTeamModal()">
+            <i class="fas fa-plus"></i> Nyt Team
+          </button>
+          <button class="btn btn-warning" id="send-team-email-btn" disabled>
+            <i class="fas fa-envelope"></i> Send Email (<span id="team-email-count">0</span>)
+          </button>
+        </div>
+      </div>
+      
+      <!-- Teams Grid -->
+      <div class="teams-grid" id="teams-grid">
+        <div class="loading-indicator">Indlæser teams...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Member to Team Modal -->
+  <div id="add-team-member-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Tilføj Medlem/Kontakt til <span id="team-name"></span></h3>
+        <span class="close-modal" onclick="hideModal('add-team-member-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="team-index">
+        
+        <div class="search-box mb-3">
+          <input type="text" id="search-members-for-team" class="search-input" placeholder="Søg efter medlemmer...">
+          <button class="search-btn"><i class="fas fa-search"></i></button>
+        </div>
+        
+        <div id="available-members-container" class="available-members">
+          <div class="loading-indicator">Indlæser medlemmer...</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('add-team-member-modal')">Annuller</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Team Modal -->
+  <div id="create-team-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Opret Nyt Team</h3>
+        <span class="close-modal" onclick="hideModal('create-team-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="new-team-name" class="form-label">Teamnavn</label>
+          <input type="text" id="new-team-name" class="form-control" placeholder="F.eks. Lovsangsteam">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('create-team-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="saveNewTeam()">Gem Team</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Team Modal -->
+  <div id="rename-team-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Omdøb Team</h3>
+        <span class="close-modal" onclick="hideModal('rename-team-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="rename-team-index">
+        <div class="form-group">
+          <label for="rename-team-name" class="form-label">Nyt teamnavn</label>
+          <input type="text" id="rename-team-name" class="form-control" placeholder="Indtast nyt navn">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('rename-team-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="applyRenameTeam()">Gem Navn</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Team Leader Modal -->
+  <div id="edit-team-leader-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Vælg Teamleder for <span id="leader-team-name"></span></h3>
+        <span class="close-modal" onclick="hideModal('edit-team-leader-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="leader-team-index">
+        
+        <div class="form-group">
+          <label for="team-leader" class="form-label">Teamleder</label>
+          <select id="team-leader" class="form-control">
+            <option value="">Vælg teamleder</option>
+            <!-- Options will be populated dynamically -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('edit-team-leader-modal')">Annuller</button>
+        <button type="button" class="btn btn-success" id="save-team-leader-btn">Gem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Email Modal for Teams -->
+  <div id="send-team-email-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Send Email til Team-medlemmer</h3>
+        <button class="close-modal" onclick="hideModal('send-team-email-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Valgte Modtagere (<span id="team-recipient-count">0</span>)</label>
+          <div class="member-selection" id="selected-team-recipients"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Skabeloner</label>
+          <div class="email-templates" id="team-email-templates-list"></div>
+          <button class="btn btn-sm btn-primary" onclick="createNewTeamEmailTemplate()">
+            <i class="fas fa-plus"></i> Ny Skabelon
+          </button>
+        </div>
+        <div class="form-group">
+          <label for="team-email-subject" class="form-label">Email Emne</label>
+          <input type="text" id="team-email-subject" class="form-control" placeholder="Indtast email emne...">
+        </div>
+        <div class="form-group">
+          <label for="team-email-body" class="form-label">Email Indhold</label>
+          <textarea id="team-email-body" class="form-control" rows="8" placeholder="Indtast email indhold...\n\nDu kan bruge følgende pladsholdere:\n{{navn}} - Modtagerens fulde navn\n{{fornavn}} - Modtagerens fornavn\n{{dato}} - Dagens dato"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="team-email-schedule" class="form-label">Send</label>
+          <select id="team-email-schedule" class="form-control">
+            <option value="now">Send Nu</option>
+            <option value="custom">Planlæg Afsendelse</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="team-custom-send-date-group">
+          <label for="team-custom-send-date" class="form-label">Send Dato og Tid</label>
+          <input type="datetime-local" id="team-custom-send-date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="save-team-email-template"> Gem som skabelon
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('send-team-email-modal')">Annuller</button>
+        <button type="button" class="btn btn-success" onclick="sendTeamEmails()">
+          <i class="fas fa-paper-plane"></i> Send/Planlæg
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Team Email Template Modal -->
+  <div id="create-team-template-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Opret Email Skabelon</h3>
+        <button class="close-modal" onclick="hideModal('create-team-template-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="team-template-name" class="form-label">Skabelon Navn</label>
+          <input type="text" id="team-template-name" class="form-control" placeholder="F.eks. Velkomst Email">
+        </div>
+        <div class="form-group">
+          <label for="team-template-subject" class="form-label">Email Emne</label>
+          <input type="text" id="team-template-subject" class="form-control" placeholder="F.eks. Velkommen til {{navn}}">
+        </div>
+        <div class="form-group">
+          <label for="team-template-body" class="form-label">Email Indhold</label>
+          <textarea id="team-template-body" class="form-control" rows="8" placeholder="Indtast email indhold..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('create-team-template-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="saveTeamEmailTemplate()">Gem Skabelon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Excel Modal -->
+  <div id="import-excel-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Importer Teams fra Excel</h3>
+        <span class="close-modal" onclick="hideModal('import-excel-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> 
+          <strong>Vejledning:</strong> Download skabelonen først, udfyld den med dine data, og upload den herefter. 
+          Dubletter (100% ens teams) bliver automatisk fjernet.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vælg Excel fil (.xlsx, .xls)</label>
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls" class="form-control">
+        </div>
+        <div id="import-progress" style="display: none; margin-top: 15px;">
+          <div class="progress">
+            <div class="progress-bar" id="import-progress-bar" style="width: 0%"></div>
+          </div>
+          <p id="import-status" style="margin-top: 10px;"></p>
+        </div>
+        <div id="import-results" style="display: none; margin-top: 15px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('import-excel-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="processExcelImport('teams')">Importer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    // Global variables
+    let teams = [];
+    let allPersons = [];
+    let selectedTeamMembers = [];
+    let teamEmailTemplates = [];
+
+    // Download Excel template for teams
+    function downloadTeamsTemplate() {
+      callApi('generateTeamsTemplate', {}, function(result) {
+        if (result && result.success) {
+          const headers = result.headers;
+          const personsList = result.personsList || [];
+          
+          const wb = XLSX.utils.book_new();
+          const wsData = [headers];
+          for (let i = 0; i < 3; i++) {
+            const exampleRow = headers.map(() => '');
+            wsData.push(exampleRow);
+          }
+          
+          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          ws['!cols'] = headers.map(() => ({ wch: 25 }));
+          
+          // Add persons list as a separate sheet for dropdown validation
+          if (personsList.length > 0) {
+            const personsSheetData = [['Navn'], ...personsList.map(p => [p])];
+            const personsWs = XLSX.utils.aoa_to_sheet(personsSheetData);
+            personsWs['!cols'] = [{ wch: 30 }];
+            XLSX.utils.book_append_sheet(wb, personsWs, 'Medlemmer_Kontakter');
+            
+            // Add data validation to all data cells in Teams sheet (excluding header row)
+            // Note: XLSX free version may not support data validation, but we'll try
+            try {
+              const dataValidation = {};
+              const lastRow = wsData.length;
+              const lastCol = headers.length;
+              
+              // Create named range reference for the persons list
+              const personsRange = `Medlemmer_Kontakter!$A$2:$A$${personsList.length + 1}`;
+              
+              // Add validation to each column (each team)
+              for (let col = 0; col < lastCol; col++) {
+                const colLetter = XLSX.utils.encode_col(col);
+                // Add validation to rows 2 to 100 (or lastRow)
+                for (let row = 2; row <= Math.min(100, lastRow); row++) {
+                  const cellRef = colLetter + row;
+                  // Try to add data validation (may not work in free version)
+                  if (!ws['!dataValidation']) {
+                    ws['!dataValidation'] = [];
+                  }
+                  // Note: This format may vary by XLSX version
+                  ws['!dataValidation'].push({
+                    sqref: cellRef,
+                    type: 'list',
+                    formula1: personsRange
+                  });
+                }
+              }
+            } catch (e) {
+              console.log('Data validation not supported, will use helper sheet only:', e);
+            }
+            
+            // Add instructions sheet
+            const instructions = [
+              ['INSTRUKTIONER TIL DROPDOWN VALIDERING'],
+              [''],
+              ['For at tilføje dropdown validering til cellerne:'],
+              ['1. Vælg de celler hvor du vil have dropdowns (alle celler under team-navnene)'],
+              ['2. Gå til Data > Data Validation'],
+              ['3. Vælg "List" som tilladelse'],
+              ['4. I "Source" feltet, indtast: =Medlemmer_Kontakter!$A$2:$A$' + (personsList.length + 1)],
+              ['5. Klik OK'],
+              [''],
+              ['Nu kan du vælge personer fra dropdown menuen i stedet for at skrive dem manuelt.'],
+              ['Dette sikrer at du vælger korrekte navne fra medlemmer og kontakter.']
+            ];
+            const instructionsWs = XLSX.utils.aoa_to_sheet(instructions);
+            instructionsWs['!cols'] = [{ wch: 80 }];
+            XLSX.utils.book_append_sheet(wb, instructionsWs, 'Instruktioner');
+          }
+          
+          XLSX.utils.book_append_sheet(wb, ws, 'Teams');
+          XLSX.writeFile(wb, 'Teams_Skabelon.xlsx');
+          showToast('Skabelon downloadet med medlemmer/kontakter liste', 'success');
+        } else {
+          showToast('Fejl ved download af skabelon: ' + (result.message || 'Ukendt fejl'), 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved download af skabelon: ' + error, 'error');
+      });
+    }
+    
+    // Export teams to Excel in the same format as import expects
+    // Format: First row = team names, subsequent rows = members (one per column)
+    function exportTeamsToExcel() {
+      if (!teams || teams.length === 0) {
+        showToast('Ingen teams at eksportere', 'warning');
+        return;
+      }
+      
+      // Find the maximum number of members across all teams
+      const maxMembers = Math.max(...teams.map(team => (team.members || []).length), 0);
+      
+      // Build the data array
+      // First row: team names
+      const teamNames = teams.map(team => team.name || '');
+      const wsData = [teamNames];
+      
+      // Subsequent rows: members (one per column, matching the team)
+      for (let rowIndex = 0; rowIndex < maxMembers; rowIndex++) {
+        const memberRow = teams.map(team => {
+          const members = team.members || [];
+          return members[rowIndex] || '';
+        });
+        wsData.push(memberRow);
+      }
+      
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Set column widths
+      ws['!cols'] = teamNames.map(() => ({ wch: 20 }));
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Teams');
+      
+      // Generate filename with current date
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const filename = `Teams_${dateStr}.xlsx`;
+      
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      showToast(`Excel fil "${filename}" er downloadet!`, 'success');
+    }
+    
+    // Process Excel import
+    function processExcelImport(type) {
+      const fileInput = document.getElementById('excel-file-input');
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showToast('Vælg venligst en fil', 'warning');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+          
+          if (jsonData.length === 0) {
+            showToast('Filen er tom', 'warning');
+            return;
+          }
+          
+          document.getElementById('import-progress').style.display = 'block';
+          document.getElementById('import-progress-bar').style.width = '50%';
+          document.getElementById('import-status').textContent = 'Importerer data...';
+          
+          const importFunction = type === 'contacts' ? 'importContactsFromExcel' : 
+                                 type === 'members' ? 'importMembersFromExcel' :
+                                 type === 'production' ? 'importProductionFromExcel' :
+                                 'importTeamsFromExcel';
+          
+          callApi(importFunction, { excelData: jsonData }, function(result) {
+            document.getElementById('import-progress-bar').style.width = '100%';
+            
+            if (result && result.success) {
+              let message = `Import gennemført!<br>`;
+              message += `✓ Importeret: ${result.imported || 0}<br>`;
+              message += `⚠ Dubletter: ${result.duplicates || 0}<br>`;
+              if (result.teamsProcessed) {
+                message += `📋 Teams behandlet: ${result.teamsProcessed}<br>`;
+              }
+              
+              document.getElementById('import-status').textContent = 'Import færdig!';
+              document.getElementById('import-results').innerHTML = `<div class="alert alert-success">${message}</div>`;
+              document.getElementById('import-results').style.display = 'block';
+              
+              setTimeout(function() {
+                loadTeams();
+                hideModal('import-excel-modal');
+                showToast('Import gennemført succesfuldt', 'success');
+              }, 2000);
+            } else {
+              document.getElementById('import-results').innerHTML = 
+                `<div class="alert alert-danger">Fejl: ${result.message || 'Ukendt fejl'}</div>`;
+              document.getElementById('import-results').style.display = 'block';
+            }
+          }, function(error) {
+            document.getElementById('import-results').innerHTML = 
+              `<div class="alert alert-danger">Fejl ved import: ${error}</div>`;
+            document.getElementById('import-results').style.display = 'block';
+          });
+        } catch (error) {
+          showToast('Fejl ved læsning af fil: ' + error.toString(), 'error');
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+    
+    // Modal functions
+    function showModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.style.display = 'block';
+      } else {
+        console.error('Modal not found: ' + modalId);
+      }
+    }
+
+    function hideModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      let toastContainer = document.getElementById('toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 1000;';
+        document.body.appendChild(toastContainer);
+      }
+      
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        padding: 12px 20px;
+        border-radius: 4px;
+        margin-top: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        min-width: 250px;
+        transition: all 0.3s ease;
+        color: white;
+        background-color: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#ffc107'};
+      `;
+      toast.textContent = message;
+      
+      toastContainer.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toastContainer.removeChild(toast);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Load all teams
+    function loadTeams() {
+      document.getElementById('teams-grid').innerHTML = '<div class="loading-indicator">Indlæser teams...</div>';
+      
+      console.log("Beginning teams load");
+      
+      callApi('getAllTeams', {}, function(data) {
+        console.log("Received teams data:", data);
+        
+        teams = data;
+        renderTeamsGrid();
+        populateTeamFilter();
+      }, function(error) {
+        console.error("Error loading teams:", error);
+        document.getElementById('teams-grid').innerHTML = '<div class="text-center text-danger">Fejl: ' + error + '</div>';
+      });
+    }
+
+    // Load all members and contacts
+    function loadAllPersons() {
+      callApi('getAllMembersAndContacts', {}, function(result) {
+        const members = (result.members || []).map(m => ({
+          type: 'medlem',
+          fornavn: m.fornavn,
+          efternavn: m.efternavn,
+          email: m.email,
+          id: 'm_' + (m.id !== undefined ? m.id : m.fornavn + '_' + m.efternavn)
+        }));
+        const contacts = (result.contacts || []).map(c => ({
+          type: 'kontakt',
+          fornavn: c.fornavn,
+          efternavn: c.efternavn,
+          email: c.email,
+          id: 'k_' + (c.id !== undefined ? c.id : c.fornavn + '_' + c.efternavn)
+        }));
+        const all = [...members, ...contacts];
+        allPersons = all.filter((person, idx, arr) =>
+          arr.findIndex(p => p.fornavn === person.fornavn && p.efternavn === person.efternavn && p.email === person.email) === idx
+        );
+        if (document.getElementById('add-team-member-modal').style.display === 'block') {
+          const teamIndex = document.getElementById('team-index').value;
+          renderAvailableMembers(teamIndex);
+        }
+      }, function(error) {
+        allPersons = [];
+        showToast('Fejl ved indlæsning af personer: ' + error, 'error');
+      });
+    }
+
+    // Render teams grid
+    function renderTeamsGrid() {
+      const container = document.getElementById('teams-grid');
+      
+      if (!teams || teams.length === 0) {
+        container.innerHTML = '<div class="text-center">Ingen teams fundet</div>';
+        return;
+      }
+      
+      let html = '';
+      
+      teams.forEach((team, teamIndex) => {
+        const teamMembers = team.members.map((member, memberIndex) => {
+          const initials = getInitials(member.split(' ')[0], member.split(' ')[1]);
+          const memberId = `${teamIndex}_${memberIndex}`;
+          return `
+            <li class="team-member">
+              <div class="team-member-name">
+                <input type="checkbox" class="team-member-checkbox" data-team-index="${teamIndex}" data-member-index="${memberIndex}" onchange="toggleTeamMemberSelection(${teamIndex},${memberIndex},this.checked)">
+                <div class="team-member-avatar">${initials}</div>
+                ${member}
+              </div>
+              <button class="remove-member-btn" onclick="removeMemberFromTeam(${teamIndex}, '${member}')">
+                <i class="fas fa-times"></i>
+              </button>
+            </li>
+          `;
+        }).join('');
+        
+        const safeTeamName = team.name || 'Navnløst team';
+        html += `
+          <div class="team-card" data-team="${safeTeamName}">
+            <div class="team-header">
+              <h3 class="team-name" title="${safeTeamName}">${safeTeamName}</h3>
+              <div class="team-actions">
+                <button class="team-action-btn" onclick="showRenameTeamModal(${teamIndex})">
+                  <i class="fas fa-pen"></i><span>Omdøb</span>
+                </button>
+                <button class="team-action-btn" onclick="confirmDeleteTeam(${teamIndex})">
+                  <i class="fas fa-trash"></i><span>Slet</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="team-leader">
+              <div class="leader-label">
+                <i class="fas fa-user-tie"></i> Teamleder:
+              </div>
+              ${team.leader || 'Ingen leder'}
+              <button class="edit-leader" onclick="showEditLeaderModal(${teamIndex})">
+                <i class="fas fa-edit"></i> Rediger
+              </button>
+            </div>
+            
+            <ul class="team-members">
+              ${teamMembers.length > 0 ? `
+                <li class="team-member" style="background-color: #f5f5f5; font-weight: 600;">
+                  <div class="team-member-name">
+                    <input type="checkbox" class="select-all-team" data-team-index="${teamIndex}" onchange="toggleSelectAllTeamMembers(${teamIndex}, this.checked)">
+                    <span style="margin-left: 5px;">Vælg alle</span>
+                  </div>
+                  <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-sm btn-danger" onclick="bulkDeleteTeamMembers(${teamIndex})" title="Slet valgte">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="bulkEmailTeamMembers(${teamIndex})" title="Send email til valgte">
+                      <i class="fas fa-envelope"></i>
+                    </button>
+                  </div>
+                </li>
+                ${teamMembers}
+              ` : '<li class="team-member">Ingen medlemmer</li>'}
+            </ul>
+            
+            <div class="team-footer">
+              <button class="btn btn-primary" onclick="showAddMemberModal(${teamIndex})">
+                <i class="fas fa-user-plus"></i> Tilføj Medlem/Kontakt
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      updateSelectedTeamCount();
+    }
+
+    function showCreateTeamModal() {
+      document.getElementById('new-team-name').value = '';
+      showModal('create-team-modal');
+      setTimeout(() => {
+        document.getElementById('new-team-name').focus();
+      }, 50);
+    }
+
+    function saveNewTeam() {
+      const input = document.getElementById('new-team-name');
+      const teamName = input.value.trim();
+      if (!teamName) {
+        showToast('Angiv et teamnavn', 'warning');
+        input.focus();
+        return;
+      }
+      callApi('createTeam', { teamName }, function(result) {
+        if (result && result.success) {
+          hideModal('create-team-modal');
+          showToast(result.message || 'Team oprettet!', 'success');
+          loadTeams();
+        } else {
+          showToast(result && result.message ? result.message : 'Kunne ikke oprette team', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved oprettelse: ' + error, 'error');
+      });
+    }
+
+    function showRenameTeamModal(teamIndex) {
+      const index = Number(teamIndex);
+      const team = teams[index];
+      if (!team) {
+        showToast('Team ikke fundet', 'error');
+        return;
+      }
+      document.getElementById('rename-team-index').value = index;
+      document.getElementById('rename-team-name').value = team.name || '';
+      showModal('rename-team-modal');
+      setTimeout(() => {
+        document.getElementById('rename-team-name').focus();
+      }, 50);
+    }
+
+    function applyRenameTeam() {
+      const indexValue = document.getElementById('rename-team-index').value;
+      const index = Number(indexValue);
+      const newName = document.getElementById('rename-team-name').value.trim();
+      if (!newName) {
+        showToast('Angiv et nyt teamnavn', 'warning');
+        return;
+      }
+      callApi('renameTeam', { teamIndex: index, newName: newName }, function(result) {
+        if (result && result.success) {
+          hideModal('rename-team-modal');
+          showToast(result.message || 'Teamnavn opdateret', 'success');
+          loadTeams();
+        } else {
+          showToast(result && result.message ? result.message : 'Kunne ikke omdøbe team', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved omdøbning: ' + error, 'error');
+      });
+    }
+
+    function confirmDeleteTeam(teamIndex) {
+      const index = Number(teamIndex);
+      const team = teams[index];
+      if (!team) {
+        showToast('Team ikke fundet', 'error');
+        return;
+      }
+      if (!confirm(`Vil du slette teamet "${team.name}"?`)) {
+        return;
+      }
+      
+      console.log('Deleting team with index:', index);
+      
+      callApi('deleteTeam', { teamIndex: index }, function(result) {
+        console.log('Delete team result:', result);
+        if (result && result.success) {
+          showToast(result.message || 'Team slettet', 'success');
+          loadTeams();
+        } else {
+          showToast(result && result.message ? result.message : 'Kunne ikke slette team', 'error');
+        }
+      }, function(error) {
+        console.error('Error deleting team:', error);
+        showToast('Fejl ved sletning: ' + error, 'error');
+      });
+    }
+
+    // Populate team filter dropdown
+    function populateTeamFilter() {
+      const select = document.getElementById('team-filter');
+      
+      // Clear existing options except the first one
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+      
+      // Add team options
+      teams.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.name;
+        option.textContent = team.name;
+        select.appendChild(option);
+      });
+    }
+
+    // Filter teams based on selected team
+    function filterTeams(teamName) {
+      const teamCards = document.querySelectorAll('.team-card');
+      
+      teamCards.forEach(card => {
+        if (teamName === 'all' || card.dataset.team === teamName) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Show add member modal
+    function showAddMemberModal(teamIndex) {
+      const team = teams[teamIndex];
+      if (!team) return;
+      
+      // Set team name and index
+      document.getElementById('team-name').textContent = team.name;
+      document.getElementById('team-index').value = teamIndex;
+      
+      // Load available members
+      renderAvailableMembers(teamIndex);
+      
+      // Show modal
+      showModal('add-team-member-modal');
+      
+      // Setup search function
+      const searchInput = document.getElementById('search-members-for-team');
+      searchInput.value = '';
+      
+      searchInput.addEventListener('keyup', function() {
+        const filter = searchInput.value.toLowerCase();
+        const memberItems = document.querySelectorAll('.available-member');
+        
+        memberItems.forEach(item => {
+          const name = item.querySelector('.available-member-name').textContent;
+          if (name.toLowerCase().indexOf(filter) > -1) {
+            item.style.display = '';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    }
+
+    // Render available members for adding to team
+    function renderAvailableMembers(teamIndex) {
+      const container = document.getElementById('available-members-container');
+      const team = teams[teamIndex];
+      if (allPersons.length === 0) {
+        container.innerHTML = '<div class="text-center p-3">Ingen medlemmer eller kontakter fundet</div>';
+        return;
+      }
+      const available = allPersons.filter(person => {
+        const fullName = `${person.fornavn} ${person.efternavn}`;
+        return !team.members.includes(fullName);
+      });
+      if (available.length === 0) {
+        container.innerHTML = '<div class="text-center p-3">Alle personer er allerede i dette team</div>';
+        return;
+      }
+      let html = '';
+      available.forEach(person => {
+        const fullName = `${person.fornavn} ${person.efternavn}`;
+        const initials = getInitials(person.fornavn, person.efternavn);
+        html += `
+          <div class="available-member" onclick="addMemberToTeam(${teamIndex}, '${fullName}')">
+            <div class="available-member-name">
+              <div class="available-member-avatar">${initials}</div>
+              ${fullName} <span style="font-size:12px;color:#888;">(${person.type})</span>
+            </div>
+            <button class="add-member-btn">
+              <i class="fas fa-plus-circle"></i>
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Add member to team
+    function addMemberToTeam(teamIndex, memberName) {
+      const team = teams[teamIndex];
+      if (!team) return;
+      
+      document.getElementById('available-members-container').innerHTML = '<div class="loading-indicator">Tilføjer medlem...</div>';
+      console.log(`Adding member ${memberName} to team index ${teamIndex}`);
+      
+      callApi('addMemberToTeam', { teamIndex, memberName }, function(result) {
+        console.log("Result of adding member to team:", result);
+        
+        if (result.success) {
+          showToast(result.message, 'success');
+          team.members.push(memberName);
+          renderTeamsGrid();
+          renderAvailableMembers(teamIndex);
+        } else {
+          showToast(result.message || 'Fejl ved tilføjelse af medlem til team', 'error');
+          renderAvailableMembers(teamIndex);
+        }
+      }, function(error) {
+        console.error("Error adding member to team:", error);
+        showToast('Fejl: ' + error, 'error');
+        renderAvailableMembers(teamIndex);
+      });
+    }
+
+    // Remove member from team
+    function removeMemberFromTeam(teamIndex, memberName) {
+      const team = teams[teamIndex];
+      if (!team) return;
+      
+      if (confirm(`Er du sikker på, at du vil fjerne ${memberName} fra ${team.name}?`)) {
+        console.log(`Removing member ${memberName} from team index ${teamIndex}`);
+        
+        callApi('removeMemberFromTeam', { teamIndex, memberName }, function(result) {
+          console.log("Result of removing member from team:", result);
+          
+          if (result.success) {
+            showToast(result.message, 'success');
+            team.members = team.members.filter(member => member !== memberName);
+            renderTeamsGrid();
+          } else {
+            showToast(result.message || 'Fejl ved fjernelse af medlem fra team', 'error');
+          }
+        }, function(error) {
+          console.error("Error removing member from team:", error);
+          showToast('Fejl: ' + error, 'error');
+        });
+      }
+    }
+
+    // Show edit team leader modal
+    function showEditLeaderModal(teamIndex) {
+      const team = teams[teamIndex];
+      if (!team) return;
+      
+      // Set team name and index
+      document.getElementById('leader-team-name').textContent = team.name;
+      document.getElementById('leader-team-index').value = teamIndex;
+      
+      // Build leader options
+      const leaderSelect = document.getElementById('team-leader');
+      
+      // Clear existing options except the first one
+      while (leaderSelect.options.length > 1) {
+        leaderSelect.remove(1);
+      }
+      
+      // Add current leader if not empty
+      if (team.leader) {
+        const currentOption = document.createElement('option');
+        currentOption.value = team.leader;
+        currentOption.textContent = team.leader + ' (Nuværende)';
+        leaderSelect.appendChild(currentOption);
+      }
+      
+      // Add all team members as options
+      team.members.forEach(member => {
+        if (member !== team.leader) {
+          const option = document.createElement('option');
+          option.value = member;
+          option.textContent = member;
+          leaderSelect.appendChild(option);
+        }
+      });
+      
+      // Set selected value to current leader
+      if (team.leader) {
+        leaderSelect.value = team.leader;
+      }
+      
+      // Show modal
+      showModal('edit-team-leader-modal');
+    }
+
+    // Save team leader
+    function saveTeamLeader() {
+      const teamIndex = parseInt(document.getElementById('leader-team-index').value);
+      const leaderName = document.getElementById('team-leader').value;
+      
+      // Show loading state
+      document.getElementById('save-team-leader-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gemmer...';
+      document.getElementById('save-team-leader-btn').disabled = true;
+      
+      console.log(`Updating team leader for index ${teamIndex} to ${leaderName}`);
+      
+      callApi('assignTeamLeader', { teamIndex, leaderName }, function(result) {
+        document.getElementById('save-team-leader-btn').innerHTML = 'Gem';
+        document.getElementById('save-team-leader-btn').disabled = false;
+        
+        console.log("Result of updating team leader:", result);
+        
+        if (result.success) {
+          showToast(result.message, 'success');
+          teams[teamIndex].leader = leaderName;
+          renderTeamsGrid();
+          hideModal('edit-team-leader-modal');
+        } else {
+          showToast(result.message || 'Fejl ved opdatering af teamleder', 'error');
+        }
+      }, function(error) {
+        document.getElementById('save-team-leader-btn').innerHTML = 'Gem';
+        document.getElementById('save-team-leader-btn').disabled = false;
+        
+        console.error("Error updating team leader:", error);
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Email system for teams
+    function toggleTeamMemberSelection(teamIndex, memberIndex, isSelected) {
+      const key = `${teamIndex}_${memberIndex}`;
+      if (isSelected) {
+        if (!selectedTeamMembers.includes(key)) {
+          selectedTeamMembers.push(key);
+        }
+      } else {
+        selectedTeamMembers = selectedTeamMembers.filter(k => k !== key);
+      }
+      updateSelectedTeamCount();
+    }
+
+    function updateSelectedTeamCount() {
+      document.getElementById('team-email-count').textContent = selectedTeamMembers.length;
+      document.getElementById('team-recipient-count').textContent = selectedTeamMembers.length;
+      document.getElementById('send-team-email-btn').disabled = selectedTeamMembers.length === 0;
+      // Render selected recipients in modal
+      const container = document.getElementById('selected-team-recipients');
+      if (container) {
+        container.innerHTML = '';
+        selectedTeamMembers.forEach(key => {
+          const [teamIndex, memberIndex] = key.split('_').map(Number);
+          const member = teams[teamIndex].members[memberIndex];
+          const div = document.createElement('div');
+          div.textContent = member;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    function loadTeamEmailTemplates() {
+      const stored = localStorage.getItem('teamEmailTemplates');
+      teamEmailTemplates = stored ? JSON.parse(stored) : [];
+      renderTeamEmailTemplates();
+    }
+
+    function renderTeamEmailTemplates() {
+      const container = document.getElementById('team-email-templates-list');
+      container.innerHTML = '';
+      teamEmailTemplates.forEach(template => {
+        const item = document.createElement('div');
+        item.className = 'email-template-item';
+        item.innerHTML = `
+          <div>
+            <strong>${template.name}</strong>
+            <div style="font-size: 12px; color: #666;">${template.subject}</div>
+          </div>
+          <button class="btn btn-sm btn-danger" onclick="deleteTeamEmailTemplate(${template.id}); event.stopPropagation();">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        item.onclick = () => selectTeamEmailTemplate(template);
+        container.appendChild(item);
+      });
+      if (teamEmailTemplates.length === 0) {
+        container.innerHTML = '<div class="text-center" style="padding: 20px; color: #666;">Ingen email skabeloner endnu</div>';
+      }
+    }
+
+    function createNewTeamEmailTemplate() {
+      // Clear form fields before showing modal
+      document.getElementById('team-template-name').value = '';
+      document.getElementById('team-template-subject').value = '';
+      document.getElementById('team-template-body').value = '';
+      showModal('create-team-template-modal');
+    }
+
+    function saveTeamEmailTemplate() {
+      const name = document.getElementById('team-template-name').value;
+      const subject = document.getElementById('team-template-subject').value;
+      const body = document.getElementById('team-template-body').value;
+      if (!name || !subject || !body) {
+        showToast('Udfyld venligst alle felter', 'warning');
+        return;
+      }
+      const template = {
+        id: Date.now(),
+        name: name,
+        subject: subject,
+        body: body
+      };
+      teamEmailTemplates.push(template);
+      localStorage.setItem('teamEmailTemplates', JSON.stringify(teamEmailTemplates));
+      // Clear form fields after saving
+      document.getElementById('team-template-name').value = '';
+      document.getElementById('team-template-subject').value = '';
+      document.getElementById('team-template-body').value = '';
+      hideModal('create-team-template-modal');
+      loadTeamEmailTemplates();
+      showToast('Email skabelon oprettet!', 'success');
+    }
+
+    function deleteTeamEmailTemplate(templateId) {
+      teamEmailTemplates = teamEmailTemplates.filter(t => t.id !== templateId);
+      localStorage.setItem('teamEmailTemplates', JSON.stringify(teamEmailTemplates));
+      loadTeamEmailTemplates();
+      showToast('Email skabelon slettet', 'success');
+    }
+
+    function selectTeamEmailTemplate(template) {
+      document.getElementById('team-email-subject').value = template.subject;
+      document.getElementById('team-email-body').value = template.body;
+      document.querySelectorAll('.email-template-item').forEach(item => item.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    }
+
+    function sendTeamEmails() {
+      if (selectedTeamMembers.length === 0) {
+        showToast('Vælg mindst ét medlem', 'warning');
+        return;
+      }
+      const subject = document.getElementById('team-email-subject').value;
+      const body = document.getElementById('team-email-body').value;
+      const schedule = document.getElementById('team-email-schedule').value;
+      const sendDate = schedule === 'custom' ? document.getElementById('team-custom-send-date').value : null;
+      const saveAsTemplate = document.getElementById('save-team-email-template').checked;
+      const sendBtn = document.querySelector('#send-team-email-modal .btn-success');
+      if (!subject || !body) {
+        showToast('Udfyld venligst email emne og indhold', 'warning');
+        return;
+      }
+      const recipientNames = selectedTeamMembers.map(key => {
+        const [teamIndex, memberIndex] = key.split('_').map(Number);
+        return teams[teamIndex].members[memberIndex];
+      });
+      if (recipientNames.length === 0) {
+        showToast('Ingen modtagere valgt', 'warning');
+        return;
+      }
+      if (saveAsTemplate) {
+        const templateName = prompt('Navn på email skabelon:', subject);
+        if (templateName) {
+          const template = {
+            id: Date.now(),
+            name: templateName,
+            subject: subject,
+            body: body
+          };
+          teamEmailTemplates.push(template);
+          localStorage.setItem('teamEmailTemplates', JSON.stringify(teamEmailTemplates));
+          loadTeamEmailTemplates();
+          showToast('Email skabelon gemt!', 'success');
+        }
+      }
+      sendBtn.disabled = true;
+      callApi('lookupPersonsInfo', { names: recipientNames }, function(recipients) {
+        const validRecipients = recipients.filter(r => r && r.email && r.email.trim() !== '');
+        if (validRecipients.length === 0) {
+          sendBtn.disabled = false;
+          showToast('Ingen gyldige emails fundet for de valgte personer!', 'error');
+          return;
+        }
+        const emailData = {
+          subject: subject.trim(),
+          body: body.trim(),
+          recipients: validRecipients.map(r => ({
+            name: r.name || '',
+            email: r.email.trim(),
+            firstName: r.firstName || ''
+          })),
+          schedule: schedule,
+          sendDate: sendDate
+        };
+        const targetFunction = (schedule === 'custom' && sendDate) ? 'scheduleBulkTeamEmails' : 'sendBulkTeamEmails';
+        callApi(targetFunction, { emailData }, function(result) {
+          sendBtn.disabled = false;
+          hideModal('send-team-email-modal');
+          selectedTeamMembers = [];
+          updateSelectedTeamCount();
+          const message = result && result.message ? result.message : (targetFunction === 'scheduleBulkTeamEmails' ? 'Email planlagt!' : 'Email sendt!');
+          const type = result && result.success ? 'success' : 'error';
+          showToast(message, type);
+        }, function(error) {
+          sendBtn.disabled = false;
+          showToast('Fejl ved afsendelse: ' + error, 'error');
+        });
+      }, function(error) {
+        sendBtn.disabled = false;
+        showToast('Fejl ved opslag af emails: ' + error, 'error');
+      });
+    }
+
+    // Select all team members
+    function toggleSelectAllTeamMembers(teamIndex, isSelected) {
+      const checkboxes = document.querySelectorAll(`.team-member-checkbox[data-team-index="${teamIndex}"]`);
+      checkboxes.forEach(cb => {
+        cb.checked = isSelected;
+        const memberIndex = parseInt(cb.getAttribute('data-member-index'));
+        toggleTeamMemberSelection(teamIndex, memberIndex, isSelected);
+      });
+      updateSelectedTeamCount();
+    }
+
+    // Bulk delete team members
+    function bulkDeleteTeamMembers(teamIndex) {
+      const team = teams[teamIndex];
+      if (!team) return;
+      
+      const selected = selectedTeamMembers.filter(key => {
+        const [tIdx] = key.split('_').map(Number);
+        return tIdx === teamIndex;
+      });
+      
+      if (selected.length === 0) {
+        showToast('Vælg mindst ét medlem at slette', 'warning');
+        return;
+      }
+      
+      if (!confirm(`Er du sikker på, at du vil slette ${selected.length} medlem(mer) fra ${team.name}?`)) {
+        return;
+      }
+      
+      // Get member names from selected checkboxes
+      const memberNames = selected.map(key => {
+        const [, memberIndex] = key.split('_').map(Number);
+        return team.members[memberIndex];
+      }).filter(name => name); // Filter out any undefined/null names
+      
+      if (memberNames.length === 0) {
+        showToast('Ingen gyldige medlemmer at slette', 'warning');
+        return;
+      }
+      
+      console.log('Deleting members:', memberNames);
+      console.log('Team index:', teamIndex);
+      
+      // Call bulk delete function
+      callApi('bulkRemoveMembersFromTeam', { teamIndex, memberNames }, function(result) {
+        console.log('Bulk delete result:', result);
+        console.log('Result type:', typeof result);
+        console.log('Result success:', result ? result.success : 'result is null/undefined');
+        
+        if (result && result.success) {
+          showToast(result.message || `${result.deletedCount || memberNames.length} medlem(mer) slettet`, 'success');
+          // Clear selection for this team
+          selectedTeamMembers = selectedTeamMembers.filter(key => {
+            const [tIdx] = key.split('_').map(Number);
+            return tIdx !== teamIndex;
+          });
+          // Reload teams to show updated data
+          loadTeams();
+          updateSelectedTeamCount();
+        } else {
+          const errorMsg = result && result.message ? result.message : (result ? 'Ukendt fejl' : 'Ingen respons fra server');
+          console.error('Delete failed:', errorMsg);
+          showToast(errorMsg, 'error');
+        }
+      }, function(error) {
+        console.error('Error deleting members:', error);
+        showToast('Fejl ved sletning: ' + (error || 'Ukendt fejl'), 'error');
+      });
+    }
+
+    // Bulk email team members
+    function bulkEmailTeamMembers(teamIndex) {
+      const team = teams[teamIndex];
+      if (!team) return;
+      
+      const selected = selectedTeamMembers.filter(key => {
+        const [tIdx] = key.split('_').map(Number);
+        return tIdx === teamIndex;
+      });
+      
+      if (selected.length === 0) {
+        showToast('Vælg mindst ét medlem at sende email til', 'warning');
+        return;
+      }
+      
+      // Update selectedTeamMembers to only include this team's members
+      selectedTeamMembers = selected;
+      updateSelectedTeamCount();
+      showModal('send-team-email-modal');
+    }
+
+    // Setup event handlers
+    function setupEventHandlers() {
+      // Refresh teams button
+      document.getElementById('refresh-teams-btn').addEventListener('click', function() {
+        loadTeams();
+        showToast('Teams opdateret!', 'success');
+      });
+      
+      // Team filter change
+      document.getElementById('team-filter').addEventListener('change', function() {
+        filterTeams(this.value);
+      });
+      
+      // Save team leader button
+      document.getElementById('save-team-leader-btn').addEventListener('click', saveTeamLeader);
+      
+      // Send team email button
+      document.getElementById('send-team-email-btn').addEventListener('click', function() {
+        updateSelectedTeamCount();
+        showModal('send-team-email-modal');
+      });
+    }
+
+    // Helper to get initials from name
+    function getInitials(firstName, lastName) {
+      let initials = '';
+      if (firstName) initials += firstName.charAt(0).toUpperCase();
+      if (lastName) initials += lastName.charAt(0).toUpperCase();
+      return initials || '?';
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTeams();
+      loadAllPersons();
+      loadTeamEmailTemplates();
+      setupEventHandlers();
+
+      // Setup sidebar navigation
+      const sidebarItems = document.querySelectorAll('.sidebar-item[data-page]');
+      sidebarItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const page = this.dataset.page;
+          if (page) {
+            navigateToPage(page);
+          }
+        });
+      });
+
+      // Close modals when clicking outside
+      window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.style.display = 'none';
+        }
+      });
+
+      // Clean up teams sheet
+      callApi('cleanUpTeamsSheet', {}, function(result) {
+        showToast(result.message, result.success ? 'success' : 'error');
+        loadTeams();
+      }, function(error) {
+        showToast('Fejl ved oprydning: ' + error, 'error');
+      });
+
+      // Add event listener for select-all checkboxes
+      document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('select-all-team')) {
+          const teamIndex = e.target.getAttribute('data-team-index');
+          const checkboxes = document.querySelectorAll('.team-member-checkbox[data-team-index="' + teamIndex + '"]');
+          checkboxes.forEach(cb => { cb.checked = e.target.checked; });
+          updateSelectedTeamCount();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

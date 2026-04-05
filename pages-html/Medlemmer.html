@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medlemmer - Horsens Pinsekirke Admin</title>
+  <?!= include('CommonJS'); ?>
+  
+  <!-- Fallback definitions if CommonJS hasn't loaded yet -->
+  <script>
+    if (typeof sessionManager === 'undefined') {
+      window.sessionManager = {
+        storageKey: 'sessionToken',
+        getToken() {
+          try {
+            if (typeof window === 'undefined') return '';
+            if (window.sessionToken) return window.sessionToken;
+            const token = window.localStorage.getItem(this.storageKey);
+            if (token) {
+              window.sessionToken = token;
+              return token;
+            }
+            return '';
+          } catch (error) {
+            return window.sessionToken || '';
+          }
+        },
+        setToken(value) {
+          try {
+            if (typeof window !== 'undefined') {
+              if (value) {
+                window.localStorage.setItem(this.storageKey, value);
+              } else {
+                window.localStorage.removeItem(this.storageKey);
+              }
+            }
+          } catch (error) {
+            console.error('Error persisting session token:', error);
+          }
+          window.sessionToken = value || '';
+        },
+        clearToken() {
+          this.setToken('');
+        }
+      };
+    }
+    if (typeof callApi !== 'function') {
+      window.callApi = function(functionName, params = {}, successHandler = null, failureHandler = null) {
+        const token = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : '';
+        const payload = { ...params };
+        if (token) {
+          payload.sessionToken = token;
+        }
+        let runner = google.script.run;
+        if (failureHandler) {
+          runner = runner.withFailureHandler(failureHandler);
+        }
+        if (successHandler) {
+          runner = runner.withSuccessHandler(successHandler);
+        }
+        runner[functionName](payload);
+      };
+    }
+    if (typeof navigateToPage !== 'function') {
+      window.navigateToPage = function(page) {
+        function ensureExecUrl(url) {
+          if (!url) return null;
+          let cleanUrl = url.split('?')[0].split('#')[0];
+          cleanUrl = cleanUrl.replace(/\/$/, '');
+          if (!cleanUrl.endsWith('/exec')) {
+            if (cleanUrl.indexOf('script.google.com') !== -1) {
+              cleanUrl = cleanUrl + '/exec';
+            } else {
+              cleanUrl = cleanUrl.replace(/\/(home|dev)$/, '/exec');
+              if (!cleanUrl.endsWith('/exec')) {
+                cleanUrl = cleanUrl + '/exec';
+              }
+            }
+          }
+          return cleanUrl;
+        }
+        
+        try {
+          const baseUrl = <?!= JSON.stringify(scriptUrl || '') ?>;
+          if (baseUrl) {
+            const finalUrl = ensureExecUrl(baseUrl);
+            if (finalUrl) {
+              window.top.location.href = `${finalUrl}?page=${page}`;
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('Error getting baseUrl:', e);
+        }
+        
+        google.script.run.withSuccessHandler(function(url) {
+          if (url) {
+            const finalUrl = ensureExecUrl(url);
+            if (finalUrl) {
+              window.top.location.href = `${finalUrl}?page=${page}`;
+            }
+          }
+        }).getScriptUrl();
+      };
+    }
+  </script>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <style>
+    :root {
+      --primary: #3b71ca;
+      --primary-light: #edf4ff;
+      --secondary: #6c757d;
+      --success: #14a44d;
+      --danger: #dc4c64;
+      --warning: #e4a11b;
+      --light: #fbfbfb;
+      --dark: #332d2d;
+      --sidebar-width: 250px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Inherit existing styles from your project */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--dark);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .sidebar-title h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .sidebar-menu {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 10px 0;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .sidebar-item i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-item:hover, .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .sidebar-item.active {
+      background-color: var(--primary);
+    }
+
+    .main-content {
+      flex-grow: 1;
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+      width: calc(100% - var(--sidebar-width));
+    }
+
+    .header {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      color: var(--secondary);
+    }
+
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .search-box {
+      display: flex;
+      flex-grow: 1;
+      max-width: 400px;
+    }
+
+    .search-input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .search-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      padding: 0 15px;
+      cursor: pointer;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #2a5298;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background-color: #0e7e32;
+    }
+
+    .btn-warning {
+      background-color: var(--warning);
+      color: white;
+    }
+
+    .btn-warning:hover:not(:disabled) {
+      background-color: #d39e00;
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background-color: #c82333;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px 8px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .data-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: var(--dark);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .data-table tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .data-table td input[type="checkbox"] {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 12px;
+      margin-right: 4px;
+      margin-bottom: 2px;
+    }
+
+    .badge-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .badge-secondary {
+      background-color: var(--secondary);
+      color: white;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 3% auto;
+      padding: 0;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .close-modal {
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.8);
+      background: none;
+      border: none;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #f8f9fa;
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* Form Styles */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    /* Email template styles */
+    .email-templates {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+
+    .email-template-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #f1f3f4;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .email-template-item:hover {
+      background: #f8f9fa;
+    }
+
+    .email-template-item:last-child {
+      border-bottom: none;
+    }
+
+    .email-template-item.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    /* Member selection */
+    .member-selection {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .member-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f3f4;
+    }
+
+    .member-item:last-child {
+      border-bottom: none;
+    }
+
+    .member-item input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.2);
+    }
+
+    .member-info {
+      flex-grow: 1;
+    }
+
+    .member-name {
+      font-weight: 500;
+    }
+
+    .member-email {
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* Statistics */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .search-box {
+        max-width: none;
+        margin-bottom: 10px;
+      }
+      
+      .action-buttons {
+        justify-content: center;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Utilities */
+    .text-danger { color: var(--danger); }
+    .text-success { color: var(--success); }
+    .mt-2 { margin-top: 10px; }
+    .mb-2 { margin-bottom: 10px; }
+    .hidden { display: none; }
+    .loading { opacity: 0.6; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <?!= include('Sidebar'); ?>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h1 class="page-title">Medlemmer</h1>
+      <div class="user-info">
+        <span id="medlemmer-header-username"><?= user && user.username ? user.username : 'Admin' ?></span>
+      </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="total-members">0</div>
+        <div class="stat-label">Totale Medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="selected-members">0</div>
+        <div class="stat-label">Valgte Medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="members-with-email">0</div>
+        <div class="stat-label">Med Email</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="active-team-members">0</div>
+        <div class="stat-label">I Teams</div>
+      </div>
+    </div>
+    
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <div class="search-box">
+        <input type="text" id="search-members" class="search-input" placeholder="Søg efter navn, email eller telefon...">
+        <button class="search-btn" onclick="searchMembers()"><i class="fas fa-search"></i></button>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-primary" onclick="refreshMembers()">
+          <i class="fas fa-sync"></i> Opdater
+        </button>
+        <button class="btn btn-success" onclick="exportToExcel()">
+          <i class="fas fa-file-excel"></i> Eksporter Excel
+        </button>
+        <button class="btn btn-info" onclick="downloadMembersTemplate()">
+          <i class="fas fa-download"></i> Download Skabelon
+        </button>
+        <button class="btn btn-warning" onclick="showModal('import-excel-modal')">
+          <i class="fas fa-upload"></i> Importer Excel
+        </button>
+        <button class="btn btn-warning" id="send-email-btn" onclick="showModal('send-email-modal')" disabled>
+          <i class="fas fa-envelope"></i> Send Email (<span id="email-count">0</span>)
+        </button>
+        <button class="btn btn-danger" id="bulk-delete-btn" onclick="confirmBulkDelete()" disabled>
+          <i class="fas fa-trash"></i> Slet Valgte (<span id="delete-count">0</span>)
+        </button>
+        <button class="btn btn-primary" onclick="showModal('add-member-modal')">
+          <i class="fas fa-user-plus"></i> Tilføj Medlem
+        </button>
+      </div>
+    </div>
+    
+    <!-- Members Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Medlemsliste</h2>
+        <div>
+          <button class="btn btn-sm btn-secondary" onclick="selectAllMembers()">
+            <i class="fas fa-check-square"></i> Vælg Alle
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="clearSelection()">
+            <i class="fas fa-square"></i> Ryd Valg
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table class="data-table" id="members-table">
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()">
+                </th>
+                <th>Navn</th>
+                <th>Email</th>
+                <th>Mobil</th>
+                <th>Adresse</th>
+                <th>Fødselsdato</th>
+                <th>Dåbsdato</th>
+                <th>Teams</th>
+                <th>Rengøring</th>
+                <th>Handlinger</th>
+              </tr>
+            </thead>
+            <tbody id="members-tbody">
+              <tr>
+                <td colspan="9" class="text-center">Indlæser medlemmer...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Member Modal -->
+  <div id="edit-member-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Rediger Medlem</h3>
+        <button class="close-modal" onclick="hideModal('edit-member-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-member-form">
+          <input type="hidden" id="edit-member-id">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-fornavn" class="form-label">Fornavn</label>
+              <input type="text" id="edit-fornavn" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-efternavn" class="form-label">Efternavn</label>
+              <input type="text" id="edit-efternavn" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-email" class="form-label">Email</label>
+              <input type="email" id="edit-email" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-mobil" class="form-label">Mobil</label>
+              <input type="tel" id="edit-mobil" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-adresse" class="form-label">Adresse</label>
+              <input type="text" id="edit-adresse" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-postnr" class="form-label">Postnummer</label>
+              <input type="text" id="edit-postnr" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-by" class="form-label">By</label>
+              <input type="text" id="edit-by" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-fodselsdato" class="form-label">Fødselsdato</label>
+              <input type="date" id="edit-fodselsdato" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-dobsdato" class="form-label">Dåbsdato</label>
+              <input type="date" id="edit-dobsdato" class="form-control">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" onclick="confirmDeleteMember()">
+          <i class="fas fa-trash"></i> Slet Medlem
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="hideModal('edit-member-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="saveMemberChanges()">Gem Ændringer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Email Modal -->
+  <div id="send-email-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Send Email til Medlemmer</h3>
+        <button class="close-modal" onclick="hideModal('send-email-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Valgte Modtagere (<span id="recipient-count">0</span>)</label>
+          <div class="member-selection" id="selected-recipients">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Skabeloner</label>
+          <div class="email-templates" id="email-templates-list">
+            <!-- Will be populated by JavaScript -->
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="createNewEmailTemplate()">
+            <i class="fas fa-plus"></i> Ny Skabelon
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="email-subject" class="form-label">Email Emne</label>
+          <input type="text" id="email-subject" class="form-control" placeholder="Indtast email emne...">
+        </div>
+
+        <div class="form-group">
+          <label for="email-body" class="form-label">Email Indhold</label>
+          <textarea id="email-body" class="form-control" rows="8" placeholder="Indtast email indhold...
+          
+Du kan bruge følgende pladsholdere:
+{{navn}} - Modtagerens fulde navn
+{{fornavn}} - Modtagerens fornavn
+{{dato}} - Dagens dato"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="email-schedule" class="form-label">Send</label>
+          <select id="email-schedule" class="form-control">
+            <option value="now">Send Nu</option>
+            <option value="custom">Planlæg Afsendelse</option>
+          </select>
+        </div>
+
+        <div class="form-group hidden" id="custom-send-date-group">
+          <label for="custom-send-date" class="form-label">Send Dato og Tid</label>
+          <input type="datetime-local" id="custom-send-date" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="save-email-template"> Gem som skabelon
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('send-email-modal')">Annuller</button>
+        <button type="button" class="btn btn-success" onclick="sendEmails()">
+          <i class="fas fa-paper-plane"></i> Send/Planlæg
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Email Template Modal -->
+  <div id="create-template-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Opret Email Skabelon</h3>
+        <button class="close-modal" onclick="hideModal('create-template-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="template-name" class="form-label">Skabelon Navn</label>
+          <input type="text" id="template-name" class="form-control" placeholder="F.eks. Velkomst Email">
+        </div>
+
+        <div class="form-group">
+          <label for="template-subject" class="form-label">Email Emne</label>
+          <input type="text" id="template-subject" class="form-control" placeholder="F.eks. Velkommen til {{navn}}">
+        </div>
+
+        <div class="form-group">
+          <label for="template-body" class="form-label">Email Indhold</label>
+          <textarea id="template-body" class="form-control" rows="8" placeholder="Indtast email indhold..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('create-template-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="saveEmailTemplate()">Gem Skabelon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Member Modal -->
+  <div id="add-member-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Tilføj Medlem</h3>
+        <button class="close-modal" onclick="hideModal('add-member-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="add-member-form" onsubmit="event.preventDefault(); submitAddMember();">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="add-fornavn" class="form-label">Fornavn</label>
+              <input type="text" id="add-fornavn" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="add-efternavn" class="form-label">Efternavn</label>
+              <input type="text" id="add-efternavn" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="add-email" class="form-label">Email</label>
+              <input type="email" id="add-email" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="add-mobil" class="form-label">Mobil</label>
+              <input type="tel" id="add-mobil" class="form-control">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="add-adresse" class="form-label">Adresse</label>
+              <input type="text" id="add-adresse" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="add-postnr" class="form-label">Postnummer</label>
+              <input type="text" id="add-postnr" class="form-control">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="add-by" class="form-label">By</label>
+              <input type="text" id="add-by" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="add-fodselsdato" class="form-label">Fødselsdato</label>
+              <input type="date" id="add-fodselsdato" class="form-control">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="add-dobsdato" class="form-label">Dåbsdato</label>
+              <input type="date" id="add-dobsdato" class="form-control">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('add-member-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="submitAddMember()">Gem Medlem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Excel Modal -->
+  <div id="import-excel-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Importer Medlemmer fra Excel</h3>
+        <span class="close-modal" onclick="hideModal('import-excel-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> 
+          <strong>Vejledning:</strong> Download skabelonen først, udfyld den med dine data, og upload den herefter. 
+          Dubletter (100% ens medlemmer) bliver automatisk fjernet.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vælg Excel fil (.xlsx, .xls)</label>
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls" class="form-control">
+        </div>
+        <div id="import-progress" style="display: none; margin-top: 15px;">
+          <div class="progress">
+            <div class="progress-bar" id="import-progress-bar" style="width: 0%"></div>
+          </div>
+          <p id="import-status" style="margin-top: 10px;"></p>
+        </div>
+        <div id="import-results" style="display: none; margin-top: 15px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('import-excel-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="processExcelImport('members')">Importer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let members = [];
+    let selectedMembers = new Set();
+    let emailTemplates = [];
+    let currentEditingMember = null;
+
+    // Modal functions
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    function hideModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Load and display members from app data store
+    function loadMembers() {
+      document.getElementById('members-tbody').innerHTML = '<tr><td colspan="9" class="text-center">Indlæser medlemmer...</td></tr>';
+      
+      // First, try to remove example members if any exist
+      callApi('removeExampleMembers', {}, function(removeResult) {
+        if (removeResult && removeResult.success && removeResult.removedCount > 0) {
+          console.log("Removed " + removeResult.removedCount + " example members");
+        }
+      }, function() {
+        // Ignore errors when removing example members
+      });
+      
+      callApi('getAllMembers', {}, function(result) {
+        console.log("getAllMembers result:", result);
+        if (!result || !result.success) {
+          const errorMsg = result && result.message ? result.message : 'Fejl ved indlæsning af medlemmer';
+          console.error("Error loading members:", errorMsg);
+          document.getElementById('members-tbody').innerHTML = '<tr><td colspan="9" class="text-center text-danger">' + errorMsg + '</td></tr>';
+          members = [];
+          updateStatistics();
+          return;
+        }
+        members = result.members || [];
+        console.log("Loaded " + members.length + " members");
+        if (members.length === 0) {
+          console.warn("No members found in result");
+        }
+        renderMembersTable();
+        updateStatistics();
+      }, function(error) {
+        console.error("Error loading members:", error);
+        document.getElementById('members-tbody').innerHTML = '<tr><td colspan="9" class="text-center text-danger">Fejl: ' + error + '</td></tr>';
+        members = [];
+        updateStatistics();
+      });
+    }
+
+    function renderMembersTable() {
+      const tbody = document.getElementById('members-tbody');
+      
+      if (members.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Ingen medlemmer fundet</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      
+      members.forEach(member => {
+        // Team badges
+        let teamBadges = '';
+        if (member.teams && member.teams.length > 0) {
+          teamBadges = member.teams.map(team => 
+            `<span class="badge badge-primary">${team}</span>`
+          ).join(' ');
+        } else {
+          teamBadges = '-';
+        }
+        
+        // Cleaning badges
+        let cleaningBadges = '';
+        if (member.cleaning && member.cleaning.length > 0) {
+          cleaningBadges = member.cleaning.map(cleaning => 
+            `<span class="badge badge-secondary">Uge ${cleaning.week}</span>`
+          ).join(' ');
+        } else {
+          cleaningBadges = '-';
+        }
+        
+        html += `
+          <tr data-member-id="${member.id}">
+            <td>
+              <input type="checkbox" class="member-checkbox" value="${member.id}" 
+                     onchange="toggleMemberSelection(${member.id}, this.checked)">
+            </td>
+            <td>${member.fornavn} ${member.efternavn}</td>
+            <td>${member.email || '-'}</td>
+            <td>${member.mobil || '-'}</td>
+            <td>${formatAddress(member)}</td>
+            <td>${member.fodselsdato || '-'}</td>
+            <td>${member.dobsdato || '-'}</td>
+            <td>${teamBadges}</td>
+            <td>${cleaningBadges}</td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="editMember(${member.id})">
+                <i class="fas fa-edit"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML = html;
+    }
+
+    function formatAddress(member) {
+      const parts = [];
+      if (member.adresse) parts.push(member.adresse);
+      if (member.postnr) parts.push(member.postnr);
+      if (member.by) parts.push(member.by);
+      return parts.length > 0 ? parts.join(', ') : '-';
+    }
+
+    // Member selection
+    function toggleMemberSelection(memberId, isSelected) {
+      // Ensure memberId is a number
+      const id = parseInt(memberId);
+      if (isNaN(id)) {
+        console.error('Invalid memberId:', memberId);
+        return;
+      }
+      
+      if (isSelected) {
+        selectedMembers.add(id);
+      } else {
+        selectedMembers.delete(id);
+      }
+      updateSelectionUI();
+    }
+
+    function toggleSelectAll() {
+      const selectAllCheckbox = document.getElementById('select-all-checkbox');
+      const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+      
+      memberCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+        toggleMemberSelection(parseInt(checkbox.value), checkbox.checked);
+      });
+    }
+
+    function selectAllMembers() {
+      document.getElementById('select-all-checkbox').checked = true;
+      document.querySelectorAll('.member-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+        selectedMembers.add(parseInt(checkbox.value));
+      });
+      updateSelectionUI();
+    }
+
+    function clearSelection() {
+      document.getElementById('select-all-checkbox').checked = false;
+      document.querySelectorAll('.member-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      selectedMembers.clear();
+      updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+      const selectedCount = selectedMembers.size;
+      // Ensure we compare numbers with numbers
+      const emailCount = members.filter(m => {
+        const memberId = parseInt(m.id);
+        return !isNaN(memberId) && selectedMembers.has(memberId) && m.email && m.email.trim() !== '';
+      }).length;
+      
+      // Update counters
+      const selectedMembersEl = document.getElementById('selected-members');
+      const emailCountEl = document.getElementById('email-count');
+      const deleteCountEl = document.getElementById('delete-count');
+      const sendEmailBtn = document.getElementById('send-email-btn');
+      const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+      
+      if (selectedMembersEl) selectedMembersEl.textContent = selectedCount;
+      if (emailCountEl) emailCountEl.textContent = emailCount;
+      if (deleteCountEl) deleteCountEl.textContent = selectedCount;
+      
+      // Enable/disable buttons
+      if (sendEmailBtn) sendEmailBtn.disabled = emailCount === 0;
+      if (bulkDeleteBtn) bulkDeleteBtn.disabled = selectedCount === 0;
+      
+      // Update select all checkbox state
+      const allSelected = selectedCount === members.length;
+      const someSelected = selectedCount > 0;
+      const selectAllCheckbox = document.getElementById('select-all-checkbox');
+      
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = allSelected;
+        selectAllCheckbox.indeterminate = someSelected && !allSelected;
+      }
+      
+      // Update email modal if it's open
+      const emailModal = document.getElementById('send-email-modal');
+      if (emailModal && emailModal.style.display === 'block') {
+        loadSelectedRecipients();
+      }
+    }
+
+    function updateStatistics() {
+      const totalMembers = members.length;
+      const membersWithEmail = members.filter(m => m.email).length;
+      const activeTeamMembers = members.filter(m => m.teams && m.teams.length > 0).length;
+      
+      document.getElementById('total-members').textContent = totalMembers;
+      document.getElementById('members-with-email').textContent = membersWithEmail;
+      document.getElementById('active-team-members').textContent = activeTeamMembers;
+    }
+
+    // Search functionality
+    function searchMembers() {
+      const searchTerm = document.getElementById('search-members').value.toLowerCase();
+      const rows = document.querySelectorAll('#members-tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    // Excel export functionality
+    // Download Excel template for members
+    function downloadMembersTemplate() {
+      callApi('generateMembersTemplate', {}, function(result) {
+        if (result && result.success) {
+          const headers = result.headers;
+          const exampleRow = result.exampleRow;
+          const membersList = result.membersList || [];
+          
+          const wb = XLSX.utils.book_new();
+          const wsData = [headers, exampleRow];
+          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          ws['!cols'] = headers.map(() => ({ wch: 20 }));
+          XLSX.utils.book_append_sheet(wb, ws, 'Medlemmer');
+          
+          // Add members list as a separate sheet for reference and dropdown validation
+          if (membersList.length > 0) {
+            const membersSheetData = [['Navn'], ...membersList.map(m => [m])];
+            const membersWs = XLSX.utils.aoa_to_sheet(membersSheetData);
+            membersWs['!cols'] = [{ wch: 30 }];
+            XLSX.utils.book_append_sheet(wb, membersWs, 'Eksisterende_Medlemmer');
+            
+            // Add instructions sheet
+            const noteRow = ['NOTE: Se "Eksisterende_Medlemmer" ark for liste af eksisterende medlemmer. Brug Excel Data Validation til at oprette dropdowns.'];
+            const noteWs = XLSX.utils.aoa_to_sheet([noteRow]);
+            noteWs['!cols'] = [{ wch: 100 }];
+            XLSX.utils.book_append_sheet(wb, noteWs, 'Instruktioner');
+          }
+          
+          XLSX.writeFile(wb, 'Medlemmer_Skabelon.xlsx');
+          showToast('Skabelon downloadet med medlemmer liste', 'success');
+        } else {
+          showToast('Fejl ved download af skabelon: ' + (result.message || 'Ukendt fejl'), 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved download af skabelon: ' + error, 'error');
+      });
+    }
+    
+    // Process Excel import
+    function processExcelImport(type) {
+      const fileInput = document.getElementById('excel-file-input');
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showToast('Vælg venligst en fil', 'warning');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+          
+          if (jsonData.length === 0) {
+            showToast('Filen er tom', 'warning');
+            return;
+          }
+          
+          document.getElementById('import-progress').style.display = 'block';
+          document.getElementById('import-progress-bar').style.width = '50%';
+          document.getElementById('import-status').textContent = 'Importerer data...';
+          
+          const importFunction = type === 'contacts' ? 'importContactsFromExcel' : 
+                                 type === 'members' ? 'importMembersFromExcel' :
+                                 type === 'production' ? 'importProductionFromExcel' :
+                                 'importTeamsFromExcel';
+          
+          callApi(importFunction, { excelData: jsonData }, function(result) {
+            document.getElementById('import-progress-bar').style.width = '100%';
+            
+            if (result && result.success) {
+              let message = `Import gennemført!<br>`;
+              message += `✓ Importeret: ${result.imported || 0}<br>`;
+              message += `⚠ Dubletter: ${result.duplicates || 0}<br>`;
+              if (result.errors > 0) {
+                message += `✗ Fejl: ${result.errors || 0}<br>`;
+              }
+              
+              document.getElementById('import-status').textContent = 'Import færdig!';
+              document.getElementById('import-results').innerHTML = `<div class="alert alert-success">${message}</div>`;
+              document.getElementById('import-results').style.display = 'block';
+              
+              setTimeout(function() {
+                loadMembers();
+                hideModal('import-excel-modal');
+                showToast('Import gennemført succesfuldt', 'success');
+              }, 2000);
+            } else {
+              document.getElementById('import-results').innerHTML = 
+                `<div class="alert alert-danger">Fejl: ${result.message || 'Ukendt fejl'}</div>`;
+              document.getElementById('import-results').style.display = 'block';
+            }
+          }, function(error) {
+            document.getElementById('import-results').innerHTML = 
+              `<div class="alert alert-danger">Fejl ved import: ${error}</div>`;
+            document.getElementById('import-results').style.display = 'block';
+          });
+        } catch (error) {
+          showToast('Fejl ved læsning af fil: ' + error.toString(), 'error');
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+    
+    function exportToExcel() {
+      if (members.length === 0) {
+        showToast('Ingen medlemmer at eksportere', 'warning');
+        return;
+      }
+
+      // Export in the same format as import expects
+      // Headers: ['Dato', 'Efternavn', 'Fornavn', 'Adresse', 'Postnr', 'By', 'Email', 'Mobil', 'Fødselsdato', 'Dåbsdato', 'FørevBible', 'Rengøring']
+      const headers = ['Dato', 'Efternavn', 'Fornavn', 'Adresse', 'Postnr', 'By', 'Email', 'Mobil', 'Fødselsdato', 'Dåbsdato', 'FørevBible', 'Rengøring'];
+      
+      // Helper function to format date for Excel (YYYY-MM-DD format)
+      const formatDateForExcel = (dateStr) => {
+        if (!dateStr) return '';
+        // If already in YYYY-MM-DD format, return as is
+        if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+          return dateStr.split('T')[0];
+        }
+        // Try to parse as Date
+        try {
+          const date = new Date(dateStr);
+          if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+        } catch (e) {
+          // If parsing fails, try dd.mm.yyyy format
+          const parts = String(dateStr).split('.');
+          if (parts.length === 3) {
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+        return dateStr || '';
+      };
+      
+      const rows = members.map(member => [
+        formatDateForExcel(member.dato) || new Date().toISOString().split('T')[0],
+        member.efternavn || '',
+        member.fornavn || '',
+        member.adresse || '',
+        member.postnr || '',
+        member.by || '',
+        member.email || '',
+        member.mobil || '',
+        formatDateForExcel(member.fodselsdato),
+        formatDateForExcel(member.dobsdato),
+        member.forevbible || 'JA',
+        member.cleaningPreference || 'NEJ'
+      ]);
+      
+      const wb = XLSX.utils.book_new();
+      const wsData = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!cols'] = headers.map(() => ({ wch: 15 }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Medlemmer');
+      
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const filename = `Medlemmer_${dateStr}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      showToast(`Excel fil "${filename}" er downloadet!`, 'success');
+    }
+
+    // Member editing
+    function editMember(memberId) {
+      const member = members.find(m => m.id === memberId);
+      if (!member) return;
+
+      currentEditingMember = member;
+
+      // Populate form
+      document.getElementById('edit-member-id').value = member.id;
+      document.getElementById('edit-fornavn').value = member.fornavn || '';
+      document.getElementById('edit-efternavn').value = member.efternavn || '';
+      document.getElementById('edit-email').value = member.email || '';
+      document.getElementById('edit-mobil').value = member.mobil || '';
+      document.getElementById('edit-adresse').value = member.adresse || '';
+      document.getElementById('edit-postnr').value = member.postnr || '';
+      document.getElementById('edit-by').value = member.by || '';
+      document.getElementById('edit-fodselsdato').value = member.fodselsdato || '';
+      document.getElementById('edit-dobsdato').value = member.dobsdato || '';
+
+      showModal('edit-member-modal');
+    }
+
+    // Add a new member using backend
+    function addMember(formData) {
+      callApi('addMember', formData, function(result) {
+        if (result.success) {
+          showToast('Medlem tilføjet succesfuldt!', 'success');
+          loadMembers();
+        } else {
+          showToast('Fejl: ' + (result.message || 'Kunne ikke tilføje medlem'), 'error');
+        }
+      }, function(error) {
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Update a member using backend
+    function saveMemberChanges() {
+      if (!currentEditingMember) return;
+      const formData = {
+        fornavn: document.getElementById('edit-fornavn').value,
+        efternavn: document.getElementById('edit-efternavn').value,
+        email: document.getElementById('edit-email').value,
+        mobil: document.getElementById('edit-mobil').value,
+        adresse_1: document.getElementById('edit-adresse').value,
+        postnr: document.getElementById('edit-postnr').value,
+        by: document.getElementById('edit-by').value,
+        fodselsdato: document.getElementById('edit-fodselsdato').value,
+        dobsdato: document.getElementById('edit-dobsdato').value,
+        forevbible: currentEditingMember.forevbible || '',
+      };
+      callApi('updateMember', { memberId: currentEditingMember.id, memberData: formData }, function(result) {
+        if (result.success) {
+          showToast('Medlem opdateret succesfuldt!', 'success');
+          loadMembers();
+          hideModal('edit-member-modal');
+        } else {
+          showToast('Fejl: ' + (result.message || 'Kunne ikke opdatere medlem'), 'error');
+        }
+      }, function(error) {
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Delete a member using backend (client wrapper)
+    function deleteMember(memberId, onDone) {
+      if (typeof memberId === 'undefined' || memberId === null) {
+        showToast('Ugyldigt medlems-ID', 'error');
+        if (onDone) onDone({ success: false, message: 'Ugyldigt ID' });
+        return;
+      }
+      callApi('deleteMember', { memberId: memberId }, function(result) {
+        if (result && result.success) {
+          showToast('Medlem slettet succesfuldt!', 'success');
+          loadMembers();
+        } else {
+          showToast('Kunne ikke slette medlem: ' + (result && result.message ? result.message : 'Ukendt fejl'), 'error');
+        }
+        if (onDone) onDone(result);
+      }, function(error) {
+        showToast('Fejl ved sletning: ' + error, 'error');
+        if (onDone) onDone({ success: false, message: String(error) });
+      });
+    }
+
+    // Ask before deleting the currently edited member
+    function confirmDeleteMember() {
+      if (!currentEditingMember || !currentEditingMember.id) {
+        showToast('Intet medlem valgt til sletning', 'warning');
+        return;
+      }
+      if (!confirm('Er du sikker på, at du vil slette dette medlem? Denne handling kan ikke fortrydes.')) {
+        return;
+      }
+      const memberId = currentEditingMember.id;
+      deleteMember(memberId, function(result) {
+        if (result && result.success) {
+          hideModal('edit-member-modal');
+          clearSelection();
+        }
+      });
+    }
+
+    // Ask before bulk deleting selected members
+    function confirmBulkDelete() {
+      const count = selectedMembers.size;
+      if (count === 0) {
+        showToast('Ingen medlemmer valgt til sletning', 'warning');
+        return;
+      }
+      if (!confirm('Slet ' + count + ' valgte medlem(mer)? Denne handling kan ikke fortrydes.')) {
+        return;
+      }
+      bulkDeleteMembers();
+    }
+
+    // Email system
+    function loadEmailTemplates() {
+      const container = document.getElementById('email-templates-list');
+      container.innerHTML = '';
+      
+      emailTemplates.forEach(template => {
+        const item = document.createElement('div');
+        item.className = 'email-template-item';
+        item.onclick = () => selectEmailTemplate(template);
+        
+        item.innerHTML = `
+          <div>
+            <strong>${template.name}</strong>
+            <div style="font-size: 12px; color: #666;">${template.subject}</div>
+          </div>
+          <button class="btn btn-sm btn-danger" onclick="deleteEmailTemplate(${template.id}); event.stopPropagation();">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        
+        container.appendChild(item);
+      });
+      
+      if (emailTemplates.length === 0) {
+        container.innerHTML = '<div class="text-center" style="padding: 20px; color: #666;">Ingen email skabeloner endnu</div>';
+      }
+    }
+
+    function selectEmailTemplate(template) {
+      // Clear previous selection
+      document.querySelectorAll('.email-template-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      
+      // Select current template
+      event.currentTarget.classList.add('selected');
+      
+      // Fill form with template data
+      document.getElementById('email-subject').value = template.subject;
+      document.getElementById('email-body').value = template.body;
+    }
+
+    function loadSelectedRecipients() {
+      const container = document.getElementById('selected-recipients');
+      if (!container) return;
+      
+      // Ensure we compare numbers with numbers
+      const selectedMembersList = members.filter(m => {
+        const memberId = parseInt(m.id);
+        return !isNaN(memberId) && selectedMembers.has(memberId);
+      });
+      
+      container.innerHTML = '';
+      
+      if (selectedMembersList.length === 0) {
+        container.innerHTML = '<div class="text-center" style="padding: 10px; color: #999;">Ingen medlemmer valgt</div>';
+      } else {
+        selectedMembersList.forEach(member => {
+          const item = document.createElement('div');
+          item.className = 'member-item';
+          
+          item.innerHTML = `
+            <input type="checkbox" checked onchange="toggleMemberSelection(${member.id}, this.checked)">
+            <div class="member-info">
+              <div class="member-name">${member.fornavn || ''} ${member.efternavn || ''}</div>
+              <div class="member-email">${member.email || 'Ingen email'}</div>
+            </div>
+          `;
+          
+          container.appendChild(item);
+        });
+      }
+      
+      const recipientCountEl = document.getElementById('recipient-count');
+      if (recipientCountEl) {
+        recipientCountEl.textContent = selectedMembersList.length;
+      }
+    }
+
+    function createNewEmailTemplate() {
+      showModal('create-template-modal');
+    }
+
+    function saveEmailTemplate() {
+      const name = document.getElementById('template-name').value;
+      const subject = document.getElementById('template-subject').value;
+      const body = document.getElementById('template-body').value;
+      
+      if (!name || !subject || !body) {
+        showToast('Udfyld venligst alle felter', 'warning');
+        return;
+      }
+      
+      const template = {
+        id: Date.now(),
+        name: name,
+        subject: subject,
+        body: body,
+        created: new Date()
+      };
+      
+      emailTemplates.push(template);
+      
+      // Clear form
+      document.getElementById('template-name').value = '';
+      document.getElementById('template-subject').value = '';
+      document.getElementById('template-body').value = '';
+      
+      hideModal('create-template-modal');
+      loadEmailTemplates();
+      showToast('Email skabelon oprettet!', 'success');
+    }
+
+    function deleteEmailTemplate(templateId) {
+      emailTemplates = emailTemplates.filter(t => t.id !== templateId);
+      loadEmailTemplates();
+      showToast('Email skabelon slettet', 'success');
+    }
+
+    function sendEmails() {
+      const subject = document.getElementById('email-subject').value;
+      const body = document.getElementById('email-body').value;
+      const schedule = document.getElementById('email-schedule').value;
+      const saveAsTemplate = document.getElementById('save-email-template').checked;
+      const sendBtn = document.querySelector('#send-email-modal .btn-success');
+      if (!subject || !body) {
+        showToast('Udfyld venligst email emne og indhold', 'warning');
+        return;
+      }
+      // Ensure we compare numbers with numbers and validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const validRecipients = members
+        .filter(m => {
+          const memberId = parseInt(m.id);
+          if (isNaN(memberId) || !selectedMembers.has(memberId)) return false;
+          const email = String(m.email || '').trim();
+          return email !== '' && emailRegex.test(email);
+        })
+        .map(member => {
+          const email = String(member.email || '').trim();
+          return {
+            name: `${member.fornavn || ''} ${member.efternavn || ''}`.trim(),
+            email: email,
+            firstName: member.fornavn || ''
+          };
+        });
+      
+      if (validRecipients.length === 0) {
+        showToast('Ingen modtagere med gyldige email adresser valgt', 'warning');
+        return;
+      }
+      
+      console.log('Valid recipients:', validRecipients.map(r => ({ name: r.name, email: r.email })));
+      
+      // Save as template if requested
+      if (saveAsTemplate) {
+        const templateName = prompt('Navn på email skabelon:', subject);
+        if (templateName) {
+          const template = {
+            id: Date.now(),
+            name: templateName,
+            subject: subject,
+            body: body,
+            created: new Date()
+          };
+          emailTemplates.push(template);
+          showToast('Email skabelon gemt!', 'success');
+        }
+      }
+      
+      // Prepare email data
+      const emailData = {
+        subject: subject.trim(),
+        body: body.trim(),
+        schedule: schedule,
+        sendDate: schedule === 'custom' ? document.getElementById('custom-send-date').value : null,
+        recipients: validRecipients
+      };
+      
+      console.log('Sending email with data:', {
+        subject: emailData.subject,
+        bodyLength: emailData.body.length,
+        recipientCount: emailData.recipients.length,
+        recipients: emailData.recipients.map(r => r.email)
+      });
+      
+      // Ensure all data is properly formatted before sending
+      const payloadToSend = {
+        emailData: {
+          subject: String(emailData.subject).trim(),
+          body: String(emailData.body).trim(),
+          schedule: emailData.schedule || 'now',
+          sendDate: emailData.sendDate || null,
+          recipients: emailData.recipients.map(r => ({
+            name: String(r.name || '').trim(),
+            email: String(r.email || '').trim(),
+            firstName: String(r.firstName || '').trim()
+          }))
+        }
+      };
+      
+      console.log('Payload to send:', JSON.stringify(payloadToSend));
+      
+      // Call backend to send emails
+      sendBtn.disabled = true;
+      callApi('sendBulkMemberEmails', payloadToSend, function(result) {
+        sendBtn.disabled = false;
+        console.log('Email send result:', result);
+        if (result && result.success) {
+          hideModal('send-email-modal');
+          clearSelection();
+          showToast(result.message || 'Email sendt!', 'success');
+        } else {
+          showToast(result && result.message ? result.message : 'Fejl ved afsendelse af email', 'error');
+        }
+      }, function(error) {
+        sendBtn.disabled = false;
+        console.error('Email send error:', error);
+        showToast('Fejl ved afsendelse: ' + (error || 'Ukendt fejl'), 'error');
+      });
+    }
+
+    // Bulk delete members using backend
+    function bulkDeleteMembers() {
+      if (selectedMembers.size === 0) {
+        showToast('Ingen medlemmer valgt til sletning', 'warning');
+        return;
+      }
+      // Ensure numeric IDs and sort descending to avoid row index shifts
+      let ids = Array.from(selectedMembers)
+        .map(function(v){ return Number(v); })
+        .filter(function(id){ return !isNaN(id); })
+        .sort(function(a,b){ return b - a; });
+      
+      if (ids.length === 0) {
+        showToast('Ingen gyldige medlems-ID\'er fundet', 'error');
+        return;
+      }
+      let deleteCount = 0;
+      let errorCount = 0;
+      const total = ids.length;
+      // Disable bulk delete button during operation
+      const bulkBtn = document.getElementById('bulk-delete-btn');
+      if (bulkBtn) bulkBtn.disabled = true;
+      function next() {
+        if (ids.length === 0) {
+          showToast(deleteCount + ' medlemmer slettet succesfuldt' + (errorCount? (' ('+errorCount+' fejl)') : '!'), errorCount > 0 ? 'warning' : 'success');
+          loadMembers();
+          clearSelection();
+          if (bulkBtn) bulkBtn.disabled = false;
+          return;
+        }
+        const id = ids.shift();
+        callApi('deleteMember', { memberId: id }, function(result) {
+          if (result && result.success) deleteCount++; else errorCount++;
+          next();
+        }, function() {
+          errorCount++;
+          next();
+        });
+      }
+      next();
+    }
+
+    // Utility functions
+    function refreshMembers() {
+      loadMembers();
+      showToast('Medlemsliste opdateret!', 'success');
+    }
+
+    function showToast(message, type = 'success') {
+      let toastContainer = document.getElementById('toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 1000;';
+        document.body.appendChild(toastContainer);
+      }
+      
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        padding: 12px 20px;
+        border-radius: 4px;
+        margin-top: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        min-width: 250px;
+        transition: all 0.3s ease;
+        color: white;
+        background-color: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#ffc107'};
+      `;
+      toast.textContent = message;
+      
+      toastContainer.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toastContainer.removeChild(toast);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Initialize sample email templates
+    function initializeEmailTemplates() {
+      emailTemplates = [
+        {
+          id: 1,
+          name: 'Velkomst Email',
+          subject: 'Velkommen til Horsens Pinsekirke, {{fornavn}}!',
+          body: 'Kære {{navn}},\n\nVelkommen til Horsens Pinsekirke! Vi glæder os til at lære dig bedre at kende.\n\nVi ser frem til at se dig til vores næste gudstjeneste.\n\nVenlige hilsner\nHorsens Pinsekirke'
+        },
+        {
+          id: 2,
+          name: 'Event Invitation',
+          subject: 'Invitation til særligt event - {{dato}}',
+          body: 'Kære {{navn}},\n\nDu er hermed inviteret til vores særlige event.\n\nVi håber du kan deltage og glæder os til at se dig!\n\nVenlige hilsner\nHorsens Pinsekirke'
+        },
+        {
+          id: 3,
+          name: 'Påmindelse',
+          subject: 'Påmindelse fra Horsens Pinsekirke',
+          body: 'Kære {{navn}},\n\nDette er en venlig påmindelse om vores kommende aktiviteter.\n\nHusk at kontakte os hvis du har spørgsmål.\n\nVenlige hilsner\nHorsens Pinsekirke'
+        }
+      ];
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize data
+      loadMembers();
+      initializeEmailTemplates();
+      
+      // Setup search functionality
+      document.getElementById('search-members').addEventListener('input', searchMembers);
+      
+      // Setup email schedule change handler
+      document.getElementById('email-schedule').addEventListener('change', function() {
+        const customDateGroup = document.getElementById('custom-send-date-group');
+        if (this.value === 'custom') {
+          customDateGroup.classList.remove('hidden');
+        } else {
+          customDateGroup.classList.add('hidden');
+        }
+      });
+      
+      // Setup modal to load recipients when opened
+      const originalShowModal = showModal;
+      window.showModal = function(modalId) {
+        if (modalId === 'send-email-modal') {
+          loadSelectedRecipients();
+          loadEmailTemplates();
+        }
+        originalShowModal(modalId);
+      };
+      
+      // Setup modal close on outside click
+      window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.style.display = 'none';
+        }
+      });
+    });
+
+    // Add this function at the end of the script section
+    function submitAddMember() {
+      const formData = {
+        fornavn: document.getElementById('add-fornavn').value.trim(),
+        efternavn: document.getElementById('add-efternavn').value.trim(),
+        email: document.getElementById('add-email').value.trim(),
+        mobil: document.getElementById('add-mobil').value.trim(),
+        adresse_1: document.getElementById('add-adresse').value.trim(),
+        postnr: document.getElementById('add-postnr').value.trim(),
+        by: document.getElementById('add-by').value.trim(),
+        fodselsdato: document.getElementById('add-fodselsdato').value,
+        dobsdato: document.getElementById('add-dobsdato').value,
+        forevbible: 'JA'
+      };
+      if (!formData.fornavn || !formData.efternavn) {
+        showToast('Fornavn og efternavn er påkrævet', 'error');
+        return;
+      }
+      addMember(formData);
+      hideModal('add-member-modal');
+      document.getElementById('add-member-form').reset();
+    }
+  </script>
+</body>
+</html>

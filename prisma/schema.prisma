@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  username       String    @unique
+  password       String
+  lastLogin      DateTime?
+  status         String    @default("Aktiv")
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  createdDate    DateTime  @default(now())
+  lastCheck      DateTime?
+
+  // Page permissions: Ingen / Læser / Redaktør
+  permKontakter  String @default("Ingen")
+  permMedlemmer  String @default("Ingen")
+  permTeams      String @default("Ingen")
+  permRengoring  String @default("Ingen")
+  permProduktion String @default("Ingen")
+  permGrupper    String @default("Ingen")
+  permEvents     String @default("Ingen")
+  permLogins     String @default("Ingen")
+
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  token        String   @unique
+  userId       Int
+  username     String
+  permissions  String   // JSON string
+  loginTime    DateTime @default(now())
+  lastActivity DateTime @default(now())
+  expiresAt    DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Contact {
+  id           Int      @id @default(autoincrement())
+  dato         DateTime @default(now())
+  efternavn    String   @default("")
+  fornavn      String   @default("")
+  adresse      String   @default("")
+  postnr       String   @default("")
+  by           String   @default("")
+  email        String   @default("")
+  mobil        String   @default("")
+  fodselsdato  String   @default("")
+  dabsdato     String   @default("")
+  nyhedsmail   Boolean  @default(false)
+  infoKristen  Boolean  @default(false)
+  infoKirke    Boolean  @default(false)
+  infoDabmedlem Boolean @default(false)
+  samtalePastor Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("contacts")
+}
+
+model Member {
+  id           Int      @id @default(autoincrement())
+  dato         DateTime @default(now())
+  efternavn    String   @default("")
+  fornavn      String   @default("")
+  adresse      String   @default("")
+  postnr       String   @default("")
+  by           String   @default("")
+  email        String   @default("")
+  mobil        String   @default("")
+  fodselsdato  String   @default("")
+  dobsdato     String   @default("")
+  forevbible   String   @default("JA")
+  rengoring    String   @default("NEJ")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teamMembers TeamMember[]
+
+  @@map("members")
+}
+
+model Team {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @default("")
+  leader      String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members TeamMember[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       Int    @id @default(autoincrement())
+  teamId   Int
+  memberId Int
+  role     String @default("")
+
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, memberId])
+  @@map("team_members")
+}
+
+model CleaningSchedule {
+  id        Int      @id @default(autoincrement())
+  week      String   @unique
+  cafe1     String   @default("")
+  cafe2     String   @default("")
+  salen     String   @default("")
+  toiletter String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cleaning_schedules")
+}
+
+model ProductionPlan {
+  id         Int      @id @default(autoincrement())
+  dato       String   @unique
+  mc         String   @default("")
+  media      String   @default("")
+  lyd        String   @default("")
+  kamera     String   @default("")
+  forsanger  String   @default("")
+  piano      String   @default("")
+  guitar     String   @default("")
+  trommer    String   @default("")
+  bas        String   @default("")
+  forkynder  String   @default("")
+  oversetterr String  @default("")
+  forsamling String   @default("")
+  kidz       String   @default("")
+  kidz2      String   @default("")
+  cafe1      String   @default("")
+  cafe2      String   @default("")
+  host1      String   @default("")
+  host2      String   @default("")
+  notes      String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("production_plans")
+}
+
+model Group {
+  id        Int      @id @default(autoincrement())
+  name      String
+  leader    String   @default("")
+  day       String   @default("")
+  time      String   @default("")
+  location  String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  groupMembers GroupMember[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id       Int    @id @default(autoincrement())
+  groupId  Int
+  memberId Int
+  name     String @default("")
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("group_members")
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  titel       String
+  beskrivelse String   @default("")
+  dato        String   @default("")
+  tid         String   @default("")
+  lokation    String   @default("")
+  team        String   @default("")
+  status      String   @default("Aktiv")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("events")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  username  String
+  action    String
+  details   String   @default("")
+  status    String   @default("INFO")
+
+  @@map("audit_logs")
+}

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brugerstyring - Horsens Pinsekirke Admin</title>
+  <?!= include('CommonJS'); ?>
+  
+  <!-- Fallback definitions if CommonJS hasn't loaded yet -->
+  <script>
+    if (typeof sessionManager === 'undefined') {
+      window.sessionManager = {
+        storageKey: 'sessionToken',
+        getToken() {
+          try {
+            if (typeof window === 'undefined') return '';
+            if (window.sessionToken) return window.sessionToken;
+            const token = window.localStorage.getItem(this.storageKey);
+            if (token) {
+              window.sessionToken = token;
+              return token;
+            }
+            return '';
+          } catch (error) {
+            return window.sessionToken || '';
+          }
+        },
+        setToken(value) {
+          try {
+            if (typeof window !== 'undefined') {
+              if (value) {
+                window.localStorage.setItem(this.storageKey, value);
+              } else {
+                window.localStorage.removeItem(this.storageKey);
+              }
+            }
+          } catch (error) {
+            console.error('Error persisting session token:', error);
+          }
+          window.sessionToken = value || '';
+        },
+        clearToken() {
+          this.setToken('');
+        }
+      };
+    }
+    if (typeof callApi !== 'function') {
+      window.callApi = function(functionName, params = {}, successHandler = null, failureHandler = null) {
+        const token = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : '';
+        const payload = { ...params };
+        if (token) {
+          payload.sessionToken = token;
+        }
+        let runner = google.script.run;
+        if (failureHandler) {
+          runner = runner.withFailureHandler(failureHandler);
+        }
+        if (successHandler) {
+          runner = runner.withSuccessHandler(successHandler);
+        }
+        runner[functionName](payload);
+      };
+    }
+    if (typeof navigateToPage !== 'function') {
+      window.navigateToPage = function(page) {
+        function ensureExecUrl(url) {
+          if (!url) return null;
+          let cleanUrl = url.split('?')[0].split('#')[0];
+          cleanUrl = cleanUrl.replace(/\/$/, '');
+          if (!cleanUrl.endsWith('/exec')) {
+            if (cleanUrl.indexOf('script.google.com') !== -1) {
+              cleanUrl = cleanUrl + '/exec';
+            } else {
+              cleanUrl = cleanUrl.replace(/\/(home|dev)$/, '/exec');
+              if (!cleanUrl.endsWith('/exec')) {
+                cleanUrl = cleanUrl + '/exec';
+              }
+            }
+          }
+          return cleanUrl;
+        }
+        
+        try {
+          const baseUrl = <?!= JSON.stringify(scriptUrl || '') ?>;
+          if (baseUrl) {
+            const finalUrl = ensureExecUrl(baseUrl);
+            if (finalUrl) {
+              window.top.location.href = `${finalUrl}?page=${page}`;
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('Error getting baseUrl:', e);
+        }
+        
+        google.script.run.withSuccessHandler(function(url) {
+          if (url) {
+            const finalUrl = ensureExecUrl(url);
+            if (finalUrl) {
+              window.top.location.href = `${finalUrl}?page=${page}`;
+            }
+          }
+        }).getScriptUrl();
+      };
+    }
+  </script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #3b71ca;
+      --success: #14a44d;
+      --danger: #dc4c64;
+      --warning: #e4a11b;
+      --light: #fbfbfb;
+      --dark: #332d2d;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 30px;
+      width: calc(100% - var(--sidebar-width));
+    }
+
+    .header {
+      margin-bottom: 30px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+
+    .user-management {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stats-card {
+      background: linear-gradient(135deg, var(--primary) 0%, #2d5aa0 100%);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      color: white;
+    }
+    
+    .stats-number {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .stats-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .create-user-btn {
+      background: var(--success);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+
+    .create-user-btn:hover {
+      background: #0d8a3a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(20, 164, 77, 0.3);
+    }
+    
+    .search-box {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e8ed;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .user-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+    }
+    
+    .user-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid #e1e8ed;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .user-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f1f3f5;
+    }
+    
+    .user-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    .user-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-aktiv {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-inaktiv {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .permissions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 15px 0;
+    }
+    
+    .permission-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    
+    .permission-label {
+      font-weight: 500;
+      color: #495057;
+    }
+    
+    .permission-value {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .perm-ingen {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .perm-læser {
+      background: #ffc107;
+      color: #212529;
+    }
+    
+    .perm-redaktør {
+      background: #28a745;
+      color: white;
+    }
+    
+    .user-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-edit {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn-edit:hover {
+      background: #138496;
+    }
+    
+    .btn-activate {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-activate:hover {
+      background: #218838;
+    }
+    
+    .btn-deactivate {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-deactivate:hover {
+      background: #c82333;
+    }
+    
+    .user-info {
+      font-size: 12px;
+      color: #6c757d;
+      margin: 10px 0;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: white;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    
+    .permission-editor {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .permission-group {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 15px;
+      background: #f8f9fa;
+    }
+    
+    .permission-group h4 {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 14px;
+      text-transform: capitalize;
+    }
+    
+    .permission-radio {
+      margin: 8px 0;
+    }
+    
+    .permission-radio label {
+      font-size: 13px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .access-denied {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .access-denied i {
+      font-size: 64px;
+      color: var(--danger);
+      margin-bottom: 20px;
+    }
+
+    .access-denied h2 {
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+
+    .access-denied p {
+      color: #6c757d;
+      margin-bottom: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .user-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .permission-editor {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <?!= include('Sidebar'); ?>
+  
+  <div class="main-content">
+    <div class="header">
+      <h1 class="page-title">
+        <i class="fas fa-users-cog"></i> Brugerstyring
+      </h1>
+    </div>
+
+    <div id="accessDenied" class="access-denied" style="display: none;">
+      <i class="fas fa-lock"></i>
+      <h2>Adgang Nægtet</h2>
+      <p>Du skal være administrator for at få adgang til brugerstyring.</p>
+      <button class="create-user-btn" onclick="navigateToPage('dashboard')">Tilbage til Dashboard</button>
+    </div>
+
+    <div id="userManagement" class="user-management" style="display: none;">
+      <!-- Statistik kort -->
+      <div class="stats-cards" id="statsCards">
+        <div class="stats-card">
+          <div class="stats-number" id="totalUsers">-</div>
+          <div class="stats-label">Totalt Brugere</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-number" id="activeUsers">-</div>
+          <div class="stats-label">Aktive Brugere</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-number" id="inactiveUsers">-</div>
+          <div class="stats-label">Inaktive Brugere</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-number" id="adminUsers">-</div>
+          <div class="stats-label">Med Admin Adgang</div>
+        </div>
+      </div>
+
+      <button class="create-user-btn" id="createUserBtn" onclick="showCreateUserModal()">
+        <i class="fas fa-plus"></i> Opret Ny Bruger
+      </button>
+
+      <!-- Søgning -->
+      <input type="text" class="search-box" id="userSearch" placeholder="Søg efter brugernavn..." onkeyup="filterUsers()">
+
+      <!-- Loading indikator -->
+      <div class="loading" id="loading">
+        <i class="fas fa-spinner fa-spin"></i> Indlæser brugere...
+      </div>
+
+      <!-- Brugerkort container -->
+      <div class="user-grid" id="userGrid" style="display: none;">
+        <!-- Brugerkort vil blive indsat her via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal til redigering af tilladelser -->
+  <div id="editPermissionsModal" class="modal">
+    <div class="modal-content">
+      <h3>Rediger Tilladelser</h3>
+      <p>Bruger: <strong id="editUsername"></strong></p>
+      
+      <div class="permission-editor" id="permissionEditor">
+        <!-- Tilladelsesgrupper vil blive indsat her -->
+      </div>
+      
+      <div style="text-align: right; margin-top: 20px;">
+        <button onclick="hideModal('editPermissionsModal')" class="btn-small" style="background: #6c757d; color: white;">Annuller</button>
+        <button onclick="savePermissions()" class="btn-small btn-edit" style="margin-left: 10px;">Gem Ændringer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal til oprettelse af ny bruger -->
+  <div id="createUserModal" class="modal">
+    <div class="modal-content">
+      <h3>Opret Ny Bruger</h3>
+      
+      <div style="margin: 20px 0;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Brugernavn:</label>
+        <input type="text" id="newUsername" style="width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #e1e8ed; border-radius: 6px;">
+        
+        <label style="display: block; margin-bottom: 5px; font-weight: 500; margin-top: 15px;">Password:</label>
+        <input type="password" id="newPassword" style="width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #e1e8ed; border-radius: 6px;">
+      </div>
+      
+      <h4 style="margin-top: 20px;">Tilladelser:</h4>
+      <div class="permission-editor" id="newUserPermissionEditor">
+        <!-- Tilladelsesgrupper for ny bruger -->
+      </div>
+      
+      <div style="text-align: right; margin-top: 20px;">
+        <button onclick="hideModal('createUserModal')" class="btn-small" style="background: #6c757d; color: white;">Annuller</button>
+        <button onclick="createUser()" class="btn-small btn-edit" style="margin-left: 10px;">Opret Bruger</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allUsers = [];
+    let currentEditingUser = null;
+    let hasAdminAccess = false;
+    const pages = ['kontakter', 'medlemmer', 'teams', 'rengoring', 'produktion', 'grupper', 'events', 'logins'];
+    const permissionLevels = ['Ingen', 'Læser', 'Redaktør'];
+    
+    // Check access on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAccess();
+    });
+
+    function checkAccess() {
+      // Check access by trying to load users - if it fails, show access denied
+      loadUsers();
+    }
+
+    function loadUsers() {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('userGrid').style.display = 'none';
+      
+      callApi('getAllUsersWithPermissionsApi', {}, function(response) {
+          document.getElementById('loading').style.display = 'none';
+          
+          if (response.success) {
+            hasAdminAccess = true;
+            document.getElementById('userManagement').style.display = 'block';
+            document.getElementById('accessDenied').style.display = 'none';
+            document.getElementById('userGrid').style.display = 'grid';
+            allUsers = response.users;
+            displayUsers(allUsers);
+            updateStats();
+          } else {
+            // No access or error
+            hasAdminAccess = false;
+            document.getElementById('userManagement').style.display = 'none';
+            document.getElementById('accessDenied').style.display = 'block';
+            showAlert(response.message || 'Ingen adgang', 'error');
+          }
+      }, function(error) {
+          document.getElementById('loading').style.display = 'none';
+          hasAdminAccess = false;
+          document.getElementById('userManagement').style.display = 'none';
+          document.getElementById('accessDenied').style.display = 'block';
+          console.error('Error loading users:', error);
+      });
+    }
+
+    function displayUsers(users) {
+      const container = document.getElementById('userGrid');
+      container.innerHTML = '';
+      
+      users.forEach(user => {
+        const userCard = createUserCard(user);
+        container.appendChild(userCard);
+      });
+    }
+
+    function createUserCard(user) {
+      const div = document.createElement('div');
+      div.className = 'user-card';
+      
+      const permissionsHTML = pages.map(page => `
+        <div class="permission-item">
+          <span class="permission-label">${page.charAt(0).toUpperCase() + page.slice(1)}</span>
+          <span class="permission-value perm-${(user.permissions[page] || 'Ingen').toLowerCase().replace(/æ/g, 'a').replace(/ø/g, 'o').replace(/å/g, 'a')}">${user.permissions[page] || 'Ingen'}</span>
+        </div>
+      `).join('');
+      
+      const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('da-DK') : 'Aldrig';
+      const failedAttempts = user.failedAttempts || 0;
+      
+      div.innerHTML = `
+        <div class="user-header">
+          <div class="user-name">${user.username}</div>
+          <span class="user-status status-${user.status.toLowerCase()}">${user.status}</span>
+        </div>
+        
+        <div class="user-info">
+          <div><strong>Sidste login:</strong> ${lastLogin}</div>
+          <div><strong>Fejlede forsøg:</strong> ${failedAttempts}</div>
+          ${user.lockedUntil ? '<div style="color: #dc3545;"><strong>Låst indtil:</strong> ' + new Date(user.lockedUntil).toLocaleString('da-DK') + '</div>' : ''}
+        </div>
+        
+        <div class="permissions-grid">
+          ${permissionsHTML}
+        </div>
+        
+        <div class="user-actions">
+          <button class="btn-small btn-edit" onclick="editUserPermissions('${user.username}')">
+            <i class="fas fa-edit"></i> Rediger
+          </button>
+          ${user.status === 'Aktiv' ? 
+            '<button class="btn-small btn-deactivate" onclick="toggleUserStatus(\'' + user.username + '\', \'Inaktiv\')"><i class="fas fa-ban"></i> Deaktiver</button>' :
+            '<button class="btn-small btn-activate" onclick="toggleUserStatus(\'' + user.username + '\', \'Aktiv\')"><i class="fas fa-check"></i> Aktiver</button>'
+          }
+        </div>
+      `;
+      
+      return div;
+    }
+
+    function editUserPermissions(username) {
+      currentEditingUser = username;
+      const user = allUsers.find(u => u.username === username);
+      
+      document.getElementById('editUsername').textContent = username;
+      
+      const editor = document.getElementById('permissionEditor');
+      editor.innerHTML = '';
+      
+      pages.forEach(page => {
+        const group = document.createElement('div');
+        group.className = 'permission-group';
+        const currentPerm = user.permissions[page] || 'Ingen';
+        group.innerHTML = `
+          <h4>${page.charAt(0).toUpperCase() + page.slice(1)}</h4>
+          ${permissionLevels.map(level => `
+            <div class="permission-radio">
+              <input type="radio" 
+                     name="perm_${page}" 
+                     value="${level}" 
+                     id="${page}_${level}"
+                     ${currentPerm === level ? 'checked' : ''}>
+              <label for="${page}_${level}">${level}</label>
+            </div>
+          `).join('')}
+        `;
+        editor.appendChild(group);
+      });
+      
+      showModal('editPermissionsModal');
+    }
+
+    function savePermissions() {
+      const permissions = {};
+      
+      pages.forEach(page => {
+        const selected = document.querySelector('input[name="perm_' + page + '"]:checked');
+        permissions[page] = selected ? selected.value : 'Ingen';
+      });
+      
+      callApi('bulkUpdatePermissionsApi', { username: currentEditingUser, permissions: permissions }, function(response) {
+        if (response.success) {
+          showAlert(response.message, 'success');
+          hideModal('editPermissionsModal');
+          loadUsers();
+        } else {
+          showAlert(response.message, 'error');
+        }
+      }, function(error) {
+        showAlert('Fejl: ' + error, 'error');
+      });
+    }
+
+    function toggleUserStatus(username, newStatus) {
+      callApi('updateUserStatusApi', { username: username, newStatus: newStatus }, function(response) {
+        if (response.success) {
+          showAlert(response.message, 'success');
+          loadUsers();
+        } else {
+          showAlert(response.message, 'error');
+        }
+      }, function(error) {
+        showAlert('Fejl: ' + error, 'error');
+      });
+    }
+
+    function showCreateUserModal() {
+      const editor = document.getElementById('newUserPermissionEditor');
+      editor.innerHTML = '';
+      
+      pages.forEach(page => {
+        const group = document.createElement('div');
+        group.className = 'permission-group';
+        group.innerHTML = `
+          <h4>${page.charAt(0).toUpperCase() + page.slice(1)}</h4>
+          ${permissionLevels.map(level => `
+            <div class="permission-radio">
+              <input type="radio" 
+                     name="new_perm_${page}" 
+                     value="${level}" 
+                     id="new_${page}_${level}"
+                     ${level === 'Ingen' ? 'checked' : ''}>
+              <label for="new_${page}_${level}">${level}</label>
+            </div>
+          `).join('')}
+        `;
+        editor.appendChild(group);
+      });
+      
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newPassword').value = '';
+      showModal('createUserModal');
+    }
+
+    function createUser() {
+      const username = document.getElementById('newUsername').value.trim();
+      const password = document.getElementById('newPassword').value.trim();
+      
+      if (!username || !password) {
+        showAlert('Udfyld venligst brugernavn og password', 'error');
+        return;
+      }
+      
+      const permissions = {};
+      pages.forEach(page => {
+        const selected = document.querySelector('input[name="new_perm_' + page + '"]:checked');
+        permissions[page] = selected ? selected.value : 'Ingen';
+      });
+      
+      const userData = {
+        username: username,
+        password: password,
+        permissions: permissions
+      };
+      
+      callApi('createNewUserApi', { userData: userData }, function(response) {
+        if (response.success) {
+          showAlert(response.message, 'success');
+          hideModal('createUserModal');
+          loadUsers();
+        } else {
+          showAlert(response.message, 'error');
+        }
+      }, function(error) {
+        showAlert('Fejl: ' + error, 'error');
+      });
+    }
+
+    function filterUsers() {
+      const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+      const filteredUsers = allUsers.filter(user => 
+        user.username.toLowerCase().includes(searchTerm)
+      );
+      displayUsers(filteredUsers);
+    }
+
+    function updateStats() {
+      const total = allUsers.length;
+      const active = allUsers.filter(u => u.status === 'Aktiv').length;
+      const inactive = total - active;
+      const admins = allUsers.filter(u => (u.permissions.logins || 'Ingen') === 'Redaktør').length;
+      
+      document.getElementById('totalUsers').textContent = total;
+      document.getElementById('activeUsers').textContent = active;
+      document.getElementById('inactiveUsers').textContent = inactive;
+      document.getElementById('adminUsers').textContent = admins;
+    }
+
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    function hideModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    function showAlert(message, type) {
+      if (typeof showToast === 'function') {
+        showToast(message, type);
+      } else {
+        alert(message);
+      }
+    }
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

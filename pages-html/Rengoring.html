@@ -1,0 +1,2948 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rengøring - Horsens Pinsekirke Admin</title>
+  <?!= include('CommonJS'); ?>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #3b71ca;
+      --primary-light: #edf4ff;
+      --secondary: #6c757d;
+      --success: #14a44d;
+      --danger: #dc4c64;
+      --warning: #e4a11b;
+      --light: #fbfbfb;
+      --dark: #332d2d;
+      --sidebar-width: 250px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-logo {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .sidebar-title h3 {
+      font-size: 18px;
+      text-align: center;
+      margin: 0;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      text-align: center;
+      opacity: 0.7;
+      margin-top: 5px;
+    }
+
+    .sidebar-menu {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 0;
+    }
+
+    .sidebar-item {
+      width: 100%;
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: white;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-item.active {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .sidebar-item i {
+      width: 20px;
+    }
+
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 30px;
+    }
+
+    .page-header {
+      margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+      font-size: 32px;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+
+    .page-header p {
+      color: var(--secondary);
+      font-size: 16px;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2d5aa0;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #0f8a3d;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #c88a15;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #b83d55;
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-info {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn-info:hover {
+      background: #138496;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 25px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .card-title {
+      font-size: 22px;
+      color: var(--dark);
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: var(--dark);
+      position: sticky;
+      top: 0;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .edit-cell {
+      position: relative;
+    }
+
+    .edit-cell input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      overflow: auto;
+    }
+
+    .modal-content {
+      background: white;
+      margin: 50px auto;
+      padding: 0;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 20px 25px;
+      border-bottom: 2px solid #f0f0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      color: var(--dark);
+      font-weight: 600;
+    }
+
+    .close-modal {
+      font-size: 28px;
+      color: var(--secondary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-modal:hover {
+      color: var(--danger);
+    }
+
+    .modal-body {
+      padding: 25px;
+    }
+
+    .modal-footer {
+      padding: 20px 25px;
+      border-top: 2px solid #f0f0f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .checkbox-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .area-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .area-item span {
+      font-weight: 500;
+    }
+
+    .available-members {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .available-member {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .available-member:hover {
+      background: #f0f0f0;
+    }
+
+    .available-member.selected {
+      background: var(--primary-light);
+      border: 2px solid var(--primary);
+    }
+
+    .available-member-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .available-member-name {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .available-member-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 40px 10px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .search-btn {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--secondary);
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 3000;
+    }
+
+    .toast {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .toast-error {
+      background: var(--danger);
+      color: white;
+    }
+
+    .toast-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--secondary);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--secondary);
+    }
+
+    .loading i {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-edit {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <?!= include('Sidebar'); ?>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="page-header">
+      <h1><i class="fas fa-broom"></i> Rengøringsliste</h1>
+      <p>Administrer rengøringsområder, generer lister og send påmindelser</p>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-info" id="manage-areas-btn">
+        <i class="fas fa-list"></i> Administrer Områder
+      </button>
+      <button class="btn btn-primary" id="generate-list-btn">
+        <i class="fas fa-random"></i> Generer Random Liste
+      </button>
+      <button class="btn btn-success" id="edit-list-btn">
+        <i class="fas fa-edit"></i> Rediger Liste
+      </button>
+      <button class="btn btn-info" onclick="downloadRengoringTemplate()">
+        <i class="fas fa-download"></i> Download Skabelon
+      </button>
+      <button class="btn btn-warning" id="send-reminders-btn">
+        <i class="fas fa-envelope"></i> Send Påmindelser
+      </button>
+      <button class="btn btn-danger" id="clear-list-btn">
+        <i class="fas fa-trash-alt"></i> Slet Alt / Start Forfra
+      </button>
+      <button class="btn btn-info" id="manage-schedules-btn">
+        <i class="fas fa-calendar-alt"></i> Administrer Planlagte Opgaver
+      </button>
+    </div>
+
+    <!-- Cleaning Schedule Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Rengøringsplan</h2>
+      </div>
+      <div class="table-container">
+        <div id="cleaning-table-container">
+          <div class="loading">
+            <i class="fas fa-spinner"></i> Indlæser rengøringsplan...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Areas Modal -->
+  <div id="manage-areas-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Administrer Rengøringsområder</h3>
+        <button class="close-modal" onclick="hideModal('manage-areas-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Tilføj nyt område</label>
+          <div class="form-row">
+            <input type="text" id="new-area-input" class="form-control" placeholder="F.eks. Køkken, Kontor, etc.">
+            <button class="btn btn-primary" id="add-area-btn">
+              <i class="fas fa-plus"></i> Tilføj
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Eksisterende områder</label>
+          <div id="areas-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('manage-areas-modal')">Luk</button>
+        <button class="btn btn-success" id="save-areas-btn">Gem Ændringer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Random List Modal -->
+  <div id="generate-list-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Generer Random Rengøringsliste</h3>
+        <button class="close-modal" onclick="hideModal('generate-list-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Vælg personer til generering</label>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="checkbox" id="include-members" checked> Medlemmer
+            </label>
+            <label style="display: block;">
+              <input type="checkbox" id="include-contacts" checked> Kontakter
+            </label>
+          </div>
+          <div class="search-box">
+            <input type="text" id="search-people" class="search-input" placeholder="Søg efter personer...">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+          </div>
+          <div id="people-list" class="available-members"></div>
+          <small style="color: #6c757d; margin-top: 10px; display: block;">Vælg de personer der skal være med i genereringen</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vælg områder</label>
+          <div id="areas-checkboxes" class="checkbox-list"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Uger</label>
+          <div>
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="radio" name="week-option" value="manual" checked> Indtast uger manuelt
+            </label>
+            <label style="display: block;">
+              <input type="radio" name="week-option" value="auto"> Fra nuværende uge og fremad
+            </label>
+          </div>
+          <div id="manual-weeks" style="margin-top: 10px;">
+            <input type="text" id="weeks-input" class="form-control" placeholder="F.eks. 1,2,3 eller 1-52">
+          </div>
+          <div id="auto-weeks" style="display: none; margin-top: 10px;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Antal uger fremad</label>
+                <input type="number" id="weeks-count" class="form-control" min="1" max="53" value="10">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Genereringsmuligheder</label>
+          <div>
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="radio" name="generate-option" value="now" checked> Generer nu
+            </label>
+            <label style="display: block;">
+              <input type="radio" name="generate-option" value="schedule"> Planlæg generering
+            </label>
+          </div>
+        </div>
+        <div id="schedule-options" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+          <div class="form-group">
+            <label class="form-label">Genereringsdato</label>
+            <input type="date" id="schedule-date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Genereringstid</label>
+            <input type="time" id="schedule-time" class="form-control" value="08:00">
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="schedule-repeat"> Gentag generering
+            </label>
+          </div>
+          <div id="repeat-options" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Gentag hver</label>
+                <select id="repeat-interval" class="form-control">
+                  <option value="week">Uge</option>
+                  <option value="month">Måned</option>
+                  <option value="quarter">Kvartal (3 måneder)</option>
+                  <option value="year">År</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Antal gange</label>
+                <input type="number" id="repeat-count" class="form-control" min="1" placeholder="Tom = ubegrænset">
+                <small style="color: #6c757d;">Tom = ubegrænset</small>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+            <label>
+              <input type="checkbox" id="auto-send-notification"> Send automatisk notifikation efter generering
+            </label>
+            <small style="color: #6c757d; display: block; margin-top: 5px;">Når listen er genereret, sendes automatisk en notifikation til de valgte modtagere</small>
+          </div>
+          <div id="notification-settings" style="display: none; margin-top: 15px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+            <div class="form-group">
+              <label class="form-label">Vælg modtagere til notifikation</label>
+              <div style="margin-bottom: 10px;">
+                <label style="display: block; margin-bottom: 10px;">
+                  <input type="checkbox" id="notif-include-cleaning-people" checked> Personer fra rengøringslisten
+                </label>
+                <label style="display: block;">
+                  <input type="checkbox" id="notif-include-others"> Andre personer
+                </label>
+              </div>
+              <div id="notif-other-people-list" class="available-members" style="max-height: 200px; display: none;"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email indhold</label>
+              <div>
+                <label style="display: block; margin-bottom: 10px;">
+                  <input type="checkbox" id="notif-include-personal" checked> Inkluder personens egne opgaver
+                </label>
+                <label style="display: block;">
+                  <input type="checkbox" id="notif-include-full-list" checked> Inkluder hele rengøringslisten
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('generate-list-modal')">Annuller</button>
+        <button class="btn btn-success" id="confirm-generate-btn">Generer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit List Modal -->
+  <div id="edit-list-modal" class="modal">
+    <div class="modal-content" style="max-width: 1200px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Rediger Rengøringsliste</h3>
+        <button class="close-modal" onclick="hideModal('edit-list-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <button class="btn btn-primary" id="add-week-btn">
+            <i class="fas fa-plus"></i> Tilføj Ny Uge
+          </button>
+        </div>
+        <div class="table-container">
+          <div id="edit-table-container"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('edit-list-modal')">Annuller</button>
+        <button class="btn btn-success" id="save-edit-btn">Gem Ændringer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Reminders Modal -->
+  <div id="send-reminders-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Send Rengøringspåmindelser</h3>
+        <button class="close-modal" onclick="hideModal('send-reminders-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Vælg uge</label>
+          <select id="reminder-week" class="form-control">
+            <option value="">-- Vælg uge --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vælg modtagere</label>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="checkbox" id="include-cleaning-people" checked> Personer fra rengøringslisten
+            </label>
+            <label style="display: block;">
+              <input type="checkbox" id="include-others"> Andre personer der skal informeres
+            </label>
+          </div>
+          <div id="recipients-list" class="checkbox-list"></div>
+        </div>
+        <div class="form-group" id="other-recipients-group" style="display: none;">
+          <label class="form-label">Tilføj andre modtagere</label>
+          <div class="search-box">
+            <input type="text" id="search-other-people" class="search-input" placeholder="Søg efter personer...">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+          </div>
+          <div id="other-people-list" class="available-members"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email indhold</label>
+          <div>
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="checkbox" id="include-personal" checked> Inkluder personens egne opgaver
+            </label>
+            <label style="display: block;">
+              <input type="checkbox" id="include-full-list" checked> Inkluder hele rengøringslisten
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Send muligheder</label>
+          <div>
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="radio" name="send-option" value="now" checked> Send nu
+            </label>
+            <label style="display: block;">
+              <input type="radio" name="send-option" value="schedule"> Planlæg sendelse
+            </label>
+          </div>
+        </div>
+        <div id="send-schedule-options" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+          <div class="form-group">
+            <label class="form-label">Send dato</label>
+            <input type="date" id="send-schedule-date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Send tid</label>
+            <input type="time" id="send-schedule-time" class="form-control" value="08:00">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('send-reminders-modal')">Annuller</button>
+        <button class="btn btn-success" id="confirm-send-reminders-btn">Send Påmindelser</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Generation Schedule Modal -->
+  <div id="edit-generation-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Rediger Planlagt Generering</h3>
+        <button class="close-modal" onclick="hideModal('edit-generation-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-schedule-id">
+        <div class="form-group">
+          <label class="form-label">Genereringsdato</label>
+          <input type="date" id="edit-schedule-date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Genereringstid</label>
+          <input type="time" id="edit-schedule-time" class="form-control" value="08:00">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="edit-schedule-repeat"> Gentag generering
+          </label>
+        </div>
+        <div id="edit-repeat-options" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Gentag hver</label>
+              <select id="edit-repeat-interval" class="form-control">
+                <option value="week">Uge</option>
+                <option value="month">Måned</option>
+                <option value="quarter">Kvartal (3 måneder)</option>
+                <option value="year">År</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Antal gange</label>
+              <input type="number" id="edit-repeat-count" class="form-control" min="1" placeholder="Tom = ubegrænset">
+              <small style="color: #6c757d;">Tom = ubegrænset</small>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+          <label>
+            <input type="checkbox" id="edit-auto-send-notification"> Send automatisk notifikation efter generering
+          </label>
+        </div>
+        <div id="edit-notification-settings" style="display: none; margin-top: 15px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+          <div class="form-group">
+            <label class="form-label">Vælg modtagere til notifikation</label>
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" id="edit-notif-include-cleaning-people" checked> Personer fra rengøringslisten
+              </label>
+              <label style="display: block;">
+                <input type="checkbox" id="edit-notif-include-others"> Andre personer
+              </label>
+            </div>
+            <div id="edit-notif-other-people-list" class="available-members" style="max-height: 200px; display: none;"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email indhold</label>
+            <div>
+              <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" id="edit-notif-include-personal" checked> Inkluder personens egne opgaver
+              </label>
+              <label style="display: block;">
+                <input type="checkbox" id="edit-notif-include-full-list" checked> Inkluder hele rengøringslisten
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+          <label class="form-label">Vælg personer til generering</label>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="checkbox" id="edit-include-members" checked> Medlemmer
+            </label>
+            <label style="display: block;">
+              <input type="checkbox" id="edit-include-contacts" checked> Kontakter
+            </label>
+          </div>
+          <div class="search-box">
+            <input type="text" id="edit-search-people" class="search-input" placeholder="Søg efter personer...">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+          </div>
+          <div id="edit-people-list" class="available-members" style="max-height: 300px; overflow-y: auto;"></div>
+          <small style="color: #6c757d; margin-top: 10px; display: block;">Vælg de personer der skal være med i genereringen</small>
+        </div>
+        <div class="form-group" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+          <small style="color: #6c757d;">
+            <strong>Bemærk:</strong> Områder og uger kan ikke redigeres. Slet og opret en ny generering for at ændre disse.
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('edit-generation-modal')">Annuller</button>
+        <button class="btn btn-success" id="save-edit-generation-btn">Gem Ændringer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Schedules Modal -->
+  <div id="manage-schedules-modal" class="modal">
+    <div class="modal-content" style="max-width: 1000px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Administrer Planlagte Opgaver</h3>
+        <button class="close-modal" onclick="hideModal('manage-schedules-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Planlagte Genereringer</label>
+          <div id="generation-schedules-list"></div>
+        </div>
+        <div class="form-group" style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #ddd;">
+          <label class="form-label">Planlagte Notifikationer</label>
+          <div id="notification-schedules-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('manage-schedules-modal')">Luk</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global state
+    let cleaningAreas = [];
+    let cleaningSchedule = [];
+    let allPeople = [];
+    let selectedPeople = [];
+    let otherSelectedPeople = [];
+    let isEditing = false;
+    let editedSchedule = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      setupEventHandlers();
+      loadCleaningAreas();
+      loadCleaningSchedule();
+      setupSidebar();
+    });
+
+    // Setup event handlers
+    function setupEventHandlers() {
+      // Manage areas
+      document.getElementById('manage-areas-btn').addEventListener('click', function() {
+        loadAreasForManagement();
+        showModal('manage-areas-modal');
+      });
+
+      document.getElementById('add-area-btn').addEventListener('click', function() {
+        const input = document.getElementById('new-area-input');
+        const areaName = input.value.trim();
+        if (areaName) {
+          addAreaToList(areaName);
+          input.value = '';
+        }
+      });
+
+      document.getElementById('save-areas-btn').addEventListener('click', saveCleaningAreas);
+
+      // Generate list
+      document.getElementById('generate-list-btn').addEventListener('click', function() {
+        loadPeopleForGeneration();
+        loadAreasForGeneration();
+        showModal('generate-list-modal');
+      });
+      
+      // Manage schedules
+      const manageSchedulesBtn = document.getElementById('manage-schedules-btn');
+      if (manageSchedulesBtn) {
+        manageSchedulesBtn.addEventListener('click', function() {
+          loadSchedules();
+          showModal('manage-schedules-modal');
+        });
+      }
+
+      document.getElementById('confirm-generate-btn').addEventListener('click', generateOrScheduleList);
+
+      // Week options
+      document.querySelectorAll('input[name="week-option"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          const manualWeeks = document.getElementById('manual-weeks');
+          const autoWeeks = document.getElementById('auto-weeks');
+          if (this.value === 'manual') {
+            manualWeeks.style.display = 'block';
+            autoWeeks.style.display = 'none';
+          } else {
+            manualWeeks.style.display = 'none';
+            autoWeeks.style.display = 'block';
+          }
+        });
+      });
+
+      // Generate options
+      document.querySelectorAll('input[name="generate-option"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          const scheduleOptions = document.getElementById('schedule-options');
+          scheduleOptions.style.display = this.value === 'schedule' ? 'block' : 'none';
+        });
+      });
+
+      document.getElementById('schedule-repeat').addEventListener('change', function() {
+        const repeatOptions = document.getElementById('repeat-options');
+        repeatOptions.style.display = this.checked ? 'block' : 'none';
+      });
+      
+      // Auto send notification checkbox
+      const autoSendNotif = document.getElementById('auto-send-notification');
+      if (autoSendNotif) {
+        autoSendNotif.addEventListener('change', function() {
+          const notifSettings = document.getElementById('notification-settings');
+          if (notifSettings) {
+            notifSettings.style.display = this.checked ? 'block' : 'none';
+            if (this.checked) {
+              loadNotificationPeople();
+            }
+          }
+        });
+      }
+      
+      const notifIncludeOthers = document.getElementById('notif-include-others');
+      if (notifIncludeOthers) {
+        notifIncludeOthers.addEventListener('change', function() {
+          const otherList = document.getElementById('notif-other-people-list');
+          if (otherList) {
+            otherList.style.display = this.checked ? 'block' : 'none';
+            if (this.checked) {
+              loadNotificationOtherPeople();
+            }
+          }
+        });
+      }
+
+      // Search people
+      document.getElementById('search-people').addEventListener('keyup', function() {
+        filterPeople(this.value.toLowerCase());
+      });
+
+      // Edit list
+      document.getElementById('edit-list-btn').addEventListener('click', function() {
+        loadScheduleForEdit();
+        showModal('edit-list-modal');
+      });
+
+      document.getElementById('add-week-btn').addEventListener('click', addNewWeek);
+      document.getElementById('save-edit-btn').addEventListener('click', saveEditedSchedule);
+
+      // Send reminders
+      document.getElementById('send-reminders-btn').addEventListener('click', function() {
+        loadWeeksForReminders();
+        showModal('send-reminders-modal');
+      });
+
+      document.getElementById('reminder-week').addEventListener('change', function() {
+        loadRecipientsForReminders();
+      });
+
+      document.getElementById('include-cleaning-people').addEventListener('change', function() {
+        loadRecipientsForReminders();
+      });
+
+      document.getElementById('include-others').addEventListener('change', function() {
+        const otherGroup = document.getElementById('other-recipients-group');
+        if (this.checked) {
+          otherGroup.style.display = 'block';
+          loadOtherPeople();
+        } else {
+          otherGroup.style.display = 'none';
+          otherSelectedPeople = [];
+        }
+        updateRecipientsList();
+      });
+
+      document.getElementById('search-other-people').addEventListener('keyup', function() {
+        filterOtherPeople(this.value.toLowerCase());
+      });
+
+      document.querySelectorAll('input[name="send-option"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          const sendSchedule = document.getElementById('send-schedule-options');
+          sendSchedule.style.display = this.value === 'schedule' ? 'block' : 'none';
+        });
+      });
+
+      document.getElementById('confirm-send-reminders-btn').addEventListener('click', sendReminders);
+
+      // Clear list
+      document.getElementById('clear-list-btn').addEventListener('click', function() {
+        if (confirm('Er du sikker på at du vil slette hele rengøringslisten? Dette kan ikke fortrydes!')) {
+          clearCleaningSchedule();
+        }
+      });
+
+      // Edit generation schedule modal events
+      document.getElementById('edit-schedule-repeat').addEventListener('change', function() {
+        document.getElementById('edit-repeat-options').style.display = this.checked ? 'block' : 'none';
+      });
+      
+      document.getElementById('edit-auto-send-notification').addEventListener('change', function() {
+        document.getElementById('edit-notification-settings').style.display = this.checked ? 'block' : 'none';
+        if (this.checked) {
+          loadEditNotificationOtherPeople();
+        }
+      });
+      
+      document.getElementById('edit-notif-include-others').addEventListener('change', function() {
+        const otherList = document.getElementById('edit-notif-other-people-list');
+        otherList.style.display = this.checked ? 'block' : 'none';
+        if (this.checked) {
+          loadEditNotificationOtherPeople();
+        }
+      });
+      
+      document.getElementById('save-edit-generation-btn').addEventListener('click', saveEditedGenerationSchedule);
+      
+      // Edit people search
+      document.getElementById('edit-search-people').addEventListener('keyup', function() {
+        filterEditPeople(this.value.toLowerCase());
+      });
+      
+      // Edit include members/contacts change
+      document.getElementById('edit-include-members').addEventListener('change', function() {
+        loadEditPeopleForGeneration();
+      });
+      
+      document.getElementById('edit-include-contacts').addEventListener('change', function() {
+        loadEditPeopleForGeneration();
+      });
+    }
+    
+    // Load people for edit generation
+    function loadEditPeopleForGeneration() {
+      const container = document.getElementById('edit-people-list');
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Indlæser personer...</div>';
+      
+      const includeMembers = document.getElementById('edit-include-members').checked;
+      const includeContacts = document.getElementById('edit-include-contacts').checked;
+      
+      if (!includeMembers && !includeContacts) {
+        container.innerHTML = '<div class="empty-state">Vælg mindst én kilde (Medlemmer eller Kontakter)</div>';
+        return;
+      }
+      
+      let allPeopleList = [];
+      let loadedCount = 0;
+      const totalToLoad = (includeMembers ? 1 : 0) + (includeContacts ? 1 : 0);
+      
+      if (includeMembers) {
+        callApi('getAllMembers', {}, function(result) {
+          if (result && result.success && result.members) {
+            result.members.forEach(m => {
+              const name = `${m.fornavn || ''} ${m.efternavn || ''}`.trim();
+              if (name && !allPeopleList.find(p => p.name === name)) {
+                allPeopleList.push({ name: name, email: m.email || '' });
+              }
+            });
+          }
+          loadedCount++;
+          if (loadedCount === totalToLoad) {
+            allPeople = allPeopleList;
+            renderEditPeopleList(allPeopleList);
+          }
+        });
+      }
+      
+      if (includeContacts) {
+        callApi('getAllContactsSimple', {}, function(result) {
+          if (result && result.success && result.contacts) {
+            result.contacts.forEach(c => {
+              const name = `${c.fornavn || ''} ${c.efternavn || ''}`.trim();
+              if (name && !allPeopleList.find(p => p.name === name)) {
+                allPeopleList.push({ name: name, email: c.email || '' });
+              }
+            });
+          }
+          loadedCount++;
+          if (loadedCount === totalToLoad) {
+            allPeople = allPeopleList;
+            renderEditPeopleList(allPeopleList);
+          }
+        });
+      }
+    }
+    
+    function renderEditPeopleList(people) {
+      const container = document.getElementById('edit-people-list');
+      if (people.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen personer fundet</div>';
+        return;
+      }
+      
+      people.sort((a, b) => a.name.localeCompare(b.name));
+      
+      let html = '';
+      people.forEach((person, index) => {
+        const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        const isSelected = selectedPeople.includes(person.name);
+        html += `
+          <div class="available-member ${isSelected ? 'selected' : ''}" onclick="toggleEditPersonSelection('${person.name}')">
+            <div class="available-member-avatar">${initials}</div>
+            <div class="available-member-name">${person.name}</div>
+            <input type="checkbox" class="available-member-checkbox" value="${person.name}" ${isSelected ? 'checked' : ''} 
+                   onchange="toggleEditPersonSelection('${person.name}')">
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+    
+    // Toggle edit person selection
+    function toggleEditPersonSelection(name) {
+      const index = selectedPeople.indexOf(name);
+      if (index > -1) {
+        selectedPeople.splice(index, 1);
+      } else {
+        selectedPeople.push(name);
+      }
+      if (allPeople && allPeople.length > 0) {
+        renderEditPeopleList(allPeople);
+      }
+    }
+    
+    // Filter edit people
+    function filterEditPeople(searchTerm) {
+      const members = document.querySelectorAll('#edit-people-list .available-member');
+      members.forEach(member => {
+        const name = member.querySelector('.available-member-name').textContent.toLowerCase();
+        if (name.includes(searchTerm)) {
+          member.style.display = '';
+        } else {
+          member.style.display = 'none';
+        }
+      });
+    }
+
+    // Clear cleaning schedule
+    function clearCleaningSchedule() {
+      document.getElementById('clear-list-btn').disabled = true;
+      document.getElementById('clear-list-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sletter...';
+      
+      callApi('clearCleaningSchedule', {}, function(result) {
+        document.getElementById('clear-list-btn').disabled = false;
+        document.getElementById('clear-list-btn').innerHTML = '<i class="fas fa-trash-alt"></i> Slet Alt / Start Forfra';
+        
+        if (result && result.success) {
+          showToast('Rengøringslisten er blevet slettet!', 'success');
+          loadCleaningSchedule();
+        } else {
+          showToast(result.message || 'Kunne ikke slette listen', 'error');
+        }
+      }, function(error) {
+        document.getElementById('clear-list-btn').disabled = false;
+        document.getElementById('clear-list-btn').innerHTML = '<i class="fas fa-trash-alt"></i> Slet Alt / Start Forfra';
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Modal functions
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    function hideModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      
+      let container = document.querySelector('.toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Load cleaning areas
+    function loadCleaningAreas() {
+      callApi('getCleaningAreas', {}, function(result) {
+        if (result && result.success) {
+          cleaningAreas = result.areas || [];
+        }
+      }, function(error) {
+        console.error('Error loading areas:', error);
+      });
+    }
+
+    // Load areas for management
+    function loadAreasForManagement() {
+      const container = document.getElementById('areas-list');
+      if (cleaningAreas.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen områder tilføjet endnu</div>';
+        return;
+      }
+      
+      let html = '';
+      cleaningAreas.forEach((area, index) => {
+        html += `
+          <div class="area-item">
+            <span>${area}</span>
+            <button class="btn btn-danger btn-sm" onclick="removeArea(${index})">
+              <i class="fas fa-trash"></i> Slet
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Add area to list
+    function addAreaToList(areaName) {
+      if (cleaningAreas.includes(areaName)) {
+        showToast('Området findes allerede', 'warning');
+        return;
+      }
+      cleaningAreas.push(areaName);
+      loadAreasForManagement();
+    }
+
+    // Remove area
+    function removeArea(index) {
+      cleaningAreas.splice(index, 1);
+      loadAreasForManagement();
+    }
+
+    // Save cleaning areas
+    function saveCleaningAreas() {
+      callApi('saveCleaningAreas', { areas: cleaningAreas }, function(result) {
+        if (result && result.success) {
+          showToast('Områder gemt succesfuldt!', 'success');
+          hideModal('manage-areas-modal');
+          loadCleaningSchedule();
+        } else {
+          showToast(result.message || 'Kunne ikke gemme områder', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Load people for generation (both members and contacts)
+    function loadPeopleForGeneration() {
+      const includeMembers = document.getElementById('include-members').checked;
+      const includeContacts = document.getElementById('include-contacts').checked;
+      const container = document.getElementById('people-list');
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Indlæser personer...</div>';
+      
+      selectedPeople = [];
+      allPeople = [];
+      
+      let loadedCount = 0;
+      const totalToLoad = (includeMembers ? 1 : 0) + (includeContacts ? 1 : 0);
+      
+      if (totalToLoad === 0) {
+        container.innerHTML = '<div class="empty-state">Vælg mindst én kilde (Medlemmer eller Kontakter)</div>';
+        return;
+      }
+      
+      function checkComplete() {
+        loadedCount++;
+        if (loadedCount === totalToLoad) {
+          renderPeopleList();
+        }
+      }
+      
+      if (includeMembers) {
+        callApi('getAllMembers', {}, function(result) {
+          if (result && result.success && result.members) {
+            const people = result.members.map(p => {
+              const name = `${p.fornavn || ''} ${p.efternavn || ''}`.trim();
+              return { name: name, email: p.email || '', source: 'members' };
+            }).filter(p => p.name);
+            allPeople = allPeople.concat(people);
+          }
+          checkComplete();
+        }, function(error) {
+          checkComplete();
+        });
+      }
+      
+      if (includeContacts) {
+        callApi('getAllContactsSimple', {}, function(result) {
+          if (result && result.success && result.contacts) {
+            const people = result.contacts.map(c => {
+              const name = `${c.fornavn || ''} ${c.efternavn || ''}`.trim();
+              return { name: name, email: c.email || '', source: 'contacts' };
+            }).filter(p => p.name);
+            // Remove duplicates (same name from both sources)
+            people.forEach(p => {
+              if (!allPeople.find(existing => existing.name === p.name)) {
+                allPeople.push(p);
+              }
+            });
+          }
+          checkComplete();
+        }, function(error) {
+          checkComplete();
+        });
+      }
+    }
+
+    // Render people list
+    function renderPeopleList() {
+      const container = document.getElementById('people-list');
+      if (allPeople.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen personer fundet</div>';
+        return;
+      }
+      
+      let html = '';
+      allPeople.forEach((person, index) => {
+        const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        const isSelected = selectedPeople.includes(person.name);
+        html += `
+          <div class="available-member ${isSelected ? 'selected' : ''}" onclick="togglePersonSelection('${person.name}')">
+            <div class="available-member-avatar">${initials}</div>
+            <div class="available-member-name">${person.name}</div>
+            <input type="checkbox" class="available-member-checkbox" ${isSelected ? 'checked' : ''} 
+                   onchange="togglePersonSelection('${person.name}')">
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Toggle person selection
+    function togglePersonSelection(name) {
+      const index = selectedPeople.indexOf(name);
+      if (index > -1) {
+        selectedPeople.splice(index, 1);
+      } else {
+        selectedPeople.push(name);
+      }
+      renderPeopleList();
+    }
+
+    // Filter people
+    function filterPeople(searchTerm) {
+      const members = document.querySelectorAll('.available-member');
+      members.forEach(member => {
+        const name = member.querySelector('.available-member-name').textContent.toLowerCase();
+        if (name.includes(searchTerm)) {
+          member.style.display = '';
+        } else {
+          member.style.display = 'none';
+        }
+      });
+    }
+
+    // Include members/contacts change
+    document.getElementById('include-members').addEventListener('change', function() {
+      loadPeopleForGeneration();
+    });
+    
+    document.getElementById('include-contacts').addEventListener('change', function() {
+      loadPeopleForGeneration();
+    });
+
+    // Load areas for generation
+    function loadAreasForGeneration() {
+      const container = document.getElementById('areas-checkboxes');
+      if (cleaningAreas.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen områder tilgængelige. Tilføj områder først.</div>';
+        return;
+      }
+      
+      let html = '';
+      cleaningAreas.forEach(area => {
+        html += `
+          <div class="checkbox-item">
+            <input type="checkbox" class="area-checkbox" value="${area}" checked>
+            <label>${area}</label>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Get current week number
+    function getCurrentWeekNumber() {
+      const now = new Date();
+      const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    // Generate or schedule list
+    function generateOrScheduleList() {
+      const includeMembers = document.getElementById('include-members').checked;
+      const includeContacts = document.getElementById('include-contacts').checked;
+      const selectedAreas = Array.from(document.querySelectorAll('.area-checkbox:checked')).map(cb => cb.value);
+      const weekOption = document.querySelector('input[name="week-option"]:checked').value;
+      const generateOption = document.querySelector('input[name="generate-option"]:checked').value;
+      const autoSendNotification = document.getElementById('auto-send-notification').checked;
+      
+      if (!includeMembers && !includeContacts) {
+        showToast('Vælg mindst én kilde (Medlemmer eller Kontakter)', 'warning');
+        return;
+      }
+      
+      if (selectedPeople.length === 0) {
+        showToast('Vælg mindst én person', 'warning');
+        return;
+      }
+      
+      if (selectedAreas.length === 0) {
+        showToast('Vælg mindst ét område', 'warning');
+        return;
+      }
+      
+      // Get weeks
+      let weeks = [];
+      if (weekOption === 'manual') {
+        const weeksInput = document.getElementById('weeks-input').value.trim();
+        if (!weeksInput) {
+          showToast('Indtast uger', 'warning');
+          return;
+        }
+        
+        if (weeksInput.includes('-')) {
+          const [start, end] = weeksInput.split('-').map(Number);
+          for (let i = start; i <= end; i++) {
+            weeks.push(i);
+          }
+        } else {
+          weeks = weeksInput.split(',').map(w => parseInt(w.trim())).filter(w => !isNaN(w));
+        }
+      } else {
+        // "Nu og fremadrettet" - brug antal uger fra input-feltet
+        const currentWeek = getCurrentWeekNumber();
+        const weeksCountInput = document.getElementById('weeks-count');
+        const weeksCount = weeksCountInput ? parseInt(weeksCountInput.value) || 10 : 10; // Default til 10 hvis ikke angivet
+        
+        if (weeksCount < 1) {
+          showToast('Antal uger skal være mindst 1', 'warning');
+          return;
+        }
+        
+        // Generer for de næste X uger (inkluderer uger med eksisterende opgaver - de vil blive overskrevet)
+        for (let i = 0; i < weeksCount; i++) {
+          const weekNum = currentWeek + i;
+          // Tjek om ugen er gyldig (1-53)
+          if (weekNum >= 1 && weekNum <= 53) {
+            weeks.push(weekNum);
+          }
+        }
+      }
+      
+      if (weeks.length === 0) {
+        showToast('Ingen gyldige uger fundet', 'warning');
+        return;
+      }
+      
+      // Check for duplicate weeks in existing schedule and warn user
+      const existingWeeks = new Set(cleaningSchedule.map(w => {
+        const week = typeof w.week === 'number' ? w.week : parseInt(String(w.week).replace(/\D/g, '')) || 0;
+        return week;
+      }));
+      const duplicateWeeks = weeks.filter(w => existingWeeks.has(w));
+      if (duplicateWeeks.length > 0) {
+        // Don't block, just inform that existing weeks will be overwritten
+        console.log(`Følgende uger findes allerede og vil blive overskrevet: ${duplicateWeeks.join(', ')}`);
+      }
+      
+      // Get notification settings if auto-send is enabled
+      let notificationSettings = null;
+      if (autoSendNotification) {
+        const notifIncludeCleaning = document.getElementById('notif-include-cleaning-people').checked;
+        const notifIncludeOthers = document.getElementById('notif-include-others').checked;
+        const notifIncludePersonal = document.getElementById('notif-include-personal').checked;
+        const notifIncludeFullList = document.getElementById('notif-include-full-list').checked;
+        
+        let notifRecipients = [];
+        if (notifIncludeCleaning) {
+          // Will be set to people from generated list
+          notifRecipients = ['__CLEANING_PEOPLE__'];
+        }
+        if (notifIncludeOthers) {
+          const otherCheckboxes = document.querySelectorAll('#notif-other-people-list .available-member-checkbox:checked');
+          otherCheckboxes.forEach(cb => {
+            const name = cb.closest('.available-member').querySelector('.available-member-name').textContent;
+            notifRecipients.push(name);
+          });
+        }
+        
+        notificationSettings = {
+          recipients: notifRecipients,
+          includePersonalTasks: notifIncludePersonal,
+          includeFullList: notifIncludeFullList
+        };
+      }
+      
+      const sourceType = includeMembers && includeContacts ? 'both' : (includeMembers ? 'members' : 'contacts');
+      
+      if (generateOption === 'now') {
+        generateRandomList(sourceType, selectedAreas, weeks, selectedPeople, notificationSettings);
+      } else {
+        scheduleGeneration(sourceType, selectedAreas, weeks, selectedPeople, notificationSettings);
+      }
+    }
+
+    // Generate random list
+    function generateRandomList(sourceType, areas, weeks, people, notificationSettings) {
+      document.getElementById('confirm-generate-btn').disabled = true;
+      document.getElementById('confirm-generate-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Genererer...';
+      
+      callApi('generateRandomCleaningSchedule', {
+        sourceType: sourceType,
+        areas: areas,
+        weeks: weeks,
+        people: people,
+        notificationSettings: notificationSettings
+      }, function(result) {
+        document.getElementById('confirm-generate-btn').disabled = false;
+        document.getElementById('confirm-generate-btn').innerHTML = 'Generer';
+        
+        if (result && result.success) {
+          showToast(result.message || 'Rengøringsliste genereret!', 'success');
+          if (notificationSettings && result.notificationsSent) {
+            showToast(`${result.notificationsSent} notifikation(er) sendt!`, 'success');
+          }
+          hideModal('generate-list-modal');
+          loadCleaningSchedule();
+        } else {
+          showToast(result.message || 'Kunne ikke generere liste', 'error');
+        }
+      }, function(error) {
+        document.getElementById('confirm-generate-btn').disabled = false;
+        document.getElementById('confirm-generate-btn').innerHTML = 'Generer';
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Schedule generation
+    function scheduleGeneration(sourceType, areas, weeks, people, notificationSettings) {
+      const scheduleDate = document.getElementById('schedule-date').value;
+      const scheduleTime = document.getElementById('schedule-time').value;
+      const repeat = document.getElementById('schedule-repeat').checked;
+      const repeatInterval = document.getElementById('repeat-interval').value;
+      const repeatCount = document.getElementById('repeat-count').value || null;
+      
+      if (!scheduleDate) {
+        showToast('Vælg en dato', 'warning');
+        return;
+      }
+      
+      document.getElementById('confirm-generate-btn').disabled = true;
+      document.getElementById('confirm-generate-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Planlægger...';
+      
+      callApi('scheduleCleaningListGeneration', {
+        scheduleDate: scheduleDate,
+        scheduleTime: scheduleTime,
+        repeat: repeat,
+        repeatInterval: repeatInterval,
+        repeatCount: repeatCount ? parseInt(repeatCount) : null,
+        sourceType: sourceType,
+        areas: areas,
+        weeks: weeks,
+        people: people,
+        notificationSettings: notificationSettings
+      }, function(result) {
+        document.getElementById('confirm-generate-btn').disabled = false;
+        document.getElementById('confirm-generate-btn').innerHTML = 'Generer';
+        
+        if (result && result.success) {
+          showToast('Generering planlagt!', 'success');
+          hideModal('generate-list-modal');
+        } else {
+          showToast(result.message || 'Kunne ikke planlægge generering', 'error');
+        }
+      }, function(error) {
+        document.getElementById('confirm-generate-btn').disabled = false;
+        document.getElementById('confirm-generate-btn').innerHTML = 'Generer';
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Load cleaning schedule
+    function loadCleaningSchedule() {
+      const container = document.getElementById('cleaning-table-container');
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Indlæser rengøringsplan...</div>';
+      
+      callApi('getCleaningSchedule', {}, function(result) {
+        if (result && result.success) {
+          cleaningSchedule = result.schedule || [];
+          renderCleaningTable();
+        } else {
+          container.innerHTML = '<div class="empty-state">Kunne ikke indlæse rengøringsplan</div>';
+        }
+      }, function(error) {
+        container.innerHTML = '<div class="empty-state">Fejl: ' + error + '</div>';
+      });
+    }
+
+    // Render cleaning table
+    function renderCleaningTable() {
+      const container = document.getElementById('cleaning-table-container');
+      
+      if (cleaningSchedule.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Ingen rengøringsplan endnu</p></div>';
+        return;
+      }
+      
+      // Sort weeks from smallest to largest
+      const sortedSchedule = [...cleaningSchedule].sort((a, b) => {
+        const weekA = typeof a.week === 'number' ? a.week : parseInt(String(a.week).replace(/\D/g, '')) || 0;
+        const weekB = typeof b.week === 'number' ? b.week : parseInt(String(b.week).replace(/\D/g, '')) || 0;
+        return weekA - weekB;
+      });
+      
+      // Use saved areas in order, or discover from schedule
+      const areasToShow = cleaningAreas.length > 0 ? cleaningAreas : (() => {
+        const allAreas = new Set();
+        sortedSchedule.forEach(week => {
+          Object.keys(week).forEach(key => {
+            if (key !== 'id' && key !== 'week') {
+              allAreas.add(key);
+            }
+          });
+        });
+        return Array.from(allAreas);
+      })();
+      
+      let html = '<table><thead><tr><th>Uge</th>';
+      areasToShow.forEach(area => {
+        html += `<th>${area}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+      
+      sortedSchedule.forEach(week => {
+        html += `<tr><td><strong>${week.week}</strong></td>`;
+        areasToShow.forEach(area => {
+          const value = week[area] || week[area.toLowerCase().replace(/[^a-z0-9]/g, '_')] || '';
+          html += `<td>${value || '-'}</td>`;
+        });
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Load schedule for edit
+    function loadScheduleForEdit() {
+      editedSchedule = JSON.parse(JSON.stringify(cleaningSchedule));
+      
+      // Clean up editedSchedule - only keep current areas, remove normalized keys and old areas
+      editedSchedule.forEach(entry => {
+        // Create a new clean entry with only week and current areas
+        const cleanEntry = {
+          id: entry.id,
+          week: entry.week
+        };
+        
+        // Only copy values for areas that currently exist
+        cleaningAreas.forEach(area => {
+          cleanEntry[area] = entry[area] || '';
+        });
+        
+        // Replace the entry with the cleaned version
+        Object.keys(entry).forEach(key => {
+          if (key !== 'id' && key !== 'week' && !cleaningAreas.includes(key)) {
+            delete entry[key];
+          }
+        });
+        
+        // Copy cleaned values back
+        cleaningAreas.forEach(area => {
+          entry[area] = cleanEntry[area];
+        });
+      });
+      
+      renderEditTable();
+    }
+
+    // Load all people for dropdowns
+    let allPeopleForDropdowns = [];
+    let isLoadingPeople = false;
+    
+    function loadAllPeopleForDropdowns(callback) {
+      if (isLoadingPeople) {
+        // Already loading, wait for it
+        const checkInterval = setInterval(() => {
+          if (!isLoadingPeople && allPeopleForDropdowns.length > 0) {
+            clearInterval(checkInterval);
+            if (callback) callback();
+          }
+        }, 100);
+        return;
+      }
+      
+      if (allPeopleForDropdowns.length > 0) {
+        // Already loaded
+        if (callback) callback();
+        return;
+      }
+      
+      isLoadingPeople = true;
+      allPeopleForDropdowns = [];
+      let loadedCount = 0;
+      
+      callApi('getAllMembers', {}, function(result) {
+        if (result && result.success && result.members) {
+          result.members.forEach(p => {
+            const name = `${p.fornavn || ''} ${p.efternavn || ''}`.trim();
+            if (name && !allPeopleForDropdowns.find(existing => existing.name === name)) {
+              allPeopleForDropdowns.push({ name: name, email: p.email || '' });
+            }
+          });
+        }
+        loadedCount++;
+        if (loadedCount === 2) {
+          allPeopleForDropdowns.sort((a, b) => a.name.localeCompare(b.name));
+          isLoadingPeople = false;
+          if (callback) callback();
+        }
+      }, function(error) {
+        loadedCount++;
+        if (loadedCount === 2) {
+          isLoadingPeople = false;
+          if (callback) callback();
+        }
+      });
+      
+      callApi('getAllContactsSimple', {}, function(result) {
+        if (result && result.success && result.contacts) {
+          result.contacts.forEach(c => {
+            const name = `${c.fornavn || ''} ${c.efternavn || ''}`.trim();
+            if (name && !allPeopleForDropdowns.find(existing => existing.name === name)) {
+              allPeopleForDropdowns.push({ name: name, email: c.email || '' });
+            }
+          });
+        }
+        loadedCount++;
+        if (loadedCount === 2) {
+          allPeopleForDropdowns.sort((a, b) => a.name.localeCompare(b.name));
+          isLoadingPeople = false;
+          if (callback) callback();
+        }
+      }, function(error) {
+        loadedCount++;
+        if (loadedCount === 2) {
+          isLoadingPeople = false;
+          if (callback) callback();
+        }
+      });
+    }
+
+    // Render edit table
+    function renderEditTable() {
+      const container = document.getElementById('edit-table-container');
+      
+      // Show loading while fetching people
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Indlæser personer...</div>';
+      
+      // Load people for dropdowns if not loaded, then render
+      loadAllPeopleForDropdowns(function() {
+        renderEditTableContent();
+      });
+    }
+    
+    function renderEditTableContent() {
+      const container = document.getElementById('edit-table-container');
+      
+      // Sort weeks
+      const sortedSchedule = [...editedSchedule].sort((a, b) => {
+        const weekA = typeof a.week === 'number' ? a.week : parseInt(String(a.week).replace(/\D/g, '')) || 0;
+        const weekB = typeof b.week === 'number' ? b.week : parseInt(String(b.week).replace(/\D/g, '')) || 0;
+        return weekA - weekB;
+      });
+      
+      // Always use cleaningAreas - never derive from data (which may contain old/normalized keys)
+      const areasToShow = cleaningAreas.length > 0 ? cleaningAreas : [];
+      
+      if (areasToShow.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen områder defineret. Tilføj områder først.</div>';
+        return;
+      }
+      
+      let html = '<table><thead><tr><th>Uge</th>';
+      areasToShow.forEach(area => {
+        html += `<th>${area}</th>`;
+      });
+      html += '<th>Handlinger</th></tr></thead><tbody>';
+      
+      sortedSchedule.forEach((week, index) => {
+        const originalIndex = editedSchedule.findIndex(w => w.id === week.id);
+        // If not found, use index as fallback
+        const safeIndex = originalIndex >= 0 ? originalIndex : index;
+        const weekValue = typeof week.week === 'number' ? week.week : parseInt(String(week.week).replace(/\D/g, '')) || '';
+        html += `<tr data-index="${safeIndex}"><td><input type="number" class="form-control" value="${weekValue}" data-field="week" min="1" max="53" onchange="validateWeekNumber(this, ${safeIndex})"></td>`;
+        areasToShow.forEach(area => {
+          // Only use the exact area name - don't try normalized keys
+          const value = week[area] || '';
+          const areaKey = area.replace(/[^a-z0-9]/gi, '_');
+          html += `<td class="edit-cell"><select class="form-control" data-field="${area}" data-area-key="${areaKey}">`;
+          html += `<option value="">-- Vælg person --</option>`;
+          allPeopleForDropdowns.forEach(person => {
+            const selected = value === person.name ? 'selected' : '';
+            html += `<option value="${person.name}" ${selected}>${person.name}</option>`;
+          });
+          html += `</select></td>`;
+        });
+        html += `<td><button class="btn btn-danger btn-sm" onclick="deleteWeek(${safeIndex})"><i class="fas fa-trash"></i></button></td></tr>`;
+      });
+      
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+    
+    // Validate week number and check for duplicates
+    function validateWeekNumber(input, index) {
+      const weekValue = parseInt(input.value);
+      if (isNaN(weekValue) || weekValue < 1 || weekValue > 53) {
+        showToast('Ugenummer skal være mellem 1 og 53', 'warning');
+        input.value = editedSchedule[index].week;
+        return;
+      }
+      
+      // Check for duplicates
+      const duplicateIndex = editedSchedule.findIndex((w, i) => {
+        if (i === index) return false;
+        const week = typeof w.week === 'number' ? w.week : parseInt(String(w.week).replace(/\D/g, '')) || 0;
+        return week === weekValue;
+      });
+      
+      if (duplicateIndex > -1) {
+        showToast('Denne uge findes allerede!', 'error');
+        input.value = editedSchedule[index].week;
+        return;
+      }
+      
+      editedSchedule[index].week = weekValue;
+    }
+
+    // Add new week
+    function addNewWeek() {
+      const newWeek = {
+        id: Date.now(),
+        week: getCurrentWeekNumber(),
+        areas: {}
+      };
+      cleaningAreas.forEach(area => {
+        newWeek[area] = '';
+      });
+      editedSchedule.push(newWeek);
+      renderEditTable();
+    }
+
+    // Delete week
+    function deleteWeek(index) {
+      if (confirm('Er du sikker på at du vil slette denne uge?')) {
+        editedSchedule.splice(index, 1);
+        renderEditTable();
+      }
+    }
+
+    // Save edited schedule
+    function saveEditedSchedule() {
+      // Check for duplicate weeks
+      const weekNumbers = [];
+      const rows = document.querySelectorAll('#edit-table-container tbody tr');
+      let hasDuplicates = false;
+      
+      rows.forEach((row) => {
+        const weekInput = row.querySelector('input[data-field="week"]');
+        if (weekInput) {
+          const weekValue = parseInt(weekInput.value);
+          if (!isNaN(weekValue)) {
+            if (weekNumbers.includes(weekValue)) {
+              showToast(`Uge ${weekValue} findes i flere rækker! Fjern dubletter først.`, 'error');
+              hasDuplicates = true;
+              return;
+            }
+            weekNumbers.push(weekValue);
+          }
+        }
+      });
+      
+      if (hasDuplicates) {
+        return;
+      }
+      
+      // Build updated schedule from inputs
+      const updatedSchedule = [];
+      
+      rows.forEach((row) => {
+        const dataIndex = parseInt(row.dataset.index);
+        if (isNaN(dataIndex) || dataIndex < 0 || !editedSchedule[dataIndex]) {
+          console.error('Invalid dataIndex:', dataIndex);
+          return;
+        }
+        
+        const weekInput = row.querySelector('input[data-field="week"]');
+        if (!weekInput) {
+          return;
+        }
+        
+        const weekValue = parseInt(weekInput.value);
+        if (isNaN(weekValue) || weekValue < 1 || weekValue > 53) {
+          showToast('Alle uger skal have et gyldigt nummer (1-53)', 'error');
+          return;
+        }
+        
+        // Create new entry - only include current areas
+        const entry = {
+          id: editedSchedule[dataIndex].id || Date.now(),
+          week: weekValue
+        };
+        
+        // Get area values - only for current areas
+        cleaningAreas.forEach(area => {
+          const areaSelect = row.querySelector(`select[data-field="${area}"]`);
+          if (areaSelect) {
+            entry[area] = areaSelect.value.trim();
+          } else {
+            entry[area] = editedSchedule[dataIndex][area] || '';
+          }
+        });
+        
+        // Don't include any other properties (old areas, normalized keys, etc.)
+        updatedSchedule.push(entry);
+      });
+      
+      if (updatedSchedule.length === 0) {
+        showToast('Ingen data at gemme', 'warning');
+        return;
+      }
+      
+      // Save to server
+      document.getElementById('save-edit-btn').disabled = true;
+      document.getElementById('save-edit-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gemmer...';
+      
+      callApi('saveCleaningSchedule', { schedule: updatedSchedule }, function(result) {
+        document.getElementById('save-edit-btn').disabled = false;
+        document.getElementById('save-edit-btn').innerHTML = 'Gem Ændringer';
+        
+        if (result && result.success) {
+          showToast('Rengøringsplan gemt!', 'success');
+          hideModal('edit-list-modal');
+          loadCleaningSchedule();
+        } else {
+          showToast(result.message || 'Kunne ikke gemme plan', 'error');
+        }
+      }, function(error) {
+        document.getElementById('save-edit-btn').disabled = false;
+        document.getElementById('save-edit-btn').innerHTML = 'Gem Ændringer';
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Load weeks for reminders
+    function loadWeeksForReminders() {
+      const select = document.getElementById('reminder-week');
+      select.innerHTML = '<option value="">-- Vælg uge --</option>';
+      
+      if (cleaningSchedule.length === 0) {
+        loadCleaningSchedule();
+        setTimeout(loadWeeksForReminders, 1000);
+        return;
+      }
+      
+      // Sort weeks
+      const sortedWeeks = [...new Set(cleaningSchedule.map(w => w.week))].sort((a, b) => {
+        const weekA = typeof a === 'number' ? a : parseInt(String(a).replace(/\D/g, '')) || 0;
+        const weekB = typeof b === 'number' ? b : parseInt(String(b).replace(/\D/g, '')) || 0;
+        return weekA - weekB;
+      });
+      
+      sortedWeeks.forEach(week => {
+        const option = document.createElement('option');
+        option.value = week;
+        option.textContent = typeof week === 'number' ? `Uge ${week}` : week;
+        select.appendChild(option);
+      });
+    }
+
+    // Load recipients for reminders
+    function loadRecipientsForReminders() {
+      const week = document.getElementById('reminder-week').value;
+      const container = document.getElementById('recipients-list');
+      const includeCleaning = document.getElementById('include-cleaning-people').checked;
+      
+      if (!week) {
+        container.innerHTML = '<div class="empty-state">Vælg en uge først</div>';
+        return;
+      }
+      
+      const weekEntry = cleaningSchedule.find(w => String(w.week) === String(week));
+      if (!weekEntry) {
+        container.innerHTML = '<div class="empty-state">Ingen rengøringsplan fundet for denne uge</div>';
+        return;
+      }
+      
+      const recipients = new Set();
+      
+      if (includeCleaning) {
+        Object.keys(weekEntry).forEach(key => {
+          if (key !== 'id' && key !== 'week' && weekEntry[key]) {
+            const name = String(weekEntry[key]).trim();
+            if (name) recipients.add(name);
+          }
+        });
+      }
+      
+      // Add other selected people
+      otherSelectedPeople.forEach(name => {
+        recipients.add(name);
+      });
+      
+      if (recipients.size === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen modtagere valgt</div>';
+        return;
+      }
+      
+      let html = '';
+      Array.from(recipients).sort().forEach(name => {
+        html += `
+          <div class="checkbox-item">
+            <input type="checkbox" class="recipient-checkbox" value="${name}" checked>
+            <label>${name}</label>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Load other people
+    function loadOtherPeople() {
+      const container = document.getElementById('other-people-list');
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Indlæser personer...</div>';
+      
+      callApi('getAllMembers', {}, function(membersResult) {
+        callApi('getAllContactsSimple', {}, function(contactsResult) {
+          const allPeopleList = [];
+          
+          if (membersResult && membersResult.success && membersResult.members) {
+            membersResult.members.forEach(m => {
+              const name = `${m.fornavn || ''} ${m.efternavn || ''}`.trim();
+              if (name) allPeopleList.push({ name: name, email: m.email || '' });
+            });
+          }
+          
+          if (contactsResult && contactsResult.success && contactsResult.contacts) {
+            contactsResult.contacts.forEach(c => {
+              const name = `${c.fornavn || ''} ${c.efternavn || ''}`.trim();
+              if (name && !allPeopleList.find(p => p.name === name)) {
+                allPeopleList.push({ name: name, email: c.email || '' });
+              }
+            });
+          }
+          
+          window.allOtherPeople = allPeopleList;
+          renderOtherPeopleList();
+        });
+      });
+    }
+
+    // Render other people list
+    function renderOtherPeopleList() {
+      const container = document.getElementById('other-people-list');
+      if (!window.allOtherPeople || window.allOtherPeople.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen personer fundet</div>';
+        return;
+      }
+      
+      let html = '';
+      window.allOtherPeople.forEach(person => {
+        const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        const isSelected = otherSelectedPeople.includes(person.name);
+        html += `
+          <div class="available-member ${isSelected ? 'selected' : ''}" onclick="toggleOtherPersonSelection('${person.name}')">
+            <div class="available-member-avatar">${initials}</div>
+            <div class="available-member-name">${person.name}</div>
+            <input type="checkbox" class="available-member-checkbox" ${isSelected ? 'checked' : ''} 
+                   onchange="toggleOtherPersonSelection('${person.name}')">
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Toggle other person selection
+    function toggleOtherPersonSelection(name) {
+      const index = otherSelectedPeople.indexOf(name);
+      if (index > -1) {
+        otherSelectedPeople.splice(index, 1);
+      } else {
+        otherSelectedPeople.push(name);
+      }
+      renderOtherPeopleList();
+      updateRecipientsList();
+    }
+
+    // Update recipients list
+    function updateRecipientsList() {
+      loadRecipientsForReminders();
+    }
+
+    // Filter other people
+    function filterOtherPeople(searchTerm) {
+      const members = document.querySelectorAll('#other-people-list .available-member');
+      members.forEach(member => {
+        const name = member.querySelector('.available-member-name').textContent.toLowerCase();
+        if (name.includes(searchTerm)) {
+          member.style.display = '';
+        } else {
+          member.style.display = 'none';
+        }
+      });
+    }
+
+    // Send reminders
+    function sendReminders() {
+      const week = document.getElementById('reminder-week').value;
+      const selectedRecipients = Array.from(document.querySelectorAll('.recipient-checkbox:checked')).map(cb => cb.value);
+      const includePersonal = document.getElementById('include-personal').checked;
+      const includeFullList = document.getElementById('include-full-list').checked;
+      const sendOption = document.querySelector('input[name="send-option"]:checked').value;
+      
+      if (!week) {
+        showToast('Vælg en uge', 'warning');
+        return;
+      }
+      
+      if (selectedRecipients.length === 0) {
+        showToast('Vælg mindst én modtager', 'warning');
+        return;
+      }
+      
+      const params = {
+        week: week,
+        recipients: selectedRecipients,
+        includePersonalTasks: includePersonal,
+        includeFullList: includeFullList
+      };
+      
+      if (sendOption === 'schedule') {
+        const scheduleDate = document.getElementById('send-schedule-date').value;
+        const scheduleTime = document.getElementById('send-schedule-time').value;
+        
+        if (!scheduleDate) {
+          showToast('Vælg en dato', 'warning');
+          return;
+        }
+        
+        params.scheduleDate = scheduleDate;
+        params.scheduleTime = scheduleTime;
+      }
+      
+      document.getElementById('confirm-send-reminders-btn').disabled = true;
+      document.getElementById('confirm-send-reminders-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sender...';
+      
+      const apiCall = sendOption === 'schedule' ? 'scheduleCleaningReminders' : 'sendCleaningReminders';
+      callApi(apiCall, params, function(result) {
+        document.getElementById('confirm-send-reminders-btn').disabled = false;
+        document.getElementById('confirm-send-reminders-btn').innerHTML = 'Send Påmindelser';
+        
+        if (result && result.success) {
+          showToast(result.message || `${result.emailsSent || 0} email(s) sendt!`, 'success');
+          if (result.errors && result.errors.length > 0) {
+            console.warn('Some errors:', result.errors);
+          }
+          hideModal('send-reminders-modal');
+        } else {
+          showToast(result.message || 'Kunne ikke sende påmindelser', 'error');
+        }
+      }, function(error) {
+        document.getElementById('confirm-send-reminders-btn').disabled = false;
+        document.getElementById('confirm-send-reminders-btn').innerHTML = 'Send Påmindelser';
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Setup sidebar
+    function setupSidebar() {
+      const sidebarItems = document.querySelectorAll('.sidebar-item[data-page]');
+      sidebarItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const page = this.dataset.page;
+          if (page) {
+            navigateToPage(page);
+          }
+        });
+      });
+      
+      // Set active page
+      const currentPage = 'rengoring';
+      sidebarItems.forEach(item => {
+        if (item.dataset.page === currentPage) {
+          item.classList.add('active');
+        }
+      });
+    }
+
+    // Load notification people
+    function loadNotificationPeople() {
+      // People will be from the generated list, so we just need to load others if needed
+      if (document.getElementById('notif-include-others').checked) {
+        loadNotificationOtherPeople();
+      }
+    }
+    
+    // Load notification other people
+    function loadNotificationOtherPeople() {
+      const container = document.getElementById('notif-other-people-list');
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Indlæser personer...</div>';
+      
+      let allPeopleList = [];
+      let loadedCount = 0;
+      
+      callApi('getAllMembers', {}, function(result) {
+        if (result && result.success && result.members) {
+          result.members.forEach(m => {
+            const name = `${m.fornavn || ''} ${m.efternavn || ''}`.trim();
+            if (name && !allPeopleList.find(p => p.name === name)) {
+              allPeopleList.push({ name: name, email: m.email || '' });
+            }
+          });
+        }
+        loadedCount++;
+        if (loadedCount === 2) renderNotificationOtherPeople(allPeopleList);
+      });
+      
+      callApi('getAllContactsSimple', {}, function(result) {
+        if (result && result.success && result.contacts) {
+          result.contacts.forEach(c => {
+            const name = `${c.fornavn || ''} ${c.efternavn || ''}`.trim();
+            if (name && !allPeopleList.find(p => p.name === name)) {
+              allPeopleList.push({ name: name, email: c.email || '' });
+            }
+          });
+        }
+        loadedCount++;
+        if (loadedCount === 2) renderNotificationOtherPeople(allPeopleList);
+      });
+    }
+    
+    function renderNotificationOtherPeople(people) {
+      const container = document.getElementById('notif-other-people-list');
+      if (people.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen personer fundet</div>';
+        return;
+      }
+      
+      people.sort((a, b) => a.name.localeCompare(b.name));
+      
+      let html = '';
+      people.forEach(person => {
+        const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        html += `
+          <div class="available-member">
+            <div class="available-member-avatar">${initials}</div>
+            <div class="available-member-name">${person.name}</div>
+            <input type="checkbox" class="available-member-checkbox notif-other-checkbox" value="${person.name}">
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+    
+    // Load schedules (generations and notifications)
+    function loadSchedules() {
+      callApi('getCleaningSchedules', {}, function(result) {
+        if (result && result.success) {
+          renderGenerationSchedules(result.generationSchedules || []);
+          renderNotificationSchedules(result.notificationSchedules || []);
+        } else {
+          document.getElementById('generation-schedules-list').innerHTML = '<div class="empty-state">Kunne ikke indlæse planlagte opgaver</div>';
+          document.getElementById('notification-schedules-list').innerHTML = '<div class="empty-state">Kunne ikke indlæse planlagte opgaver</div>';
+        }
+      }, function(error) {
+        document.getElementById('generation-schedules-list').innerHTML = '<div class="empty-state">Fejl: ' + error + '</div>';
+        document.getElementById('notification-schedules-list').innerHTML = '<div class="empty-state">Fejl: ' + error + '</div>';
+      });
+    }
+    
+    // Render generation schedules
+    function renderGenerationSchedules(schedules) {
+      const container = document.getElementById('generation-schedules-list');
+      if (schedules.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen planlagte genereringer</div>';
+        return;
+      }
+      
+      let html = '';
+      schedules.forEach((schedule, index) => {
+        const nextRun = schedule.nextRun ? new Date(schedule.nextRun).toLocaleString('da-DK') : 'Ikke planlagt';
+        const repeatText = schedule.repeat ? `Gentages hver ${schedule.repeatInterval}` : 'Kun én gang';
+        const countText = schedule.repeatCount ? `(${schedule.currentCount || 0}/${schedule.repeatCount})` : schedule.repeat ? '(Ubegrænset)' : '';
+        
+        html += `
+          <div class="area-item" style="margin-bottom: 15px;">
+            <div style="flex: 1;">
+              <div><strong>Næste generering:</strong> ${nextRun}</div>
+              <div><strong>Områder:</strong> ${(schedule.areas || []).join(', ')}</div>
+              <div><strong>Uger:</strong> ${(schedule.weeks || []).slice(0, 5).join(', ')}${(schedule.weeks || []).length > 5 ? '...' : ''}</div>
+              <div><strong>Gentagelse:</strong> ${repeatText} ${countText}</div>
+              ${schedule.notificationSettings ? '<div><strong>Automatisk notifikation:</strong> Aktiveret</div>' : ''}
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-primary btn-sm" onclick="editGenerationSchedule('${schedule.scheduleId}')">
+                <i class="fas fa-edit"></i> Rediger
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteGenerationSchedule('${schedule.scheduleId}')">
+                <i class="fas fa-trash"></i> Slet
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+    
+    // Render notification schedules
+    function renderNotificationSchedules(schedules) {
+      const container = document.getElementById('notification-schedules-list');
+      if (schedules.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen planlagte notifikationer</div>';
+        return;
+      }
+      
+      let html = '';
+      schedules.forEach((schedule, index) => {
+        const scheduleDate = schedule.scheduleDate ? new Date(schedule.scheduleDate).toLocaleString('da-DK') : 'Ikke planlagt';
+        
+        html += `
+          <div class="area-item" style="margin-bottom: 15px;">
+            <div style="flex: 1;">
+              <div><strong>Send dato:</strong> ${scheduleDate}</div>
+              <div><strong>Uge:</strong> ${schedule.week}</div>
+              <div><strong>Modtagere:</strong> ${(schedule.recipients || []).slice(0, 5).join(', ')}${(schedule.recipients || []).length > 5 ? '...' : ''}</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-primary btn-sm" onclick="editNotificationSchedule('${schedule.scheduleId}')">
+                <i class="fas fa-edit"></i> Rediger
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteNotificationSchedule('${schedule.scheduleId}')">
+                <i class="fas fa-trash"></i> Slet
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+    
+    // Delete generation schedule
+    function deleteGenerationSchedule(scheduleId) {
+      if (!confirm('Er du sikker på at du vil slette denne planlagte generering?')) {
+        return;
+      }
+      
+      callApi('deleteCleaningGenerationSchedule', { scheduleId: scheduleId }, function(result) {
+        if (result && result.success) {
+          showToast('Planlagt generering slettet!', 'success');
+          loadSchedules();
+        } else {
+          showToast(result.message || 'Kunne ikke slette generering', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+    
+    // Delete notification schedule
+    function deleteNotificationSchedule(scheduleId) {
+      if (!confirm('Er du sikker på at du vil slette denne planlagte notifikation?')) {
+        return;
+      }
+      
+      callApi('deleteCleaningNotificationSchedule', { scheduleId: scheduleId }, function(result) {
+        if (result && result.success) {
+          showToast('Planlagt notifikation slettet!', 'success');
+          loadSchedules();
+        } else {
+          showToast(result.message || 'Kunne ikke slette notifikation', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+
+    // Edit generation schedule
+    let currentEditSchedule = null;
+    
+    function editGenerationSchedule(scheduleId) {
+      callApi('getCleaningSchedules', {}, function(result) {
+        if (result && result.success) {
+          const schedule = (result.generationSchedules || []).find(s => s.scheduleId === scheduleId);
+          if (!schedule) {
+            showToast('Planlagt generering ikke fundet', 'error');
+            return;
+          }
+          
+          currentEditSchedule = schedule;
+          
+          // Populate form fields
+          document.getElementById('edit-schedule-id').value = schedule.scheduleId;
+          
+          // Load and populate people selection
+          loadEditPeopleForGeneration();
+          if (schedule.people && schedule.people.length > 0) {
+            // Set selected people after loading
+            setTimeout(() => {
+              schedule.people.forEach(personName => {
+                const checkbox = document.querySelector(`#edit-people-list input[value="${personName}"]`);
+                if (checkbox) {
+                  checkbox.checked = true;
+                  const memberDiv = checkbox.closest('.available-member');
+                  if (memberDiv) {
+                    memberDiv.classList.add('selected');
+                  }
+                }
+              });
+              // Update selectedPeople array
+              selectedPeople = [...schedule.people];
+            }, 500);
+          }
+          
+          // Set source type checkboxes
+          if (schedule.sourceType === 'members' || schedule.sourceType === 'both') {
+            document.getElementById('edit-include-members').checked = true;
+          } else {
+            document.getElementById('edit-include-members').checked = false;
+          }
+          if (schedule.sourceType === 'contacts' || schedule.sourceType === 'both') {
+            document.getElementById('edit-include-contacts').checked = true;
+          } else {
+            document.getElementById('edit-include-contacts').checked = false;
+          }
+          
+          // Set date and time
+          if (schedule.nextRun) {
+            const nextRunDate = new Date(schedule.nextRun);
+            const dateStr = nextRunDate.toISOString().split('T')[0];
+            const timeStr = String(nextRunDate.getHours()).padStart(2, '0') + ':' + String(nextRunDate.getMinutes()).padStart(2, '0');
+            document.getElementById('edit-schedule-date').value = dateStr;
+            document.getElementById('edit-schedule-time').value = timeStr;
+          }
+          
+          // Set repeat options
+          document.getElementById('edit-schedule-repeat').checked = schedule.repeat || false;
+          if (schedule.repeatInterval) {
+            document.getElementById('edit-repeat-interval').value = schedule.repeatInterval;
+          }
+          if (schedule.repeatCount) {
+            document.getElementById('edit-repeat-count').value = schedule.repeatCount;
+          }
+          
+          // Show/hide repeat options
+          const repeatOptions = document.getElementById('edit-repeat-options');
+          repeatOptions.style.display = schedule.repeat ? 'block' : 'none';
+          
+          // Set notification settings
+          const hasNotification = schedule.notificationSettings !== null && schedule.notificationSettings !== undefined;
+          document.getElementById('edit-auto-send-notification').checked = hasNotification;
+          const notifSettings = document.getElementById('edit-notification-settings');
+          notifSettings.style.display = hasNotification ? 'block' : 'none';
+          
+          if (hasNotification && schedule.notificationSettings) {
+            document.getElementById('edit-notif-include-cleaning-people').checked = schedule.notificationSettings.includeCleaningPeople || false;
+            document.getElementById('edit-notif-include-others').checked = schedule.notificationSettings.includeOthers || false;
+            document.getElementById('edit-notif-include-personal').checked = schedule.notificationSettings.includePersonalTasks !== false;
+            document.getElementById('edit-notif-include-full-list').checked = schedule.notificationSettings.includeFullList !== false;
+            
+            // Load other people if needed
+            if (schedule.notificationSettings.includeOthers) {
+              loadEditNotificationOtherPeople();
+            }
+          }
+          
+          showModal('edit-generation-modal');
+        } else {
+          showToast('Kunne ikke indlæse planlagte opgaver', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+    
+    // Save edited generation schedule
+    function saveEditedGenerationSchedule() {
+      const scheduleId = document.getElementById('edit-schedule-id').value;
+      if (!scheduleId) {
+        showToast('Schedule ID mangler', 'error');
+        return;
+      }
+      
+      const scheduleDate = document.getElementById('edit-schedule-date').value;
+      const scheduleTime = document.getElementById('edit-schedule-time').value;
+      const repeat = document.getElementById('edit-schedule-repeat').checked;
+      const repeatInterval = document.getElementById('edit-repeat-interval').value;
+      const repeatCountInput = document.getElementById('edit-repeat-count').value;
+      const repeatCount = repeatCountInput ? parseInt(repeatCountInput) : null;
+      
+      if (!scheduleDate) {
+        showToast('Vælg en dato', 'warning');
+        return;
+      }
+      
+      // Build notification settings
+      let notificationSettings = null;
+      if (document.getElementById('edit-auto-send-notification').checked) {
+        const includeCleaning = document.getElementById('edit-notif-include-cleaning-people').checked;
+        const includeOthers = document.getElementById('edit-notif-include-others').checked;
+        
+        if (includeCleaning || includeOthers) {
+          let notifRecipients = [];
+          if (includeCleaning) {
+            notifRecipients.push('__CLEANING_PEOPLE__');
+          }
+          if (includeOthers) {
+            const otherCheckboxes = document.querySelectorAll('#edit-notif-other-people-list .notif-other-checkbox:checked');
+            otherCheckboxes.forEach(cb => {
+              if (!notifRecipients.includes(cb.value)) {
+                notifRecipients.push(cb.value);
+              }
+            });
+          }
+          
+          notificationSettings = {
+            recipients: notifRecipients,
+            includeCleaningPeople: includeCleaning,
+            includeOthers: includeOthers,
+            includePersonalTasks: document.getElementById('edit-notif-include-personal').checked,
+            includeFullList: document.getElementById('edit-notif-include-full-list').checked
+          };
+        }
+      }
+      
+      // Get selected people
+      const selectedPeopleCheckboxes = document.querySelectorAll('#edit-people-list .available-member-checkbox:checked');
+      const selectedPeopleList = Array.from(selectedPeopleCheckboxes).map(cb => cb.value);
+      
+      // Get source type
+      const includeMembers = document.getElementById('edit-include-members').checked;
+      const includeContacts = document.getElementById('edit-include-contacts').checked;
+      let sourceType = 'members';
+      if (includeMembers && includeContacts) {
+        sourceType = 'both';
+      } else if (includeContacts) {
+        sourceType = 'contacts';
+      }
+      
+      const params = {
+        scheduleId: scheduleId,
+        scheduleDate: scheduleDate,
+        scheduleTime: scheduleTime,
+        repeat: repeat,
+        repeatInterval: repeatInterval,
+        repeatCount: repeatCount,
+        notificationSettings: notificationSettings,
+        people: selectedPeopleList,
+        sourceType: sourceType
+      };
+      
+      document.getElementById('save-edit-generation-btn').disabled = true;
+      document.getElementById('save-edit-generation-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gemmer...';
+      
+      callApi('updateCleaningGenerationSchedule', params, function(result) {
+        document.getElementById('save-edit-generation-btn').disabled = false;
+        document.getElementById('save-edit-generation-btn').innerHTML = 'Gem Ændringer';
+        
+        if (result && result.success) {
+          showToast('Planlagt generering opdateret!', 'success');
+          hideModal('edit-generation-modal');
+          loadSchedules();
+        } else {
+          showToast(result.message || 'Kunne ikke opdatere generering', 'error');
+        }
+      }, function(error) {
+        document.getElementById('save-edit-generation-btn').disabled = false;
+        document.getElementById('save-edit-generation-btn').innerHTML = 'Gem Ændringer';
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+    
+    // Load other people for edit notification
+    function loadEditNotificationOtherPeople() {
+      const container = document.getElementById('edit-notif-other-people-list');
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Indlæser personer...</div>';
+      container.style.display = 'block';
+      
+      let allPeopleList = [];
+      let loadedCount = 0;
+      
+      callApi('getAllMembers', {}, function(result) {
+        if (result && result.success && result.members) {
+          result.members.forEach(m => {
+            const name = `${m.fornavn || ''} ${m.efternavn || ''}`.trim();
+            if (name && !allPeopleList.find(p => p.name === name)) {
+              allPeopleList.push({ name: name, email: m.email || '' });
+            }
+          });
+        }
+        loadedCount++;
+        if (loadedCount === 2) renderEditNotificationOtherPeople(allPeopleList);
+      });
+      
+      callApi('getAllContactsSimple', {}, function(result) {
+        if (result && result.success && result.contacts) {
+          result.contacts.forEach(c => {
+            const name = `${c.fornavn || ''} ${c.efternavn || ''}`.trim();
+            if (name && !allPeopleList.find(p => p.name === name)) {
+              allPeopleList.push({ name: name, email: c.email || '' });
+            }
+          });
+        }
+        loadedCount++;
+        if (loadedCount === 2) renderEditNotificationOtherPeople(allPeopleList);
+      });
+    }
+    
+    function renderEditNotificationOtherPeople(people) {
+      const container = document.getElementById('edit-notif-other-people-list');
+      if (people.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen personer fundet</div>';
+        return;
+      }
+      
+      people.sort((a, b) => a.name.localeCompare(b.name));
+      
+      // Check if current schedule has selected people
+      const currentSelected = currentEditSchedule && currentEditSchedule.notificationSettings && currentEditSchedule.notificationSettings.recipients 
+        ? currentEditSchedule.notificationSettings.recipients.filter(r => r !== '__CLEANING_PEOPLE__')
+        : [];
+      
+      let html = '';
+      people.forEach(person => {
+        const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        const isSelected = currentSelected.includes(person.name);
+        html += `
+          <div class="available-member">
+            <div class="available-member-avatar">${initials}</div>
+            <div class="available-member-name">${person.name}</div>
+            <input type="checkbox" class="available-member-checkbox notif-other-checkbox" value="${person.name}" ${isSelected ? 'checked' : ''}>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+    
+    // Edit notification schedule
+    function editNotificationSchedule(scheduleId) {
+      callApi('getCleaningSchedules', {}, function(result) {
+        if (result && result.success) {
+          const schedule = (result.notificationSchedules || []).find(s => s.scheduleId === scheduleId);
+          if (!schedule) {
+            showToast('Planlagt notifikation ikke fundet', 'error');
+            return;
+          }
+          
+          // For now, just show a message that editing is not fully implemented
+          // User can delete and recreate instead
+          if (confirm('Redigering af planlagte notifikationer er ikke fuldt implementeret endnu. Vil du slette denne og oprette en ny i stedet?')) {
+            deleteNotificationSchedule(scheduleId);
+            // Open send reminders modal after deletion
+            setTimeout(() => {
+              document.getElementById('send-reminders-btn').click();
+            }, 500);
+          }
+        } else {
+          showToast('Kunne ikke indlæse planlagte opgaver', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl: ' + error, 'error');
+      });
+    }
+    
+    // Close modals on outside click
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+  </script>
+  
+  <!-- XLSX Library for Excel export/import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <script>
+    // Download Excel template for rengoring
+    function downloadRengoringTemplate() {
+      callApi('generateRengoringTemplate', {}, function(result) {
+        if (result && result.success) {
+          const headers = result.headers;
+          const exampleRow = result.exampleRow;
+          const personsList = result.personsList || [];
+          
+          const wb = XLSX.utils.book_new();
+          const wsData = [headers, exampleRow];
+          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          ws['!cols'] = headers.map(() => ({ wch: 20 }));
+          
+          // Add persons list as a separate sheet for dropdown validation
+          if (personsList.length > 0) {
+            const personsSheetData = [['Navn'], ...personsList.map(p => [p])];
+            const personsWs = XLSX.utils.aoa_to_sheet(personsSheetData);
+            personsWs['!cols'] = [{ wch: 30 }];
+            XLSX.utils.book_append_sheet(wb, personsWs, 'Medlemmer_Kontakter');
+            
+            // Try to add data validation to area columns (all columns except 'Uge')
+            try {
+              const personsRange = `Medlemmer_Kontakter!$A$2:$A$${personsList.length + 1}`;
+              const areaColumns = [];
+              headers.forEach((h, idx) => {
+                if (h !== 'Uge') {
+                  areaColumns.push(idx);
+                }
+              });
+              
+              if (!ws['!dataValidation']) {
+                ws['!dataValidation'] = [];
+              }
+              
+              // Add validation to area columns (rows 2-100)
+              areaColumns.forEach(colIdx => {
+                const colLetter = XLSX.utils.encode_col(colIdx);
+                for (let row = 2; row <= 100; row++) {
+                  const cellRef = colLetter + row;
+                  ws['!dataValidation'].push({
+                    sqref: cellRef,
+                    type: 'list',
+                    formula1: personsRange
+                  });
+                }
+              });
+            } catch (e) {
+              console.log('Data validation not supported, will use helper sheet only:', e);
+            }
+            
+            // Add instructions sheet
+            const instructions = [
+              ['INSTRUKTIONER TIL DROPDOWN VALIDERING'],
+              [''],
+              ['For at tilføje dropdown validering til område-kolonnerne:'],
+              ['1. Vælg de celler hvor du vil have dropdowns (alle kolonner undtagen "Uge")'],
+              ['2. Gå til Data > Data Validation'],
+              ['3. Vælg "List" som tilladelse'],
+              ['4. I "Source" feltet, indtast: =Medlemmer_Kontakter!$A$2:$A$' + (personsList.length + 1)],
+              ['5. Klik OK'],
+              [''],
+              ['Nu kan du vælge personer fra dropdown menuen i stedet for at skrive dem manuelt.'],
+              ['Dette sikrer at du vælger korrekte navne fra medlemmer og kontakter.']
+            ];
+            const instructionsWs = XLSX.utils.aoa_to_sheet(instructions);
+            instructionsWs['!cols'] = [{ wch: 80 }];
+            XLSX.utils.book_append_sheet(wb, instructionsWs, 'Instruktioner');
+          }
+          
+          XLSX.utils.book_append_sheet(wb, ws, 'Rengoring');
+          XLSX.writeFile(wb, 'Rengoring_Skabelon.xlsx');
+          showToast('Skabelon downloadet med medlemmer/kontakter liste', 'success');
+        } else {
+          showToast('Fejl ved download af skabelon: ' + (result.message || 'Ukendt fejl'), 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved download af skabelon: ' + error, 'error');
+      });
+    }
+  </script>
+</body>
+</html>

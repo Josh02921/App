@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Heaven Church Admin</title>
+  <?!= include('CommonJS'); ?>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --brand-50: #eef2ff;
+      --brand-100: #c7d2fe;
+      --brand-200: #a5b4fc;
+      --brand-500: #6366f1;
+      --brand-600: #4f46e5;
+      --brand-900: #1e1b4b;
+      --ink-900: #0f172a;
+      --ink-700: #334155;
+      --ink-500: #64748b;
+      --surface: #f4f6fb;
+      --surface-raised: #ffffff;
+      --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 45px rgba(15, 23, 42, 0.12);
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --transition-fast: 0.18s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--surface);
+      color: var(--ink-700);
+      display: flex;
+    }
+
+    main.page-shell {
+      margin-left: var(--sidebar-width);
+      padding: 42px 48px 56px;
+      width: calc(100% - var(--sidebar-width));
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--ink-900);
+      letter-spacing: -0.03em;
+    }
+
+    .topbar p {
+      margin: 6px 0 0;
+      font-size: 16px;
+      color: var(--ink-500);
+    }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--ink-500);
+      font-size: 14px;
+    }
+
+    .ghost-button {
+      border: 1px solid var(--brand-200);
+      background: rgba(99, 102, 241, 0.12);
+      color: var(--brand-600);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .ghost-button:hover {
+      background: rgba(79, 70, 229, 0.16);
+      transform: translateY(-1px);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+    }
+
+    .metric-card {
+      position: relative;
+      background: var(--surface-raised);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .metric-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), transparent 55%);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .metric-card:hover::after {
+      opacity: 1;
+    }
+
+    .metric-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--brand-50);
+      color: var(--brand-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .metric-content {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+    }
+
+    .metric-title {
+      margin: 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-500);
+    }
+
+    .metric-value {
+      margin: 6px 0 0;
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--ink-900);
+      letter-spacing: -0.02em;
+    }
+
+    .metric-sub {
+      margin-top: 6px;
+      font-size: 14px;
+      color: var(--ink-500);
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 40px 0 18px;
+      color: var(--ink-900);
+    }
+
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .quick-card {
+      background: var(--surface-raised);
+      border: 1px solid rgba(99, 102, 241, 0.14);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .quick-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .quick-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.12);
+      color: var(--brand-600);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .quick-card h4 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--ink-900);
+    }
+
+    .quick-card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink-500);
+      line-height: 1.4;
+    }
+
+    .panels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-top: 10px;
+    }
+
+    .panel-card {
+      background: var(--surface-raised);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .panel-card h3 {
+      margin: 0;
+      font-size: 20px;
+      color: var(--ink-900);
+      letter-spacing: -0.01em;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99, 102, 241, 0.12);
+      color: var(--brand-600);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      width: fit-content;
+    }
+
+    .event-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--ink-900);
+      margin: 4px 0 0;
+    }
+
+    .event-detail {
+      font-size: 15px;
+      color: var(--ink-500);
+      margin-top: 4px;
+    }
+
+    .panel-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      color: var(--ink-500);
+      font-size: 14px;
+    }
+
+    .panel-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .role-chip {
+      border: 1px solid rgba(99, 102, 241, 0.18);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--brand-900);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .role-chip strong {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--brand-600);
+    }
+
+    .role-chip span {
+      font-size: 15px;
+      color: var(--ink-900);
+    }
+
+    .cleaning-assignments {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .assignment-card {
+      background: rgba(15, 23, 42, 0.04);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .assignment-card span:first-child {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-500);
+    }
+
+    .assignment-card span:last-child {
+      font-size: 15px;
+      color: var(--ink-900);
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px;
+      border: 1px dashed rgba(15, 23, 42, 0.14);
+      border-radius: var(--radius-md);
+      color: var(--ink-500);
+      font-size: 15px;
+    }
+
+    .error-state {
+      background: rgba(220, 76, 100, 0.12);
+      color: #8c1d2a;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      border: 1px solid rgba(220, 76, 100, 0.2);
+      margin-top: 24px;
+    }
+
+    @media (max-width: 1200px) {
+      main.page-shell {
+        padding: 32px 28px 48px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --sidebar-width: 0px;
+      }
+
+      main.page-shell {
+        margin-left: 0;
+        padding: 24px 20px 40px;
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <?!= include('Sidebar'); ?>
+
+  <main class="page-shell">
+    <header class="topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Få overblik over medlemmer, teams og kommende aktiviteter.</p>
+      </div>
+      <div class="topbar-meta">
+        <span id="meta-generated">Opdateret: --</span>
+        <button class="ghost-button" id="refresh-dashboard"><i class="fas fa-rotate"></i> Opdater data</button>
+      </div>
+    </header>
+
+    <section class="metrics-grid" aria-label="Nøglemetrikker">
+      <article class="metric-card" data-metric="contacts">
+        <div class="metric-icon"><i class="fas fa-address-book"></i></div>
+        <div class="metric-content">
+          <p class="metric-title">Kontakter</p>
+          <p class="metric-value" id="metric-contacts-total">--</p>
+          <p class="metric-sub" id="metric-contacts-sub">Nye (30 dage): -- · Opfølgning: --</p>
+        </div>
+      </article>
+      <article class="metric-card" data-metric="members">
+        <div class="metric-icon"><i class="fas fa-users"></i></div>
+        <div class="metric-content">
+          <p class="metric-title">Medlemmer</p>
+          <p class="metric-value" id="metric-members-total">--</p>
+          <p class="metric-sub" id="metric-members-sub">I teams: -- · Deltagelse: --%</p>
+        </div>
+      </article>
+      <article class="metric-card" data-metric="teams">
+        <div class="metric-icon"><i class="fas fa-people-group"></i></div>
+        <div class="metric-content">
+          <p class="metric-title">Teams</p>
+          <p class="metric-value" id="metric-teams-total">--</p>
+          <p class="metric-sub" id="metric-teams-sub">Medlemmer: -- · Størst: --</p>
+        </div>
+      </article>
+      <article class="metric-card" data-metric="events">
+        <div class="metric-icon"><i class="fas fa-calendar-star"></i></div>
+        <div class="metric-content">
+          <p class="metric-title">Events</p>
+          <p class="metric-value" id="metric-events-total">--</p>
+          <p class="metric-sub" id="metric-events-sub">Kommende: -- · Næste om: --</p>
+        </div>
+      </article>
+    </section>
+
+    <section aria-label="Genveje">
+      <div class="section-title">
+        <h2>Hurtige handlinger</h2>
+        <span id="quick-actions-meta">Forslag baseret på aktuelle data</span>
+      </div>
+      <div class="quick-actions-grid" id="quick-actions"></div>
+    </section>
+
+    <section class="panels-grid" aria-label="Detaljerede paneler">
+      <article class="panel-card" id="events-panel">
+        <div class="tag"><i class="fas fa-calendar-alt"></i> Næste event</div>
+        <div>
+          <h3 id="event-days">Ingen planlagte events</h3>
+          <div class="event-title" id="event-title">Planlæg næste aktivitet</div>
+          <div class="event-detail" id="event-date">Tilføj et nyt event for at holde menigheden informeret.</div>
+        </div>
+        <div class="panel-meta" id="event-meta"></div>
+        <button class="ghost-button" data-link="events">Administrer events</button>
+      </article>
+
+      <article class="panel-card" id="production-panel">
+        <div class="tag"><i class="fas fa-video"></i> Søndagens produktion</div>
+        <div>
+          <h3 id="production-date">Ingen kommende produktioner</h3>
+        </div>
+        <div class="roles-grid" id="production-roles"></div>
+        <button class="ghost-button" data-link="produktion">Åbn produktion</button>
+      </article>
+
+      <article class="panel-card" id="cleaning-panel">
+        <div class="tag"><i class="fas fa-broom"></i> Rengøring</div>
+        <div>
+          <h3 id="cleaning-week">Ingen rengøringsplan fundet</h3>
+          <p class="event-detail" id="cleaning-summary">Når rengøringsplanen er klar, vises den aktuelle uge her.</p>
+        </div>
+        <div class="cleaning-assignments" id="cleaning-assignments"></div>
+        <button class="ghost-button" data-link="rengoring">Åbn rengøring</button>
+      </article>
+    </section>
+
+    <div id="dashboard-error" class="error-state" style="display:none;"></div>
+  </main>
+
+  <script>
+    // Fallback for sessionManager if CommonJS hasn't loaded yet
+    if (typeof sessionManager === 'undefined') {
+      window.sessionManager = {
+        storageKey: 'sessionToken',
+        getToken() {
+          try {
+            if (typeof window === 'undefined') return '';
+            if (window.sessionToken) return window.sessionToken;
+            const token = window.localStorage.getItem(this.storageKey);
+            if (token) {
+              window.sessionToken = token;
+              return token;
+            }
+            return '';
+          } catch (error) {
+            return window.sessionToken || '';
+          }
+        },
+        setToken(value) {
+          try {
+            if (typeof window !== 'undefined') {
+              if (value) {
+                window.localStorage.setItem(this.storageKey, value);
+              } else {
+                window.localStorage.removeItem(this.storageKey);
+              }
+            }
+          } catch (error) {
+            console.error('Error persisting session token:', error);
+          }
+          window.sessionToken = value || '';
+        },
+        clearToken() {
+          this.setToken('');
+        }
+      };
+    }
+    
+    // Fallback for callApi if CommonJS hasn't loaded yet
+    if (typeof callApi !== 'function') {
+      window.callApi = function(functionName, params = {}, successHandler = null, failureHandler = null) {
+        const token = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : '';
+        const payload = { ...params };
+        if (token) {
+          payload.sessionToken = token;
+        }
+
+        let runner = google.script.run;
+        if (failureHandler) {
+          runner = runner.withFailureHandler(failureHandler);
+        }
+        if (successHandler) {
+          runner = runner.withSuccessHandler(successHandler);
+        }
+
+        runner[functionName](payload);
+      };
+    }
+    
+    // Read sessionToken from URL and store it
+    (function() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('sessionToken');
+        if (urlToken && urlToken.trim() !== '') {
+          if (typeof sessionManager !== 'undefined' && sessionManager.setToken) {
+            sessionManager.setToken(urlToken);
+          }
+          window.sessionToken = urlToken;
+          console.log('Dashboard: Session token loaded from URL');
+        }
+      } catch (e) {
+        console.error('Error reading sessionToken from URL:', e);
+      }
+    })();
+    
+    // Fallback for navigateToPage if CommonJS hasn't loaded yet
+    if (typeof navigateToPage !== 'function') {
+      window.navigateToPage = function(page) {
+        function ensureExecUrl(url) {
+          if (!url) return null;
+          let cleanUrl = url.split('?')[0].split('#')[0];
+          cleanUrl = cleanUrl.replace(/\/$/, '');
+          if (!cleanUrl.endsWith('/exec')) {
+            if (cleanUrl.indexOf('script.google.com') !== -1) {
+              cleanUrl = cleanUrl + '/exec';
+            } else {
+              cleanUrl = cleanUrl.replace(/\/(home|dev)$/, '/exec');
+              if (!cleanUrl.endsWith('/exec')) {
+                cleanUrl = cleanUrl + '/exec';
+              }
+            }
+          }
+          return cleanUrl;
+        }
+        
+        // Get session token from CURRENT URL first, then localStorage as fallback
+        const currentUrlParams = new URLSearchParams(window.location.search);
+        let currentToken = currentUrlParams.get('sessionToken') || '';
+        
+        // If no token in URL, use localStorage (for navigation purposes)
+        if (!currentToken) {
+          const storedToken = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : (window.sessionToken || '');
+          if (storedToken && storedToken.trim() !== '') {
+            console.log('Dashboard navigation: No token in URL, using stored token');
+            currentToken = storedToken;
+          }
+        }
+        
+        const baseUrl = <?!= JSON.stringify(scriptUrl || '') ?>;
+        if (baseUrl) {
+          const finalUrl = ensureExecUrl(baseUrl);
+          if (finalUrl) {
+            const urlParams = new URLSearchParams();
+            urlParams.set('page', page);
+            if (currentToken && currentToken.trim() !== '') {
+              urlParams.set('sessionToken', currentToken);
+            }
+            const targetUrl = `${finalUrl}?${urlParams.toString()}`;
+            console.log('Dashboard navigating to:', targetUrl);
+            try {
+              window.location.replace(targetUrl);
+            } catch (error) {
+              window.location.href = targetUrl;
+            }
+            return;
+          }
+        }
+        // Use current URL's base instead of getting from server (more reliable)
+        const currentBaseUrl = window.location.origin + window.location.pathname;
+        const urlParams = new URLSearchParams();
+        urlParams.set('page', page);
+        if (currentToken && currentToken.trim() !== '') {
+          urlParams.set('sessionToken', currentToken);
+        } else {
+          console.error('Dashboard: CRITICAL - No session token for navigation!');
+        }
+        const targetUrl = `${currentBaseUrl}?${urlParams.toString()}`;
+        console.log('Dashboard navigating to (using current URL):', targetUrl);
+        console.log('Token in dashboard navigation:', currentToken ? currentToken.substring(0, 20) + '...' : 'NONE');
+        
+        // Store token before navigation
+        if (currentToken && currentToken.trim() !== '') {
+          if (typeof sessionManager !== 'undefined' && sessionManager.setToken) {
+            sessionManager.setToken(currentToken);
+          }
+        }
+        
+        try {
+          window.location.href = targetUrl;
+        } catch (error) {
+          console.error('Dashboard navigation error:', error);
+          try {
+            window.location.replace(targetUrl);
+          } catch (e2) {
+            window.location = targetUrl;
+          }
+        }
+      };
+    }
+
+    const numberFormatter = new Intl.NumberFormat('da-DK');
+    const percentageFormatter = new Intl.NumberFormat('da-DK', { maximumFractionDigits: 0 });
+
+    // Function to ensure sidebar is visible (with retry)
+    function ensureSidebarVisible() {
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.style.display = 'flex';
+        sidebar.style.visibility = 'visible';
+        sidebar.style.opacity = '1';
+        sidebar.style.zIndex = '1000';
+        console.log('Sidebar found and made visible');
+        return true;
+      }
+      return false;
+    }
+    
+    // Read session token from URL (with retry for redirect timing)
+    (function() {
+      function readToken() {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const urlToken = urlParams.get('sessionToken');
+          if (urlToken && urlToken.trim() !== '') {
+            // Store token for API calls (but URL is the source of truth)
+            if (typeof sessionManager !== 'undefined' && sessionManager.setToken) {
+              sessionManager.setToken(urlToken);
+            }
+            window.sessionToken = urlToken;
+            console.log('Dashboard: Session token loaded from URL');
+            return true;
+          } else {
+            // No token in URL - check localStorage
+            const storedToken = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : (window.sessionToken || '');
+            if (storedToken && storedToken.trim() !== '') {
+              // Add token to URL
+              console.log('Dashboard: Token in storage but not URL - adding to URL');
+              urlParams.set('sessionToken', storedToken);
+              const newUrl = window.location.pathname + '?' + urlParams.toString();
+              window.history.replaceState({}, '', newUrl);
+              window.sessionToken = storedToken;
+              console.log('Dashboard: Session token added to URL from storage');
+              return true;
+            } else {
+              // No token anywhere
+              window.sessionToken = '';
+              console.log('Dashboard: No session token in URL or storage');
+              return false;
+            }
+          }
+        } catch (e) {
+          console.error('Error reading sessionToken from URL:', e);
+          return false;
+        }
+      }
+      
+      // Try immediately
+      if (!readToken()) {
+        // Retry after delays (redirect might not have completed yet)
+        setTimeout(() => {
+          if (!readToken()) {
+            setTimeout(() => {
+              if (!readToken()) {
+                setTimeout(readToken, 1000);
+              }
+            }, 500);
+          }
+        }, 100);
+      }
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Verify session token is in URL (with retry for redirect timing)
+      (function checkToken() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('sessionToken');
+        if (!token || token.trim() === '') {
+          console.warn('No session token in URL after redirect - retrying check...');
+          // Retry a few times in case redirect hasn't completed
+          let retries = 0;
+          const maxRetries = 5;
+          const checkInterval = setInterval(() => {
+            retries++;
+            const currentParams = new URLSearchParams(window.location.search);
+            const currentToken = currentParams.get('sessionToken');
+            if (currentToken && currentToken.trim() !== '') {
+              console.log('Session token found after retry');
+              clearInterval(checkInterval);
+              // Token found, continue initialization
+              initializePage();
+            } else if (retries >= maxRetries) {
+              console.error('No session token found after retries - redirect may have failed');
+              clearInterval(checkInterval);
+              // Still try to initialize, but user might need to login
+              initializePage();
+            }
+          }, 200);
+        } else {
+          console.log('Session token verified in URL');
+          initializePage();
+        }
+      })();
+      
+      function initializePage() {
+        // Try to find sidebar immediately
+        if (!ensureSidebarVisible()) {
+          // Retry after a short delay (sidebar might be loading)
+          setTimeout(() => {
+            if (!ensureSidebarVisible()) {
+              // One more retry after longer delay
+              setTimeout(() => {
+                if (!ensureSidebarVisible()) {
+                  console.error('Sidebar not found in DOM after retries!');
+                }
+              }, 500);
+            }
+          }, 100);
+        }
+        
+        // Update user info in sidebar
+        if (typeof updateUserInfoOnPage === 'function') {
+          updateUserInfoOnPage();
+        } else if (typeof updateSidebarUserInfo === 'function') {
+          updateSidebarUserInfo();
+        }
+        
+        primeSkeleton();
+        loadDashboardData();
+      }
+
+      const refreshButton = document.getElementById('refresh-dashboard');
+      if (refreshButton) {
+        refreshButton.addEventListener('click', () => {
+          refreshButton.disabled = true;
+          refreshButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opdaterer...';
+          loadDashboardData(() => {
+            refreshButton.disabled = false;
+            refreshButton.innerHTML = '<i class="fas fa-rotate"></i> Opdater data';
+          });
+        });
+      }
+
+      document.querySelectorAll('button[data-link]').forEach(button => {
+        button.addEventListener('click', () => {
+          const page = button.dataset.link;
+          if (page && typeof navigateToPage === 'function') {
+            navigateToPage(page);
+          }
+        });
+      });
+    });
+
+    function primeSkeleton() {
+      setText('metric-contacts-total', '—');
+      setText('metric-contacts-sub', 'Nye (30 dage): — · Opfølgning: —');
+      setText('metric-members-total', '—');
+      setText('metric-members-sub', 'I teams: — · Deltagelse: —%');
+      setText('metric-teams-total', '—');
+      setText('metric-teams-sub', 'Medlemmer: — · Størst: —');
+      setText('metric-events-total', '—');
+      setText('metric-events-sub', 'Kommende: — · Næste om: —');
+      renderQuickActions([]);
+      showEventPanel();
+      showProductionPanel();
+      showCleaningPanel();
+    }
+
+    function loadDashboardData(done) {
+      console.log('Loading dashboard data...');
+      callApi('getDashboardData', {}, function(data) {
+        console.log('Dashboard data received:', data);
+        if (typeof done === 'function') done();
+        if (data === null || data === undefined) {
+          console.error('Dashboard data is null or undefined');
+          showErrorState('Ingen data modtaget fra server - tjek execution logs');
+          return;
+        }
+        renderDashboard(data);
+      }, function(error) {
+        console.error('Dashboard data error:', error);
+        if (typeof done === 'function') done();
+        showErrorState('Fejl ved indlæsning: ' + (error || 'Ukendt fejl'));
+      });
+    }
+
+    function renderDashboard(payload) {
+      if (!payload) {
+        showErrorState('Kunne ikke indlæse dashboard-data.');
+        return;
+      }
+
+      let errorMessage = null;
+      if (payload.success === false) {
+        errorMessage = payload.message || 'Kunne ikke indlæse dashboard-data.';
+      }
+
+      const rawData = payload.data || payload;
+      if (!rawData) {
+        showErrorState(errorMessage || 'Kunne ikke indlæse dashboard-data.');
+        return;
+      }
+
+      if (rawData.success === false) {
+        errorMessage = errorMessage || rawData.message || 'Kunne ikke indlæse dashboard-data.';
+      }
+
+      if (errorMessage) {
+        showErrorState(errorMessage);
+      } else {
+        hideErrorState();
+      }
+
+      const data = rawData.data || rawData;
+
+      if (data.generatedAt) {
+        const generated = new Date(data.generatedAt);
+        if (!isNaN(generated.getTime())) {
+          setText('meta-generated', 'Opdateret: ' + generated.toLocaleString('da-DK'));
+        }
+      }
+
+      renderMetrics(data);
+      renderQuickActions(data.quickActions || []);
+      showEventPanel(data.events || {});
+      showProductionPanel(data.production || {});
+      showCleaningPanel(data.cleaning || {});
+    }
+
+    function renderMetrics(data) {
+      if (data.contacts) {
+        setText('metric-contacts-total', numberFormatter.format(data.contacts.total || 0));
+        const recent = numberFormatter.format(data.contacts.recentContacts || 0);
+        const followUps = numberFormatter.format(data.contacts.followUpsNeeded || 0);
+        setText('metric-contacts-sub', `Nye (30 dage): ${recent} · Opfølgning: ${followUps}`);
+      }
+
+      if (data.members) {
+        setText('metric-members-total', numberFormatter.format(data.members.total || 0));
+        const inTeams = numberFormatter.format(data.members.inTeams || 0);
+        const teamPercent = percentageFormatter.format(data.members.teamPercentage || 0);
+        setText('metric-members-sub', `I teams: ${inTeams} · Deltagelse: ${teamPercent}%`);
+      }
+
+      if (data.teams) {
+        setText('metric-teams-total', numberFormatter.format(data.teams.total || 0));
+        const totalMembers = numberFormatter.format(data.teams.totalMembers || 0);
+        const largestTeam = data.teams.largestTeam && data.teams.largestTeam.name ? data.teams.largestTeam.name : '—';
+        setText('metric-teams-sub', `Medlemmer: ${totalMembers} · Størst: ${sanitize(largestTeam)}`);
+      }
+
+      if (data.events) {
+        setText('metric-events-total', numberFormatter.format(data.events.total || 0));
+        const upcoming = numberFormatter.format(data.events.upcoming || 0);
+        const daysUntil = data.events.nextEvent && data.events.nextEvent.daysUntil != null
+          ? numberFormatter.format(data.events.nextEvent.daysUntil)
+          : '—';
+        setText('metric-events-sub', `Kommende: ${upcoming} · Næste om: ${daysUntil}`);
+      }
+    }
+
+    function renderQuickActions(actions) {
+      const container = document.getElementById('quick-actions');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!actions || actions.length === 0) {
+        container.innerHTML = '<div class="empty-state">Ingen forslag lige nu. Når data ændrer sig, foreslår vi relevante handlinger her.</div>';
+        return;
+      }
+
+      actions.forEach(action => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'quick-card';
+        card.dataset.link = action.page || '';
+        card.innerHTML = `
+          <div class="quick-card-icon"><i class="fas ${action.icon || 'fa-arrow-right'}"></i></div>
+          <div>
+            <h4>${sanitize(action.label || 'Handling')}</h4>
+            <p>${sanitize(action.description || '')}</p>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          if (typeof navigateToPage === 'function' && action.page) {
+            navigateToPage(action.page);
+          }
+        });
+        container.appendChild(card);
+      });
+    }
+
+    function showEventPanel(events = {}) {
+      const daysEl = document.getElementById('event-days');
+      const titleEl = document.getElementById('event-title');
+      const dateEl = document.getElementById('event-date');
+      const metaEl = document.getElementById('event-meta');
+
+      if (!events.nextEvent) {
+        daysEl.textContent = 'Ingen planlagte events';
+        titleEl.textContent = 'Planlæg næste aktivitet';
+        dateEl.textContent = 'Opret et nyt event for at holde menigheden informeret.';
+        metaEl.innerHTML = '';
+        return;
+      }
+
+      const next = events.nextEvent;
+      const daysUntil = next.daysUntil != null ? numberFormatter.format(next.daysUntil) : '—';
+      const formattedDate = next.date ? new Date(next.date).toLocaleString('da-DK', { dateStyle: 'full', timeStyle: 'short' }) : '—';
+
+      daysEl.textContent = `Om ${daysUntil} dag${daysUntil === '1' ? '' : 'e'}`;
+      titleEl.textContent = sanitize(next.title || 'Kommende event');
+      dateEl.textContent = formattedDate;
+
+      metaEl.innerHTML = '';
+      if (next.location) {
+        const span = document.createElement('span');
+        span.innerHTML = `<i class="fas fa-location-dot"></i> ${sanitize(next.location)}`;
+        metaEl.appendChild(span);
+      }
+      if (next.team) {
+        const span = document.createElement('span');
+        span.innerHTML = `<i class="fas fa-people-group"></i> ${sanitize(next.team)}`;
+        metaEl.appendChild(span);
+      }
+    }
+
+    function showProductionPanel(production = {}) {
+      const dateEl = document.getElementById('production-date');
+      const rolesContainer = document.getElementById('production-roles');
+      rolesContainer.innerHTML = '';
+
+      if (!production.upcoming) {
+        dateEl.textContent = 'Ingen kommende produktioner';
+        rolesContainer.innerHTML = '<div class="empty-state">Opdater produktionen for den kommende søndag for at se fordelingen her.</div>';
+        return;
+      }
+
+      const upcoming = production.upcoming;
+      const formattedDate = upcoming.date ? new Date(upcoming.date).toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' }) : '—';
+      dateEl.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
+      const roles = [
+        { label: 'MC', value: upcoming.mc },
+        { label: 'Media', value: upcoming.media },
+        { label: 'Forsanger', value: upcoming.forsanger },
+        { label: 'Værter', value: [upcoming.host?.host1, upcoming.host?.host2].filter(Boolean).join(' & ') }
+      ];
+
+      ['piano', 'guitar', 'trommer', 'bas'].forEach(instrument => {
+        if (upcoming.band && upcoming.band[instrument]) {
+          const label = instrument.charAt(0).toUpperCase() + instrument.slice(1);
+          roles.push({ label, value: upcoming.band[instrument] });
+        }
+      });
+
+      roles.forEach(role => {
+        if (!role.value) return;
+        const chip = document.createElement('div');
+        chip.className = 'role-chip';
+        chip.innerHTML = `<strong>${sanitize(role.label)}</strong><span>${sanitize(role.value)}</span>`;
+        rolesContainer.appendChild(chip);
+      });
+
+      if (!rolesContainer.hasChildNodes()) {
+        rolesContainer.innerHTML = '<div class="empty-state">Tildel roller i produktionen for at se dem her.</div>';
+      }
+    }
+
+    function showCleaningPanel(cleaning = {}) {
+      const weekEl = document.getElementById('cleaning-week');
+      const summaryEl = document.getElementById('cleaning-summary');
+      const assignmentsEl = document.getElementById('cleaning-assignments');
+      assignmentsEl.innerHTML = '';
+
+      if (!cleaning.current) {
+        weekEl.textContent = 'Ingen rengøringsplan fundet';
+        summaryEl.textContent = 'Når rengøringsplanen er genereret, vises den aktuelle uge her.';
+        assignmentsEl.innerHTML = '<div class="empty-state">Ingen medlemmer er tildelt endnu.</div>';
+        return;
+      }
+
+      const weekLabel = typeof cleaning.current.week === 'number' ? 'Uge ' + cleaning.current.week : cleaning.current.week;
+      weekEl.textContent = sanitize(weekLabel || 'Aktuel uge');
+      summaryEl.textContent = 'Fordeling af rengøring i denne uge.';
+
+      const assignments = cleaning.current.assignments || {};
+      const mapping = [
+        { label: 'Cafe 1', value: assignments.cafe1 },
+        { label: 'Cafe 2', value: assignments.cafe2 },
+        { label: 'Salen', value: assignments.salen },
+        { label: 'Toiletter / Gulv / Børnerum', value: assignments.facilities }
+      ];
+
+      mapping.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'assignment-card';
+        card.innerHTML = `<span>${sanitize(item.label)}</span><span>${sanitize(item.value || 'Ikke tildelt')}</span>`;
+        assignmentsEl.appendChild(card);
+      });
+    }
+
+    function showErrorState(error) {
+      const el = document.getElementById('dashboard-error');
+      if (!el) return;
+      el.style.display = 'block';
+      el.textContent = typeof error === 'string' ? error : 'Der opstod en fejl under indlæsning af dashboard-data.';
+    }
+
+    function hideErrorState() {
+      const el = document.getElementById('dashboard-error');
+      if (!el) return;
+      el.style.display = 'none';
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function sanitize(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  </script>
+</body>
+</html>
+

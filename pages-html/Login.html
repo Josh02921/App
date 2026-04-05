@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - HEAVEN CHURCH Admin</title>
+  <script>
+    // CRITICAL: Set flag IMMEDIATELY before CommonJS loads to prevent any redirects
+    window.onLoginPage = true;
+  </script>
+  <?!= include('CommonJS'); ?>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --primary-light: #e3f2fd;
+      --secondary: #6c757d;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --white: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-container {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-header {
+      margin-bottom: 30px;
+    }
+
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 32px;
+      color: var(--primary);
+    }
+
+    .login-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      color: var(--secondary);
+      font-size: 16px;
+    }
+
+    .login-form {
+      text-align: left;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .input-group {
+      position: relative;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--secondary);
+    }
+
+    .input-group .form-control {
+      padding-left: 48px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+         .alert-danger {
+       background-color: #f8d7da;
+       color: #721c24;
+       border: 1px solid #f5c6cb;
+     }
+     
+     .alert-warning {
+       background-color: #fff3cd;
+       color: #856404;
+       border: 1px solid #ffeaa7;
+     }
+
+    @media (max-width: 480px) {
+      .login-container {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-logo">
+        <i class="fas fa-church"></i>
+      </div>
+      <h1 class="login-title">Horsens Pinsekirke</h1>
+      <p class="login-subtitle">Administrator Login</p>
+    </div>
+
+    <!-- Alert container for messages -->
+    <div id="alert-container"></div>
+
+    <div class="login-form">
+      <div class="form-group">
+        <label for="username" class="form-label">Brugernavn</label>
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="username" name="username" class="form-control" 
+                 placeholder="Indtast brugernavn" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Adgangskode</label>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" name="password" class="form-control" 
+                 placeholder="Indtast adgangskode" required>
+        </div>
+      </div>
+
+      <button type="button" id="login-btn" class="btn btn-primary" onclick="performLogin()">
+        Log Ind
+      </button>
+    </div>
+  </div>
+  <script>
+    (function ensureCommonJsSupport() {
+      const baseUrl = window.location.href.split('?')[0];
+
+      if (typeof sessionManager === 'undefined') {
+        window.sessionManager = {
+          storageKey: 'sessionToken',
+          getToken() {
+            try {
+              if (typeof window === 'undefined') return '';
+              if (window.sessionToken) return window.sessionToken;
+              const token = window.localStorage.getItem(this.storageKey);
+              if (token) {
+                window.sessionToken = token;
+                return token;
+              }
+            } catch (error) {
+              console.error('sessionManager.getToken fallback error', error);
+            }
+            return window.sessionToken || '';
+          },
+          setToken(value) {
+            try {
+              if (typeof window !== 'undefined') {
+                if (value) {
+                  window.localStorage.setItem(this.storageKey, value);
+                } else {
+                  window.localStorage.removeItem(this.storageKey);
+                }
+              }
+            } catch (error) {
+              console.error('sessionManager.setToken fallback error', error);
+            }
+            window.sessionToken = value || '';
+          },
+          clearToken() {
+            this.setToken('');
+          }
+        };
+      }
+
+      if (typeof callApi !== 'function') {
+        window.callApi = function(functionName, params, successHandler, failureHandler) {
+          params = params || {};
+          const token = sessionManager.getToken();
+          const payload = Object.assign({}, params);
+          if (token && !payload.sessionToken) payload.sessionToken = token;
+          fetch('/api/gas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ function: functionName, params: payload })
+          }).then(function(r) { return r.json(); })
+            .then(function(data) { if (successHandler) successHandler(data); })
+            .catch(function(err) { if (failureHandler) failureHandler(err); });
+        };
+      }
+
+      if (typeof navigateToPage !== 'function') {
+        window.navigateToPage = function(page) {
+          const sessionToken = sessionManager.getToken();
+          const params = new URLSearchParams();
+          params.set('page', page);
+          if (sessionToken) params.set('sessionToken', sessionToken);
+          window.location.href = '/?' + params.toString();
+        };
+      }
+    })();
+    // Global flag to track login state
+    let isLoggingIn = false;
+
+    function performLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const loginBtn = document.getElementById('login-btn');
+      
+      // Clear any existing alerts
+      clearAlerts();
+      
+      // Validate input
+      if (!username || !password) {
+        showAlert('Udfyld venligst både brugernavn og adgangskode', 'danger');
+        return;
+      }
+      
+      // Set login state
+      isLoggingIn = true;
+      
+      // Set loading state
+      loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logger ind...';
+      loginBtn.disabled = true;
+      
+      console.log('Attempting login with username:', username);
+      
+      // Call login API via fetch (replaces google.script.run)
+      fetch('/api/gas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ function: 'processLogin', params: { username: username, password: password } })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(response) {
+        loginBtn.innerHTML = 'Log Ind';
+        loginBtn.disabled = false;
+        isLoggingIn = false;
+
+        if (response && response.success) {
+          if (response.sessionToken) {
+            sessionManager.setToken(response.sessionToken);
+            try {
+              localStorage.setItem('username', response.username);
+              localStorage.setItem('userRole', response.userRole);
+              localStorage.setItem('userPermissions', JSON.stringify(response.userPermissions));
+            } catch (e) {}
+          }
+          showAlert('Login succesfuldt! Omdirigerer til dashboard...', 'success');
+          document.getElementById('username').value = '';
+          document.getElementById('password').value = '';
+          window.loginRedirectInProgress = true;
+          const token = response.sessionToken;
+          sessionManager.setToken(token);
+          window.sessionToken = token;
+          window.location.href = '/?page=dashboard&sessionToken=' + encodeURIComponent(token);
+        } else {
+          const errorMessage = (response && response.message) ? response.message : 'Ugyldigt brugernavn eller adgangskode';
+          showAlert(errorMessage, 'danger');
+          document.getElementById('password').value = '';
+          document.getElementById('password').focus();
+        }
+      })
+      .catch(function(error) {
+        console.error('Login error:', error);
+        loginBtn.innerHTML = 'Log Ind';
+        loginBtn.disabled = false;
+        isLoggingIn = false;
+        showAlert('Fejl ved login: ' + error.message, 'danger');
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      });
+    }
+
+    function showAlert(message, type) {
+      const alertContainer = document.getElementById('alert-container');
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type}`;
+      alertDiv.textContent = message;
+      
+      // Clear existing alerts
+      alertContainer.innerHTML = '';
+      alertContainer.appendChild(alertDiv);
+      
+      // Auto-hide success alerts after 3 seconds
+      if (type === 'success') {
+        setTimeout(function() {
+          if (alertDiv.parentNode) {
+            alertDiv.remove();
+          }
+        }, 3000);
+      }
+    }
+
+    function clearAlerts() {
+      const alertContainer = document.getElementById('alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = '';
+      }
+    }
+
+    // CRITICAL: Ensure page=login is in URL immediately when login page loads
+    // This must run BEFORE any other code to prevent redirects
+    (function ensureLoginPageInURL() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = urlParams.get('page');
+        
+        // If page parameter is not 'login', add it to URL
+        if (currentPage !== 'login') {
+          // Remove any sessionToken from URL (login page shouldn't have token)
+          urlParams.delete('sessionToken');
+          urlParams.set('page', 'login');
+          const newUrl = window.location.origin + window.location.pathname + '?' + urlParams.toString();
+          console.log('Login page: Ensuring page=login in URL:', newUrl);
+          // Use replace to avoid adding to history
+          window.history.replaceState({}, '', newUrl);
+        } else {
+          // Already has page=login, but make sure token is removed
+          if (urlParams.has('sessionToken')) {
+            urlParams.delete('sessionToken');
+            const newUrl = window.location.origin + window.location.pathname + '?' + urlParams.toString();
+            window.history.replaceState({}, '', newUrl);
+          }
+        }
+      } catch (e) {
+        console.error('Error ensuring login page URL:', e);
+      }
+    })();
+    
+    // Focus on username field when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Login page loaded - no token required');
+      
+      // CRITICAL: Set flag immediately to prevent any redirects
+      window.onLoginPage = true;
+      
+      // Login page does NOT require token - it's where you GET the token
+      // Clear any old tokens
+      if (typeof sessionManager !== 'undefined') {
+        sessionManager.clearToken();
+      }
+      if (typeof window.localStorage !== 'undefined') {
+        window.localStorage.removeItem('sessionToken');
+      }
+      window.sessionToken = '';
+      
+      // CRITICAL: Don't check for existing session on login page
+      // User must explicitly login - no auto-redirect
+      // checkExistingSession(); // DISABLED - don't auto-redirect on login page
+      
+      const usernameField = document.getElementById('username');
+      if (usernameField) {
+        usernameField.focus();
+      }
+    });
+    
+    // Also set flag immediately when script runs (before DOMContentLoaded)
+    window.onLoginPage = true;
+    
+    // Check if user already has an active session
+    // BUT: Only if token is in URL - don't auto-login from localStorage
+    function checkExistingSession() {
+      try {
+        // Don't check for existing session if we're in the middle of a login process
+        if (isLoggingIn || document.getElementById('login-btn').disabled || window.loginRedirectInProgress) {
+          console.log('Login in progress or redirect in progress, skipping existing session check');
+          return;
+        }
+        
+        // CRITICAL: Only check if token is in URL - don't auto-login from localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('sessionToken');
+        
+        if (!urlToken || urlToken.trim() === '') {
+          // No token in URL - user must login first
+          console.log('No token in URL - user must login');
+          clearLocalStorage(); // Clear any old tokens
+          return;
+        }
+        
+        // Token is in URL - verify it
+        // BUT: Only redirect if we're NOT on login page (shouldn't happen, but safety check)
+        if (window.onLoginPage) {
+          console.log('On login page - not checking existing session');
+          clearLocalStorage();
+          return;
+        }
+        
+        const username = localStorage.getItem('username');
+        const loginTime = localStorage.getItem('loginTime');
+        
+        if (urlToken && username && loginTime) {
+          // Check if session is still valid (not expired)
+          const loginDate = new Date(loginTime);
+          const now = new Date();
+          const sessionAge = now.getTime() - loginDate.getTime();
+          const maxSessionAge = 24 * 60 * 60 * 1000; // 24 hours
+          
+          if (sessionAge <= maxSessionAge) {
+            callApi('validateSessionToken', { sessionToken: urlToken }, function(result) {
+              // Double-check we're still not on login page before redirecting
+              if (window.onLoginPage) {
+                console.log('On login page - not redirecting');
+                return;
+              }
+              
+              if (result && result.success) {
+                console.log('Existing session validated, redirecting to dashboard...');
+                showAlert('Du er allerede logget ind. Omdirigerer til dashboard...', 'info');
+                // Redirect with token in URL
+                const redirectUrl = `${window.location.origin}${window.location.pathname}?page=dashboard&sessionToken=${encodeURIComponent(urlToken)}`;
+                window.location.href = redirectUrl;
+              } else {
+                console.warn('Existing session invalidated:', result);
+                clearLocalStorage();
+              }
+            }, function(error) {
+              console.error('Session validation failed:', error);
+              clearLocalStorage();
+            });
+            return;
+          }
+          console.log('Existing session expired, clearing localStorage');
+          clearLocalStorage();
+        }
+      } catch (error) {
+        console.error('Error checking existing session:', error);
+        clearLocalStorage();
+      }
+    }
+    
+    // Clear localStorage function
+    function clearLocalStorage() {
+      try {
+        sessionManager.clearToken();
+        localStorage.removeItem('username');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userPermissions');
+        localStorage.removeItem('loginTime');
+        console.log('LocalStorage cleared');
+      } catch (error) {
+        console.error('Error clearing localStorage:', error);
+      }
+    }
+
+    function navigateToDashboard() {
+      navigateToPage('dashboard');
+    }
+    
+    // Allow Enter key to submit form
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        performLogin();
+      }
+    });
+  </script>
+</body>
+</html>

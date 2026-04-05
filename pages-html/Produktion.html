@@ -1,0 +1,3360 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produktionsplan - Horsens Pinsekirke Admin</title>
+  <?!= include('CommonJS'); ?>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #3b71ca;
+      --primary-light: #edf4ff;
+      --secondary: #6c757d;
+      --success: #14a44d;
+      --danger: #dc4c64;
+      --warning: #e4a11b;
+      --light: #fbfbfb;
+      --dark: #332d2d;
+      --sidebar-width: 250px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+      color: #ffffff !important;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar * {
+      color: inherit;
+    }
+
+    .sidebar-header {
+      padding: 30px 25px;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-logo {
+      width: 55px;
+      height: 55px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: white;
+      margin-right: 18px;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .sidebar-title h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ffffff !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85) !important;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .sidebar-menu {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 25px 0;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 18px 30px;
+      color: rgba(255, 255, 255, 0.95) !important;
+      text-decoration: none;
+      transition: all 0.4s;
+      position: relative;
+      margin: 3px 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: calc(100% - 30px);
+      text-align: left;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff !important;
+      transform: translateX(8px);
+    }
+
+    .sidebar-item.active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .sidebar-item.active span {
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+    
+    .sidebar-item.active i {
+      color: #a8edea !important;
+    }
+
+    .sidebar-item i {
+      font-size: 20px;
+      width: 28px;
+      text-align: center;
+      margin-right: 18px;
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .sidebar-item span {
+      font-weight: 600;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .sidebar-indicator {
+      position: absolute;
+      right: 20px;
+      width: 10px;
+      height: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-item.active .sidebar-indicator {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+      margin: 25px 30px;
+    }
+
+    .sidebar-footer {
+      padding: 25px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .user-avatar {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 18px;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-weight: 700;
+      color: #ffffff !important;
+      font-size: 15px;
+      color: white;
+      margin-bottom: 2px;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85) !important;
+      font-weight: 500;
+    }
+
+    .sidebar-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .sidebar-action-btn {
+      flex: 1;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.95) !important;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-action-btn:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff !important;
+    }
+
+    .sidebar-item i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-item:hover, .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .sidebar-footer {
+      padding: 15px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      flex-grow: 1;
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+      width: calc(100% - var(--sidebar-width));
+    }
+
+    .header {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      color: var(--secondary);
+    }
+
+    /* Card Styles */
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* Action Bar */
+    .action-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Button Styles */
+    .btn {
+      padding: 8px 15px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .btn i {
+      margin-right: 5px;
+    }
+
+    .btn:hover {
+      background-color: #3264b7;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+    }
+
+    .btn-success:hover {
+      background-color: #118f43;
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+    }
+
+    .btn-warning {
+      background-color: var(--warning);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+    }
+
+    .btn-sm {
+      font-size: 12px;
+      padding: 5px 10px;
+    }
+
+    .role-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #dfe6e9;
+      color: #2d3436;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .role-chip--lead {
+      background: #ffeaa7;
+      color: #5e3300;
+    }
+
+    .role-chip--tech {
+      background: #74b9ff;
+      color: #0c2461;
+    }
+
+    .role-chip--default {
+      background: #dfe6e9;
+      color: #2d3436;
+    }
+
+    .role-chip--worship {
+      background: #55efc4;
+      color: #065446;
+    }
+
+    .role-chip--support {
+      background: #dff9fb;
+      color: #0a3d62;
+    }
+
+    .role-chip--nextgen {
+      background: #fdcb6e;
+      color: #5e2a07;
+    }
+
+    .role-chip--hospitality {
+      background: #fab1a0;
+      color: #6f1e51;
+    }
+
+    .role-chip--empty {
+      background: transparent;
+      color: #95a5a6;
+      font-style: italic;
+    }
+
+    /* Table Styles */
+    .table-responsive {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th, .table td {
+      padding: 8px 10px;
+      border: 1px solid #e0e0e0;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .table-striped tbody tr:nth-child(odd) {
+      background: #f6f8fa;
+    }
+
+    .table-hover tbody tr:hover {
+      background: #eaf1fb;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: 2% auto;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      padding: 20px;
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+
+    #production-modal .modal-content {
+      max-width: 95vw;
+      width: 1200px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .close-modal {
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .modal-body {
+      padding: 15px 0;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    /* Form Styles */
+    .form-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      flex: 1;
+      margin-bottom: 12px;
+    }
+
+    .half-width {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .third-width {
+      flex: 1;
+      min-width: 180px;
+      max-width: calc(33.333% - 10px);
+    }
+
+    .form-section {
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-danger {
+      color: var(--danger);
+    }
+
+    .loading-indicator {
+      text-align: center;
+      padding: 20px;
+      color: var(--secondary);
+    }
+
+    @media (max-width: 900px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+      .modal-content {
+        max-width: 98vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Enhanced Sidebar with Events styling (inline to avoid template evaluation issues) -->
+  <div class="sidebar" data-current-page="produktion">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <i class="fas fa-church"></i>
+      </div>
+      <div class="sidebar-title">
+        <h3>HEAVEN CHURCH</h3>
+        <div class="sidebar-subtitle">Admin System</div>
+      </div>
+    </div>
+
+    <div class="sidebar-menu">
+      <button type="button" class="sidebar-item" data-page="dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <button type="button" class="sidebar-item" data-page="kontakter">
+        <i class="fas fa-address-book"></i>
+        <span>Kontakter</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <button type="button" class="sidebar-item" data-page="medlemmer">
+        <i class="fas fa-users"></i>
+        <span>Medlemmer</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <button type="button" class="sidebar-item" data-page="teams">
+        <i class="fas fa-user-friends"></i>
+        <span>Teams</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <button type="button" class="sidebar-item" data-page="produktion">
+        <i class="fas fa-video"></i>
+        <span>Produktionsplan</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <button type="button" class="sidebar-item" data-page="rengoring">
+        <i class="fas fa-broom"></i>
+        <span>Rengøring</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <button type="button" class="sidebar-item" data-page="grupper">
+        <i class="fas fa-sitemap"></i>
+        <span>Grupper</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <button type="button" class="sidebar-item" data-page="events">
+        <i class="fas fa-calendar-day"></i>
+        <span>Events</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+      
+      <div class="sidebar-divider"></div>
+      
+      <button type="button" class="sidebar-item" data-page="logins">
+        <i class="fas fa-users-cog"></i>
+        <span>Brugerstyring</span>
+        <div class="sidebar-indicator"></div>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-details">
+          <span class="user-name" id="produktion-sidebar-username"><?= user && user.username ? user.username : 'Admin' ?></span>
+          <span class="user-role" id="produktion-sidebar-userrole"><?= user && user.role ? user.role : 'Administrator' ?></span>
+        </div>
+      </div>
+      
+      <div class="sidebar-actions">
+        <button class="sidebar-action-btn" onclick="logout()" title="Log ud">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+        <button class="sidebar-action-btn" onclick="toggleSidebar()" title="Skjul menu">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Sidebar functionality (inline to avoid template evaluation issues)
+  (function() {
+    const NAVIGATION_STATE = {
+      scriptUrl: 'https://script.google.com/macros/s/AKfycbyqf60NKXYCOhimJq7MbutuFJDqOqb5aJVFJXGWSvmfWNd8osWpc0yJ-7ro78VpLK7ljw/exec',
+      currentPage: 'produktion'
+    };
+
+    // Get current page from URL
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pageFromUrl = urlParams.get('page');
+      if (pageFromUrl) {
+        NAVIGATION_STATE.currentPage = pageFromUrl;
+      }
+    } catch(e) {}
+
+    // Try to get scriptUrl from server
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(url) {
+        if (url) {
+          NAVIGATION_STATE.scriptUrl = url;
+        }
+      }).getScriptUrl();
+    }
+
+    function highlightCurrentPage() {
+      let activePage = 'produktion';
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageFromUrl = urlParams.get('page');
+        if (pageFromUrl) {
+          activePage = pageFromUrl.toLowerCase();
+        } else {
+          const sidebar = document.querySelector('.sidebar');
+          if (sidebar && sidebar.dataset.currentPage) {
+            activePage = sidebar.dataset.currentPage.toLowerCase();
+          }
+        }
+      } catch(e) {
+        console.error('Error detecting current page:', e);
+      }
+      
+      console.log('Highlighting page:', activePage);
+      
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        const itemPage = (item.dataset.page || '').toLowerCase();
+        if (itemPage === activePage) {
+          item.classList.add('active');
+          console.log('Activated sidebar item:', itemPage);
+        } else {
+          item.classList.remove('active');
+        }
+      });
+      
+      // Ensure sidebar has proper styling
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+        sidebar.style.color = 'white';
+      }
+    }
+
+    function setupSidebarInteractions() {
+      function ensureExecUrl(url) {
+        if (!url) return null;
+        let cleanUrl = url.split('?')[0].split('#')[0];
+        cleanUrl = cleanUrl.replace(/\/$/, '');
+        if (!cleanUrl.endsWith('/exec')) {
+          if (cleanUrl.indexOf('script.google.com') !== -1) {
+            cleanUrl = cleanUrl + '/exec';
+          } else {
+            cleanUrl = cleanUrl.replace(/\/(home|dev)$/, '/exec');
+            if (!cleanUrl.endsWith('/exec')) {
+              cleanUrl = cleanUrl + '/exec';
+            }
+          }
+        }
+        return cleanUrl;
+      }
+      
+      document.querySelectorAll('.sidebar-item[data-page]').forEach(item => {
+        item.addEventListener('click', function() {
+          const page = this.dataset.page;
+          if (page) {
+            if (typeof navigateToPage === 'function') {
+              navigateToPage(page);
+            } else {
+              const finalUrl = ensureExecUrl(NAVIGATION_STATE.scriptUrl);
+              if (finalUrl) {
+                window.top.location.href = `${finalUrl}?page=${page}`;
+              }
+            }
+          }
+        });
+      });
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+      }
+    }
+
+    window.toggleSidebar = toggleSidebar;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      highlightCurrentPage();
+      setupSidebarInteractions();
+    });
+  })();
+  </script>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h1 class="page-title">Produktionsplan</h1>
+      <div class="user-info">
+        <span id="produktion-header-username"><?= user && user.username ? user.username : 'Admin' ?></span>
+      </div>
+    </div>
+    
+    <!-- Produktion Content -->
+    <div class="produktion-container">
+      <!-- Modern Action Bar -->
+      <div class="action-bar">
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="refresh-production-btn"><i class="fas fa-sync-alt"></i> Opdater</button>
+          <button class="btn btn-success" id="create-production-btn"><i class="fas fa-plus"></i> Opret Produktion</button>
+          <button class="btn btn-info" id="manage-teams-btn" style="background-color: #17a2b8;"><i class="fas fa-users-cog"></i> Administrer Teams</button>
+          <button class="btn btn-warning" id="export-production-btn"><i class="fas fa-file-excel"></i> Eksportér til Excel</button>
+          <button class="btn btn-info" onclick="downloadProductionTemplate()"><i class="fas fa-download"></i> Download Skabelon</button>
+          <button class="btn btn-warning" onclick="showModal('import-excel-modal')"><i class="fas fa-upload"></i> Importer Excel</button>
+          <button class="btn btn-secondary" id="send-production-email-btn"><i class="fas fa-paper-plane"></i> Send Email</button>
+          <button id="delete-selected-productions" class="btn btn-danger" disabled>Slet valgte</button>
+        </div>
+      </div>
+      
+      <!-- Responsive Table Container -->
+      <div class="table-responsive">
+        <input type="text" id="search-produktion" placeholder="Søg i produktioner..." class="form-control" style="margin-bottom:10px;">
+        <table id="production-table" class="table table-striped table-hover">
+          <thead style="position:sticky;top:0;background:#fff;z-index:2;">
+            <tr>
+              <th style="width:32px;"><input type="checkbox" id="select-all-productions"></th>
+              <th>Dato</th>
+              <th>MC</th>
+              <th>Media</th>
+              <th>Lyd</th>
+              <th>Kamera</th>
+              <th>Forsanger</th>
+              <th>Piano</th>
+              <th>Guitar</th>
+              <th>Trommer</th>
+              <th>Bas</th>
+              <th>Forkynder</th>
+              <th>Oversætter</th>
+              <th>Forsamling</th>
+              <th>Kidz</th>
+              <th>Kidz2</th>
+              <th>Café 1</th>
+              <th>Café 2</th>
+              <th>Host 1</th>
+              <th>Host 2</th>
+              <th style="min-width:90px;">Handlinger</th>
+            </tr>
+          </thead>
+          <tbody id="production-table-body">
+            <tr>
+              <td colspan="21" class="text-center">Indlæser produktionsplan...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Production Modal -->
+  <div id="production-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="production-modal-title">Opret Produktion</h3>
+        <button class="close-modal" onclick="hideModal('production-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="production-row-index">
+        
+        <!-- Dato og Gentagelsesindstillinger -->
+        <div class="form-section">
+          <h4 style="margin-bottom: 15px; color: var(--primary); border-bottom: 2px solid var(--primary-light); padding-bottom: 8px;">Grundlæggende Indstillinger</h4>
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label for="production-date" class="form-label">Dato *</label>
+              <input type="date" id="production-date" class="form-control" required>
+            </div>
+            <div class="form-group half-width">
+              <label for="production-name" class="form-label">Navn på Produktion</label>
+              <input type="text" id="production-name" class="form-control" placeholder="fx Familie Gudstjeneste">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label for="production-color" class="form-label">Farve</label>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="color-option" data-color="#506FB2" style="width: 40px; height: 40px; border-radius: 50%; background-color: #506FB2; cursor: pointer; border: 3px solid transparent; transition: all 0.2s;" onclick="selectProductionColor('#506FB2', this)"></div>
+                <div class="color-option" data-color="#57BFE8" style="width: 40px; height: 40px; border-radius: 50%; background-color: #57BFE8; cursor: pointer; border: 3px solid transparent; transition: all 0.2s;" onclick="selectProductionColor('#57BFE8', this)"></div>
+                <div class="color-option" data-color="#B0CF63" style="width: 40px; height: 40px; border-radius: 50%; background-color: #B0CF63; cursor: pointer; border: 3px solid transparent; transition: all 0.2s;" onclick="selectProductionColor('#B0CF63', this)"></div>
+                <div class="color-option" data-color="#FDB737" style="width: 40px; height: 40px; border-radius: 50%; background-color: #FDB737; cursor: pointer; border: 3px solid transparent; transition: all 0.2s;" onclick="selectProductionColor('#FDB737', this)"></div>
+                <div class="color-option" data-color="#DC4F34" style="width: 40px; height: 40px; border-radius: 50%; background-color: #DC4F34; cursor: pointer; border: 3px solid transparent; transition: all 0.2s;" onclick="selectProductionColor('#DC4F34', this)"></div>
+                <input type="hidden" id="production-color" value="">
+              </div>
+            </div>
+            <div class="form-group half-width">
+              <label for="production-repeat-interval" class="form-label">Gentag hver</label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="number" id="production-repeat-interval" min="1" value="1" class="form-control" style="width: 80px;"> 
+                <span>uge(r)</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label for="production-repeat-count" class="form-label">Antal gentagelser</label>
+              <input type="number" id="production-repeat-count" min="1" value="1" class="form-control" style="width: 120px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Teams Section -->
+        <div id="production-teams-container">
+          <!-- Teams will be dynamically generated here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="delete-production-btn">Slet Produktion</button>
+        <button type="button" class="btn btn-secondary" onclick="hideModal('production-modal')">Annuller</button>
+        <button type="button" class="btn btn-success" id="save-production-btn">Gem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Production Notes Modal -->
+  <div id="production-notes-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Produktionsnoter</h3>
+        <button class="close-modal" onclick="hideModal('production-notes-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="notes-production-date">
+        <input type="hidden" id="notes-production-index">
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8;">
+          <strong>Adgangskontrol:</strong> Alle kan tilføje info, som MC skal acceptere. Ellers kan kun personer på specifikke teams skrive i deres felt (fx kun forkynder-team kan skrive i forkynder-feltet).
+        </div>
+
+        <!-- START SANG -->
+        <div class="form-section" style="margin-bottom: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--primary);">○ START SANG</h4>
+          <div class="form-group">
+            <label>Hvem?</label>
+            <input type="text" id="notes-start-song" class="form-control" placeholder="Navn på person">
+          </div>
+        </div>
+
+        <!-- INFO -->
+        <div class="form-section" style="margin-bottom: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--primary);">○ INFO [MC]</h4>
+          <div class="form-group">
+            <label>MC</label>
+            <input type="text" id="notes-info-mc" class="form-control" placeholder="MC navn">
+          </div>
+          <div id="notes-info-items" style="margin-top: 10px;">
+            <!-- Info items will be added here dynamically -->
+          </div>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="addInfoItem()" style="margin-top: 10px;">
+            <i class="fas fa-plus"></i> Tilføj info
+          </button>
+        </div>
+
+        <!-- LOVSANGE -->
+        <div class="form-section" style="margin-bottom: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--primary);">○ LOVSANGE [w1]</h4>
+          <div class="form-group">
+            <label>Worship Leader</label>
+            <input type="text" id="notes-worship-leader" class="form-control" placeholder="Navn på worship leader">
+          </div>
+          <div id="notes-songs-list" style="margin-top: 10px;">
+            <!-- Songs will be added here dynamically -->
+          </div>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="addSong()" style="margin-top: 10px;">
+            <i class="fas fa-plus"></i> Tilføj sang
+          </button>
+        </div>
+
+        <!-- FORKYNDER -->
+        <div class="form-section" style="margin-bottom: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--primary);">○ FORKYNDER / Emne PRÆDIKEN</h4>
+          <div class="form-group">
+            <label>Hvem?</label>
+            <input type="text" id="notes-preacher" class="form-control" placeholder="Navn på forkynder" readonly style="background: #e9ecef;">
+            <small style="color: #6c757d;">Kun forkynder-team kan redigere dette felt</small>
+          </div>
+          <div class="form-group">
+            <label>Emne</label>
+            <input type="text" id="notes-sermon-topic" class="form-control" placeholder="Emne for prædiken" readonly style="background: #e9ecef;">
+            <small style="color: #6c757d;">Kun forkynder-team kan redigere dette felt</small>
+          </div>
+        </div>
+
+        <!-- KOLLEKT -->
+        <div class="form-section" style="margin-bottom: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--primary);">○ KOLLEKT</h4>
+          <div class="form-group">
+            <label>Sang</label>
+            <input type="text" id="notes-collection-song" class="form-control" placeholder="Sang navn">
+          </div>
+          <div class="form-group">
+            <label>Hvem?</label>
+            <input type="text" id="notes-collection-who" class="form-control" placeholder="Navn på person">
+          </div>
+        </div>
+
+        <!-- ANDET -->
+        <div class="form-section" style="margin-bottom: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--primary);">○ ANDET</h4>
+          <div class="form-group">
+            <textarea id="notes-other" class="form-control" rows="3" placeholder="Andre noter..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('production-notes-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="saveProductionNotes()">Gem Noter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Email Modal -->
+  <div id="production-email-modal" class="modal">
+    <div class="modal-content" style="max-width:700px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Send Produktionsplan Email</h3>
+        <button class="close-modal" onclick="hideModal('production-email-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="email-subject" class="form-label">Emne</label>
+          <input type="text" id="email-subject" class="form-control" value="Produktionsplan for uge {{uge}}">
+        </div>
+        <div class="form-group">
+          <label for="email-body" class="form-label">Besked (skabelon)</label>
+          <textarea id="email-body" class="form-control" rows="6">
+Hej {{navn}},
+
+Her er produktionsplanen for uge {{uge}}.
+
+Venlig hilsen
+Horsens Pinsekirke
+          </textarea>
+        </div>
+        <div class="form-group">
+          <label for="email-recipients" class="form-label">Modtagere</label>
+          <select id="email-recipients" class="form-control">
+            <option value="mc">MC</option>
+            <option value="all">Alle på listen</option>
+            <option value="custom">Vælg manuelt</option>
+          </select>
+        </div>
+        
+        <!-- Custom Recipients Selection (shown when "custom" is selected) -->
+        <div id="custom-recipients-section" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;">
+          <label class="form-label">Vælg modtagere manuelt:</label>
+          <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: white; border-radius: 4px;">
+            <div id="custom-recipients-list" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Will be populated dynamically -->
+            </div>
+          </div>
+          <small style="color: #6c757d; display: block; margin-top: 8px;">Vælg de personer der skal modtage emailen</small>
+        </div>
+        
+        <!-- Production Selection Info -->
+        <div class="form-group" style="background: #e7f3ff; padding: 12px; border-radius: 5px; border-left: 4px solid #3b71ca;">
+          <label class="form-label" style="font-weight: 600; margin-bottom: 8px;">Vælg produktioner at sende:</label>
+          <div style="font-size: 14px; color: #555;">
+            <p style="margin: 0 0 8px 0;">Vælg produktioner i tabellen nedenfor ved at markere checkboxes.</p>
+            <p style="margin: 0; font-weight: 600;" id="selected-productions-count">Ingen produktioner valgt</p>
+          </div>
+        </div>
+        
+        <!-- Send Options -->
+        <div class="form-group">
+          <label class="form-label">Send muligheder</label>
+          <div>
+            <label style="display: block; margin-bottom: 10px;">
+              <input type="radio" name="send-option" value="now" checked> Send nu
+            </label>
+            <label style="display: block;">
+              <input type="radio" name="send-option" value="schedule"> Planlæg sendelse
+            </label>
+          </div>
+        </div>
+        
+        <!-- Schedule Options (hidden by default) -->
+        <div id="schedule-options" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;">
+          <div class="form-group">
+            <label for="schedule-date" class="form-label">Send dato</label>
+            <input type="date" id="schedule-date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="schedule-time" class="form-label">Send tid</label>
+            <input type="time" id="schedule-time" class="form-control" value="08:00">
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="schedule-repeat"> Gentag sendelse</label>
+          </div>
+          
+          <!-- Repeat Options (hidden by default) -->
+          <div id="repeat-options" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+              <div class="form-group" style="flex: 1;">
+                <label for="repeat-interval" class="form-label">Gentag hver</label>
+                <select id="repeat-interval" class="form-control">
+                  <option value="week">Uge</option>
+                  <option value="month">Måned</option>
+                  <option value="quarter">Kvartal (3 måneder)</option>
+                  <option value="year">År</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="repeat-count" class="form-label">Antal gange</label>
+                <input type="number" id="repeat-count" class="form-control" min="1" value="1" placeholder="Ubegrænset = tom">
+                <small style="color: #6c757d;">Tom = ubegrænset</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('production-email-modal')">Annuller</button>
+        <button type="button" class="btn btn-success" onclick="sendOrScheduleProductionEmail()">Send nu / Planlæg</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Management Modal -->
+  <div id="teams-management-modal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Administrer Teams og Poster</h3>
+        <button class="close-modal" onclick="hideModal('teams-management-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 20px;">
+          <button class="btn btn-success" onclick="showAddTeamDialog()"><i class="fas fa-plus"></i> Tilføj Nyt Team</button>
+        </div>
+        
+        <div id="teams-list-container">
+          <!-- Teams will be dynamically generated here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('teams-management-modal')">Luk</button>
+        <button type="button" class="btn btn-success" onclick="saveTeamsConfiguration()">Gem Konfiguration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Team Dialog -->
+  <div id="add-team-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 300px;">
+    <h4 style="margin-bottom: 15px;">Tilføj Nyt Team</h4>
+    <div class="form-group">
+      <label class="form-label">Team Navn</label>
+      <input type="text" id="new-team-name" class="form-control" placeholder="fx MC Team, Kor, etc.">
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+      <button class="btn btn-secondary" onclick="hideAddTeamDialog()">Annuller</button>
+      <button class="btn btn-success" onclick="addNewTeam()">Tilføj</button>
+    </div>
+  </div>
+
+  <!-- Add Position Dialog -->
+  <div id="add-position-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 300px;">
+    <h4 style="margin-bottom: 15px;">Tilføj Ny Post</h4>
+    <div class="form-group">
+      <label class="form-label">Post Navn</label>
+      <input type="text" id="new-position-name" class="form-control" placeholder="fx Violin, Kor, etc.">
+    </div>
+    <input type="hidden" id="add-position-team-id">
+    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+      <button class="btn btn-secondary" onclick="hideAddPositionDialog()">Annuller</button>
+      <button class="btn btn-success" onclick="addNewPosition()">Tilføj</button>
+    </div>
+  </div>
+
+  <!-- Import Excel Modal -->
+  <div id="import-excel-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Importer Produktion fra Excel</h3>
+        <span class="close-modal" onclick="hideModal('import-excel-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> 
+          <strong>Vejledning:</strong> Download skabelonen først, udfyld den med dine data, og upload den herefter. 
+          Dubletter (samme dato) bliver automatisk fjernet.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vælg Excel fil (.xlsx, .xls)</label>
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls" class="form-control">
+        </div>
+        <div id="import-progress" style="display: none; margin-top: 15px;">
+          <div class="progress">
+            <div class="progress-bar" id="import-progress-bar" style="width: 0%"></div>
+          </div>
+          <p id="import-status" style="margin-top: 10px;"></p>
+        </div>
+        <div id="import-results" style="display: none; margin-top: 15px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('import-excel-modal')">Annuller</button>
+        <button type="button" class="btn btn-primary" onclick="processExcelImport('production')">Importer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      try {
+        // Accepts both Date objects and strings
+        const date = (dateString instanceof Date) ? dateString : new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        // Format as dd.MM.yyyy
+        return date.toLocaleDateString('da-DK');
+      } catch (e) {
+        return dateString;
+      }
+    }
+
+    // Global variables
+    let productionPlan = [];
+    let members = [];
+    let productionTeams = [];
+    
+    // Update user info display
+    function updateUserInfoDisplay() {
+      // Try to get username from template variable first
+      const templateUsername = '<?= user && user.username ? user.username : "" ?>';
+      const templateRole = '<?= user && user.role ? user.role : "" ?>';
+      
+      // Fallback to localStorage
+      const storedUsername = localStorage.getItem('username') || templateUsername || 'Admin';
+      const storedRole = templateRole || 'Administrator';
+      
+      // Update sidebar username
+      const sidebarUsername = document.getElementById('produktion-sidebar-username');
+      if (sidebarUsername) {
+        sidebarUsername.textContent = storedUsername;
+      }
+      
+      // Update sidebar role
+      const sidebarRole = document.getElementById('produktion-sidebar-userrole');
+      if (sidebarRole) {
+        sidebarRole.textContent = storedRole;
+      }
+      
+      // Update header username
+      const headerUsername = document.getElementById('produktion-header-username');
+      if (headerUsername) {
+        headerUsername.textContent = storedUsername;
+      }
+      
+      // If still not set, try to get from session
+      if (storedUsername === 'Admin' || !storedUsername) {
+        const sessionToken = sessionManager.getToken();
+        if (sessionToken) {
+          callApi('validateSessionTokenApi', { sessionToken: sessionToken }, function(result) {
+            if (result && result.success && result.user) {
+              const username = result.user.username || 'Admin';
+              const role = result.user.role || 'Administrator';
+              
+              if (sidebarUsername) sidebarUsername.textContent = username;
+              if (sidebarRole) sidebarRole.textContent = role;
+              if (headerUsername) headerUsername.textContent = username;
+              
+              // Store in localStorage for next time
+              localStorage.setItem('username', username);
+            }
+          }, function(error) {
+            console.error('Error validating session:', error);
+          });
+        }
+      }
+    }
+
+    const ROLE_GROUPS = {
+      mc: 'lead',
+      media: 'tech',
+      lyd: 'tech',
+      kamera: 'tech',
+      forsanger: 'worship',
+      piano: 'worship',
+      guitar: 'worship',
+      trommer: 'worship',
+      bas: 'worship',
+      forkynder: 'lead',
+      oversaetter: 'lead',
+      forsamling: 'support',
+      kidz: 'nextgen',
+      kidz2: 'nextgen',
+      cafe_1: 'hospitality',
+      cafe_2: 'hospitality',
+      host_1: 'hospitality',
+      host_2: 'hospitality'
+    };
+
+    function sanitizeText(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function renderRoleChip(roleKey, value) {
+      const text = sanitizeText(value);
+      if (!text) {
+        return '<span class="role-chip role-chip--empty">-</span>';
+      }
+      const group = ROLE_GROUPS[roleKey] || 'default';
+      return `<span class="role-chip role-chip--${group}">${text}</span>`;
+    }
+
+    // Navigation function
+    function navigateToPage(page) {
+      console.log('Navigating to:', page);
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyqf60NKXYCOhimJq7MbutuFJDqOqb5aJVFJXGWSvmfWNd8osWpc0yJ-7ro78VpLK7ljw/exec';
+      window.top.location.href = scriptUrl + '?page=' + page;
+    }
+
+    // Logout function
+    function logout() {
+      console.log('Logging out...');
+      
+      // Call server logout function
+      callApi('processLogout', {}, function() {
+        console.log('Logout successful, redirecting to login');
+        navigateToPage('login');
+      }, function(error) {
+        console.error('Logout error:', error);
+        navigateToPage('login');
+      });
+    }
+
+    // Modal functions
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    function hideModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      let toastContainer = document.getElementById('toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 1000;';
+        document.body.appendChild(toastContainer);
+      }
+      
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        padding: 12px 20px;
+        border-radius: 4px;
+        margin-top: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        min-width: 250px;
+        transition: all 0.3s ease;
+        color: white;
+        background-color: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#ffc107'};
+      `;
+      toast.textContent = message;
+      
+      toastContainer.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toastContainer.removeChild(toast);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Load production teams configuration
+    function loadProductionTeams() {
+      callApi('getProductionTeams', {}, function(result) {
+        if (result && result.success) {
+          productionTeams = result.teams || [];
+          renderProductionModalTeams();
+          renderTeamsManagement();
+        } else {
+          console.error("Error loading teams:", result);
+          // Use default teams if loading fails
+          productionTeams = [];
+          loadProductionTeams(); // Retry
+        }
+      }, function(error) {
+        console.error("Error loading teams:", error);
+        productionTeams = [];
+      });
+    }
+
+    // Render teams in production modal
+    function renderProductionModalTeams() {
+      const container = document.getElementById('production-teams-container');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      if (!productionTeams || productionTeams.length === 0) {
+        container.innerHTML = '<p style="color: #6c757d; text-align: center; padding: 20px;">Ingen teams konfigureret. Klik på "Administrer Teams" for at tilføje teams.</p>';
+        return;
+      }
+      
+      productionTeams.forEach(team => {
+        const section = document.createElement('div');
+        section.className = 'form-section';
+        section.setAttribute('data-team-id', team.id);
+        
+        const header = document.createElement('h4');
+        header.style.cssText = 'margin-bottom: 15px; color: var(--primary); border-bottom: 2px solid var(--primary-light); padding-bottom: 8px;';
+        header.textContent = team.name;
+        section.appendChild(header);
+        
+        const positionsContainer = document.createElement('div');
+        positionsContainer.className = 'form-row';
+        positionsContainer.style.flexWrap = 'wrap';
+        
+        team.positions.forEach(position => {
+          const positionGroup = document.createElement('div');
+          positionGroup.className = 'form-group third-width';
+          
+          const label = document.createElement('label');
+          label.className = 'form-label';
+          label.setAttribute('for', `production-${position.id}`);
+          label.textContent = position.name;
+          
+          const select = document.createElement('select');
+          select.id = `production-${position.id}`;
+          select.className = 'form-control';
+          select.setAttribute('data-position-id', position.id);
+          
+          positionGroup.appendChild(label);
+          positionGroup.appendChild(select);
+          positionsContainer.appendChild(positionGroup);
+        });
+        
+        section.appendChild(positionsContainer);
+        container.appendChild(section);
+      });
+      
+      // Populate all dropdowns after rendering
+      populateRoleDropdowns({});
+    }
+
+    // Render teams management interface
+    function renderTeamsManagement() {
+      const container = document.getElementById('teams-list-container');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      if (!productionTeams || productionTeams.length === 0) {
+        container.innerHTML = '<p style="color: #6c757d; text-align: center; padding: 20px;">Ingen teams endnu. Klik på "Tilføj Nyt Team" for at oprette et.</p>';
+        return;
+      }
+      
+      productionTeams.forEach(team => {
+        const teamCard = document.createElement('div');
+        teamCard.style.cssText = 'background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px;';
+        teamCard.setAttribute('data-team-id', team.id);
+        
+        const header = document.createElement('div');
+        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;';
+        
+        const title = document.createElement('h4');
+        title.style.margin = '0';
+        title.textContent = team.name;
+        
+        const actions = document.createElement('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '10px';
+        
+        const addPosBtn = document.createElement('button');
+        addPosBtn.className = 'btn btn-sm btn-success';
+        addPosBtn.innerHTML = '<i class="fas fa-plus"></i> Tilføj Post';
+        addPosBtn.onclick = () => showAddPositionDialog(team.id);
+        
+        const removeTeamBtn = document.createElement('button');
+        removeTeamBtn.className = 'btn btn-sm btn-danger';
+        removeTeamBtn.innerHTML = '<i class="fas fa-trash"></i> Slet Team';
+        removeTeamBtn.onclick = () => removeTeam(team.id);
+        
+        actions.appendChild(addPosBtn);
+        actions.appendChild(removeTeamBtn);
+        header.appendChild(title);
+        header.appendChild(actions);
+        
+        const positionsList = document.createElement('div');
+        positionsList.style.cssText = 'display: flex; flex-wrap: wrap; gap: 10px;';
+        
+        if (team.positions && team.positions.length > 0) {
+          team.positions.forEach(position => {
+            const posBadge = document.createElement('div');
+            posBadge.style.cssText = 'background: white; border: 1px solid #ced4da; border-radius: 20px; padding: 8px 15px; display: flex; align-items: center; gap: 8px;';
+            
+            const posName = document.createElement('span');
+            posName.textContent = position.name;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn btn-sm btn-danger';
+            removeBtn.style.cssText = 'padding: 2px 8px; font-size: 12px;';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.onclick = () => removePosition(team.id, position.id);
+            
+            posBadge.appendChild(posName);
+            posBadge.appendChild(removeBtn);
+            positionsList.appendChild(posBadge);
+          });
+        } else {
+          const emptyMsg = document.createElement('p');
+          emptyMsg.style.cssText = 'color: #6c757d; font-style: italic; margin: 0;';
+          emptyMsg.textContent = 'Ingen poster i dette team';
+          positionsList.appendChild(emptyMsg);
+        }
+        
+        teamCard.appendChild(header);
+        teamCard.appendChild(positionsList);
+        container.appendChild(teamCard);
+      });
+    }
+
+    // Show add team dialog
+    function showAddTeamDialog() {
+      document.getElementById('new-team-name').value = '';
+      document.getElementById('add-team-dialog').style.display = 'block';
+    }
+
+    // Hide add team dialog
+    function hideAddTeamDialog() {
+      document.getElementById('add-team-dialog').style.display = 'none';
+    }
+
+    // Add new team
+    function addNewTeam() {
+      const teamName = document.getElementById('new-team-name').value.trim();
+      if (!teamName) {
+        showToast('Indtast et team navn', 'warning');
+        return;
+      }
+      
+      callApi('addProductionTeam', { teamName: teamName }, function(result) {
+        if (result && result.success) {
+          productionTeams = result.teams || productionTeams;
+          renderTeamsManagement();
+          renderProductionModalTeams();
+          hideAddTeamDialog();
+          showToast('Team tilføjet succesfuldt', 'success');
+        } else {
+          showToast(result.message || 'Fejl ved tilføjelse af team', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved tilføjelse af team: ' + error, 'error');
+      });
+    }
+
+    // Remove team
+    function removeTeam(teamId) {
+      if (!confirm('Er du sikker på at du vil slette dette team? Alle poster i teamet vil også blive slettet.')) {
+        return;
+      }
+      
+      callApi('removeProductionTeam', { teamId: teamId }, function(result) {
+        if (result && result.success) {
+          productionTeams = result.teams || productionTeams;
+          renderTeamsManagement();
+          renderProductionModalTeams();
+          showToast('Team slettet succesfuldt', 'success');
+        } else {
+          showToast(result.message || 'Fejl ved sletning af team', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved sletning af team: ' + error, 'error');
+      });
+    }
+
+    // Show add position dialog
+    function showAddPositionDialog(teamId) {
+      document.getElementById('new-position-name').value = '';
+      document.getElementById('add-position-team-id').value = teamId;
+      document.getElementById('add-position-dialog').style.display = 'block';
+    }
+
+    // Hide add position dialog
+    function hideAddPositionDialog() {
+      document.getElementById('add-position-dialog').style.display = 'none';
+    }
+
+    // Add new position
+    function addNewPosition() {
+      const positionName = document.getElementById('new-position-name').value.trim();
+      const teamId = document.getElementById('add-position-team-id').value;
+      
+      if (!positionName) {
+        showToast('Indtast et post navn', 'warning');
+        return;
+      }
+      
+      callApi('addPositionToTeam', { teamId: teamId, positionName: positionName }, function(result) {
+        if (result && result.success) {
+          productionTeams = result.teams || productionTeams;
+          renderTeamsManagement();
+          renderProductionModalTeams();
+          hideAddPositionDialog();
+          showToast('Post tilføjet succesfuldt', 'success');
+        } else {
+          showToast(result.message || 'Fejl ved tilføjelse af post', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved tilføjelse af post: ' + error, 'error');
+      });
+    }
+
+    // Remove position
+    function removePosition(teamId, positionId) {
+      if (!confirm('Er du sikker på at du vil slette denne post?')) {
+        return;
+      }
+      
+      callApi('removePositionFromTeam', { teamId: teamId, positionId: positionId }, function(result) {
+        if (result && result.success) {
+          productionTeams = result.teams || productionTeams;
+          renderTeamsManagement();
+          renderProductionModalTeams();
+          showToast('Post slettet succesfuldt', 'success');
+        } else {
+          showToast(result.message || 'Fejl ved sletning af post', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved sletning af post: ' + error, 'error');
+      });
+    }
+
+    // Save teams configuration
+    function saveTeamsConfiguration() {
+      callApi('saveProductionTeams', { teams: productionTeams }, function(result) {
+        if (result && result.success) {
+          showToast('Team konfigurationer gemt succesfuldt', 'success');
+          hideModal('teams-management-modal');
+        } else {
+          showToast(result.message || 'Fejl ved gemning', 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved gemning: ' + error, 'error');
+      });
+    }
+
+    // Show teams management modal
+    function showTeamsManagementModal() {
+      loadProductionTeams();
+      showModal('teams-management-modal');
+    }
+
+    // Load members for dropdowns
+    function loadMembers() {
+      console.log("Loading members for production dropdowns");
+      
+      callApi('getAllMembers', {}, function(result) {
+        console.log("Received members data:", result);
+        
+        if (!result || !result.success) {
+          console.error("Error loading members:", result && result.message ? result.message : "Unknown error");
+          showToast("Kunne ikke indlæse medlemmer", "error");
+          return;
+        }
+        
+        members = result.members || [];
+        populateAllDropdowns();
+      }, function(error) {
+        console.error("Error loading members:", error);
+        showToast("Kunne ikke indlæse medlemmer: " + error, "error");
+      });
+    }
+
+    // Populate all member dropdowns
+    function populateAllDropdowns() {
+      const dropdownIds = [
+        'edit-mc', 'edit-media', 'edit-forsanger', 'edit-piano', 
+        'edit-guitar', 'edit-trommer', 'edit-bas', 'edit-kidz',
+        'edit-cafe1', 'edit-cafe2', 'edit-host1', 'edit-host2'
+      ];
+      
+      dropdownIds.forEach(id => {
+        const dropdown = document.getElementById(id);
+        if (dropdown) {
+          populateMemberDropdown(dropdown);
+        }
+      });
+    }
+
+    // Populate a single member dropdown
+    function populateMemberDropdown(selectElement) {
+      // Clear existing options except the first one
+      while (selectElement.options.length > 1) {
+        selectElement.remove(1);
+      }
+      
+      // Add members as options
+      members.forEach(member => {
+        const fullName = `${member.fornavn} ${member.efternavn}`;
+        const option = document.createElement('option');
+        option.value = fullName;
+        option.textContent = fullName;
+        selectElement.appendChild(option);
+      });
+      
+      // Add "Anden" option for custom input
+      const customOption = document.createElement('option');
+      customOption.value = 'CUSTOM';
+      customOption.textContent = '-- Anden person --';
+      selectElement.appendChild(customOption);
+    }
+
+    // Handle custom input when "Anden" is selected
+    function handleCustomInput(selectElement) {
+      if (selectElement.value === 'CUSTOM') {
+        const customName = prompt('Indtast navn:');
+        if (customName && customName.trim()) {
+          // Add as new option and select it
+          const option = document.createElement('option');
+          option.value = customName.trim();
+          option.textContent = customName.trim();
+          selectElement.insertBefore(option, selectElement.lastElementChild);
+          selectElement.value = customName.trim();
+        } else {
+          selectElement.value = ''; // Reset to empty if cancelled
+        }
+      }
+    }
+
+    // Load production plan
+    function loadProductionPlan() {
+      const tbody = document.getElementById('production-table-body');
+      if (!tbody) {
+        console.error("production-table-body element not found!");
+        return;
+      }
+      tbody.innerHTML = '<tr><td colspan="21" class="text-center">Indlæser produktionsplan...</td></tr>';
+      
+      console.log("Beginning production plan load");
+      console.log("callApi function exists:", typeof callApi === 'function');
+      console.log("google.script.run exists:", typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
+      
+      if (typeof callApi !== 'function') {
+        console.error("callApi is not a function! Using direct google.script.run instead");
+        google.script.run
+          .withSuccessHandler(function(result) {
+            handleProductionPlanResult(result);
+          })
+          .withFailureHandler(function(error) {
+            console.error("Error loading production plan:", error);
+            tbody.innerHTML = '<tr><td colspan="21" class="text-center text-danger">Fejl: ' + error + '</td></tr>';
+          })
+          .getProductionPlan({});
+        return;
+      }
+      
+      callApi('getProductionPlan', {}, function(result) {
+        console.log("getProductionPlan callback called with result:", result);
+        handleProductionPlanResult(result);
+      }, function(error) {
+        console.error("Error loading production plan:", error);
+        const tbody = document.getElementById('production-table-body');
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="21" class="text-center text-danger">Fejl ved indlæsning: ' + (error || 'Ukendt fejl') + '</td></tr>';
+        }
+        showToast('Kunne ikke indlæse produktionsplan: ' + (error || 'Ukendt fejl'), 'error');
+      });
+    }
+    
+    // Helper function to handle production plan result
+    function handleProductionPlanResult(result) {
+      console.log("handleProductionPlanResult called with:", result);
+      console.log("Result type:", typeof result);
+      console.log("Result success:", result ? result.success : 'result is null/undefined');
+      console.log("Result plan:", result ? result.plan : 'no plan property');
+      
+      const tbody = document.getElementById('production-table-body');
+      if (!tbody) {
+        console.error("production-table-body element not found in handleProductionPlanResult!");
+        return;
+      }
+      
+      if (!result) {
+        console.error("No result received from getProductionPlan");
+        tbody.innerHTML = '<tr><td colspan="21" class="text-center text-danger">Ingen data modtaget fra server</td></tr>';
+        showToast('Ingen data modtaget fra server', 'error');
+        return;
+      }
+      
+      if (result && result.success === false) {
+        console.error("Server returned error:", result.message);
+        tbody.innerHTML = '<tr><td colspan="21" class="text-center text-danger">' + (result.message || 'Fejl ved indlæsning') + '</td></tr>';
+        showToast(result.message || 'Fejl ved indlæsning', 'error');
+        return;
+      }
+      
+      // Extract plan array from result
+      let planData = [];
+      if (Array.isArray(result)) {
+        planData = result;
+      } else if (result.plan && Array.isArray(result.plan)) {
+        planData = result.plan;
+      } else if (result.data && Array.isArray(result.data)) {
+        planData = result.data;
+      } else {
+        console.warn("Unexpected result structure:", result);
+        planData = [];
+      }
+      
+      productionPlan = planData;
+      console.log("Production plan entries loaded:", productionPlan.length);
+      console.log("First entry sample:", productionPlan.length > 0 ? productionPlan[0] : 'no entries');
+      window.productionPlan = productionPlan; // Make it globally available
+      
+      // Always render the table, even if empty (renderProductionTable handles empty state)
+      // Ensure teams are loaded before rendering table
+      if (productionTeams && productionTeams.length > 0) {
+        renderProductionTable();
+      } else {
+        // Load teams first, then render table
+        loadProductionTeams();
+        setTimeout(() => {
+          renderProductionTable();
+        }, 300);
+      }
+      initializeSearch();
+      addProductionTableEventListeners();
+      
+      if (productionPlan.length > 0) {
+        showToast('Produktionsplan indlæst: ' + productionPlan.length + ' produktion(er)', 'success');
+      }
+    }
+
+    // Render production table header dynamically
+    function renderProductionTableHeader() {
+      const thead = document.querySelector('#production-table thead tr');
+      if (!thead) return;
+      
+      // Start with checkbox, color, name, and date columns
+      let headerHTML = `
+        <th style="width:32px;"><input type="checkbox" id="select-all-productions"></th>
+        <th style="width:60px;">Farve</th>
+        <th style="min-width:150px;">Navn</th>
+        <th>Dato</th>
+      `;
+      
+      // Add headers from all teams
+      if (productionTeams && productionTeams.length > 0) {
+        productionTeams.forEach(team => {
+          if (team.positions && team.positions.length > 0) {
+            team.positions.forEach(position => {
+              headerHTML += `<th>${sanitizeText(position.name)}</th>`;
+            });
+          }
+        });
+      } else {
+        // Fallback to legacy headers if no teams configured
+        headerHTML += `
+          <th>MC</th><th>Media</th><th>Lyd</th><th>Kamera</th>
+          <th>Forsanger</th><th>Piano</th><th>Guitar</th><th>Trommer</th><th>Bas</th>
+          <th>Forkynder</th><th>Oversætter</th><th>Forsamling</th>
+          <th>Kidz</th><th>Kidz2</th><th>Café 1</th><th>Café 2</th><th>Host 1</th><th>Host 2</th>
+        `;
+      }
+      
+      headerHTML += '<th style="min-width:90px;">Handlinger</th>';
+      thead.innerHTML = headerHTML;
+    }
+
+    // Render production table
+    function renderProductionTable() {
+      const tbody = document.getElementById('production-table-body');
+      if (!tbody) return;
+      
+      // Update header first
+      renderProductionTableHeader();
+      
+      tbody.innerHTML = '';
+      if (!productionPlan || productionPlan.length === 0) {
+        const colCount = productionTeams && productionTeams.length > 0 
+          ? productionTeams.reduce((sum, team) => sum + (team.positions ? team.positions.length : 0), 0) + 5
+          : 23;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center" style="padding: 40px; color: #6c757d;"><i class="fas fa-inbox" style="font-size: 48px; display: block; margin-bottom: 10px; opacity: 0.5;"></i>Ingen produktioner fundet. Opret en ny produktion ved at klikke på "Opret Produktion" knappen!</td></tr>`;
+        return;
+      }
+      
+      productionPlan.forEach((entry, idx) => {
+        const row = document.createElement('tr');
+        const dateLabel = sanitizeText(formatDate(entry.date));
+        const productionColor = entry.color || entry.production_color || '';
+        const productionName = entry.name || entry.production_name || '';
+        
+        // Render color box
+        const colorBox = productionColor 
+          ? `<div style="width: 30px; height: 30px; background-color: ${productionColor}; border-radius: 50%; margin: 0 auto; border: 2px solid #ddd;"></div>`
+          : '<div style="width: 30px; height: 30px; background-color: #f0f0f0; border-radius: 50%; margin: 0 auto; border: 2px solid #ddd;"></div>';
+        
+        // Start with checkbox, color, name, and date
+        let rowHTML = `
+          <td><input type="checkbox" class="production-checkbox" data-row="${idx}"></td>
+          <td style="text-align: center;">${colorBox}</td>
+          <td>${sanitizeText(productionName)}</td>
+          <td>${dateLabel}</td>
+        `;
+        
+        // Add cells from all teams
+        if (productionTeams && productionTeams.length > 0) {
+          productionTeams.forEach(team => {
+            if (team.positions && team.positions.length > 0) {
+              team.positions.forEach(position => {
+                const value = entry[position.id] || '';
+                rowHTML += `<td>${renderRoleChip(position.id, value)}</td>`;
+              });
+            }
+          });
+        } else {
+          // Fallback to legacy columns
+          rowHTML += `
+            <td>${renderRoleChip('mc', entry.mc)}</td>
+            <td>${renderRoleChip('media', entry.media)}</td>
+            <td>${renderRoleChip('lyd', entry.lyd)}</td>
+            <td>${renderRoleChip('kamera', entry.kamera)}</td>
+            <td>${renderRoleChip('forsanger', entry.forsanger)}</td>
+            <td>${renderRoleChip('piano', entry.piano)}</td>
+            <td>${renderRoleChip('guitar', entry.guitar)}</td>
+            <td>${renderRoleChip('trommer', entry.trommer)}</td>
+            <td>${renderRoleChip('bas', entry.bas)}</td>
+            <td>${renderRoleChip('forkynder', entry.forkynder)}</td>
+            <td>${renderRoleChip('oversaetter', entry.oversaetter)}</td>
+            <td>${renderRoleChip('forsamling', entry.forsamling)}</td>
+            <td>${renderRoleChip('kidz', entry.kidz)}</td>
+            <td>${renderRoleChip('kidz2', entry.kidz2)}</td>
+            <td>${renderRoleChip('cafe_1', entry.cafe_1)}</td>
+            <td>${renderRoleChip('cafe_2', entry.cafe_2)}</td>
+            <td>${renderRoleChip('host_1', entry.host_1)}</td>
+            <td>${renderRoleChip('host_2', entry.host_2)}</td>
+          `;
+        }
+        
+        rowHTML += `
+          <td>
+            <button class="btn btn-sm btn-primary edit-btn" data-row="${idx}" title="Rediger produktion"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-info notes-btn" data-row="${idx}" data-date="${entry.date}" title="Vis/Rediger noter" style="margin-left: 5px;"><i class="fas fa-sticky-note"></i></button>
+          </td>
+        `;
+        
+        row.innerHTML = rowHTML;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Initialize search functionality
+    function initializeSearch() {
+      const searchInput = document.getElementById('search-produktion');
+      searchInput.addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#production-table tbody tr');
+        
+        rows.forEach(row => {
+          if (row.cells.length > 1) {
+            const text = row.textContent || row.innerText;
+            row.style.display = text.toLowerCase().includes(filter) ? '' : 'none';
+          }
+        });
+      });
+    }
+
+    // Helper to fetch all persons (Medlemmer + Kontakter)
+    function fetchAllPersons(callback) {
+      callApi('getAllMembersAndContacts', {}, function(result) {
+        const members = (result.members || []).map(m => `${m.fornavn} ${m.efternavn}`.trim());
+        const contacts = (result.contacts || []).map(c => `${c.fornavn} ${c.efternavn}`.trim());
+        const all = Array.from(new Set([...members, ...contacts])).sort();
+        callback(all);
+      });
+    }
+
+    function populateRoleDropdowns(selected = {}) {
+      fetchAllPersons(function(persons) {
+        // Get all position IDs from teams
+        const allPositionIds = [];
+        if (productionTeams && productionTeams.length > 0) {
+          productionTeams.forEach(team => {
+            if (team.positions) {
+              team.positions.forEach(pos => {
+                allPositionIds.push(pos.id);
+              });
+            }
+          });
+        }
+        
+        // Also include legacy fields for backward compatibility
+        const legacyFields = ['mc','media','lyd','kamera','forsanger','piano','guitar','trommer','bas','forkynder','oversaetter','forsamling','kidz','kidz2','cafe1','cafe2','host1','host2'];
+        const allFields = [...new Set([...allPositionIds, ...legacyFields])];
+        
+        allFields.forEach(field => {
+          const select = document.getElementById('production-' + field);
+          if (!select) return;
+          
+          // Map legacy field names
+          let selectedField = field;
+          if (field === 'cafe1') selectedField = 'cafe_1';
+          if (field === 'cafe2') selectedField = 'cafe_2';
+          if (field === 'host1') selectedField = 'host_1';
+          if (field === 'host2') selectedField = 'host_2';
+          
+          // Gem nuværende værdi
+          const currentValue = selected[selectedField] || selected[field] || select.value;
+          const uniquePersons = Array.from(new Set(persons));
+          const customOptionNeeded = currentValue && !uniquePersons.includes(currentValue);
+          const optionsHtml = uniquePersons.map(name => `<option value="${name}">${name}</option>`).join('');
+          select.innerHTML = '<option value="">-- Vælg --</option>' + (customOptionNeeded ? `<option value="${currentValue}">${currentValue}</option>` : '') + optionsHtml;
+          // Sæt valgt værdi EFTER options er sat
+          if (currentValue) select.value = currentValue;
+        });
+      });
+    }
+
+    // Select production color
+    function selectProductionColor(color, element) {
+      // Remove selected class from all color options
+      document.querySelectorAll('.color-option').forEach(opt => {
+        opt.style.border = '3px solid transparent';
+        opt.style.transform = 'scale(1)';
+      });
+      
+      // Add selected class to clicked option
+      element.style.border = '3px solid #333';
+      element.style.transform = 'scale(1.1)';
+      
+      // Set hidden input value
+      document.getElementById('production-color').value = color;
+    }
+
+    // Show modal for creating/editing production
+    function showProductionModal(isEdit, data = {}, idx = null) {
+      document.getElementById('production-modal-title').textContent = isEdit ? 'Rediger Produktion' : 'Opret Produktion';
+      document.getElementById('production-row-index').value = idx !== null ? idx : '';
+      document.getElementById('production-date').value = data.date || '';
+      document.getElementById('production-name').value = data.name || data.production_name || '';
+      
+      // Set color
+      const color = data.color || data.production_color || '';
+      document.getElementById('production-color').value = color;
+      
+      // Reset all color options
+      document.querySelectorAll('.color-option').forEach(opt => {
+        opt.style.border = '3px solid transparent';
+        opt.style.transform = 'scale(1)';
+        if (opt.getAttribute('data-color') === color) {
+          opt.style.border = '3px solid #333';
+          opt.style.transform = 'scale(1.1)';
+        }
+      });
+      
+      // Ensure teams are rendered
+      renderProductionModalTeams();
+      
+      // Build selected data object for all positions
+      const selectedData = {
+        mc: data.mc || '',
+        media: data.media || '',
+        lyd: data.lyd || '',
+        kamera: data.kamera || '',
+        forsanger: data.forsanger || '',
+        piano: data.piano || '',
+        guitar: data.guitar || '',
+        trommer: data.trommer || '',
+        bas: data.bas || '',
+        forkynder: data.forkynder || '',
+        oversaetter: data.oversaetter || '',
+        forsamling: data.forsamling || '',
+        kidz: data.kidz || '',
+        kidz2: data.kidz2 || '',
+        cafe_1: data.cafe_1 || data.cafe1 || '',
+        cafe_2: data.cafe_2 || data.cafe2 || '',
+        host_1: data.host_1 || data.host1 || '',
+        host_2: data.host_2 || data.host2 || ''
+      };
+      
+      // Add dynamic team positions
+      if (productionTeams && productionTeams.length > 0) {
+        productionTeams.forEach(team => {
+          if (team.positions) {
+            team.positions.forEach(position => {
+              selectedData[position.id] = data[position.id] || '';
+            });
+          }
+        });
+      }
+      
+      // Populate dropdowns and set selected values
+      setTimeout(() => {
+        populateRoleDropdowns(selectedData);
+        
+        // Set values after a short delay to ensure dropdowns are populated
+        setTimeout(() => {
+          Object.keys(selectedData).forEach(field => {
+            const element = document.getElementById('production-' + field);
+            if (element && selectedData[field]) {
+              // Check if option exists, if not add it
+              if (!Array.from(element.options).some(opt => opt.value === selectedData[field])) {
+                const option = document.createElement('option');
+                option.value = selectedData[field];
+                option.textContent = selectedData[field];
+                element.appendChild(option);
+              }
+              element.value = selectedData[field];
+            }
+          });
+        }, 200);
+      }, 100);
+      
+      showModal('production-modal');
+    }
+
+    // Edit production entry
+    function editProductionEntry(idx) {
+      if (!productionPlan || !productionPlan[idx]) {
+        console.error('Production plan not loaded or index invalid:', idx, productionPlan);
+        return;
+      }
+      const entry = productionPlan[idx];
+      console.log('Editing entry:', entry);
+      showProductionModal(true, entry, idx);
+    }
+
+    // Save production entry
+    function saveProductionEntry() {
+      const date = document.getElementById('production-date')?.value || '';
+      const repeatInterval = parseInt(document.getElementById('production-repeat-interval')?.value || '1', 10);
+      const repeatCount = parseInt(document.getElementById('production-repeat-count')?.value || '1', 10);
+      const productionName = document.getElementById('production-name')?.value || '';
+      const productionColor = document.getElementById('production-color')?.value || '';
+
+      if (!date) {
+        showToast('Vælg en dato!', 'warning');
+        return;
+      }
+      if (repeatCount < 1) {
+        showToast('Antal gentagelser skal være mindst 1!', 'warning');
+        return;
+      }
+
+      // Generér datoer: hver X uge, Y gange
+      let dates = [];
+      let current = new Date(date);
+      for (let i = 0; i < repeatCount; i++) {
+        dates.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 7 * repeatInterval);
+      }
+
+      // Build params dynamically from all teams and positions
+      const params = { 
+        dates,
+        name: productionName,
+        color: productionColor
+      };
+      
+      // Legacy fields for backward compatibility
+      const legacyFields = ['mc','media','lyd','kamera','forsanger','piano','guitar','trommer','bas','forkynder','oversaetter','forsamling','kidz','kidz2','cafe1','cafe2','host1','host2'];
+      legacyFields.forEach(field => {
+        const select = document.getElementById('production-' + field);
+        if (select) {
+          const value = select.value || '';
+          // Map to backend field names
+          if (field === 'cafe1') params.cafe1 = value;
+          else if (field === 'cafe2') params.cafe2 = value;
+          else if (field === 'host1') params.host1 = value;
+          else if (field === 'host2') params.host2 = value;
+          else params[field] = value;
+        }
+      });
+      
+      // Add all dynamic team positions
+      if (productionTeams && productionTeams.length > 0) {
+        productionTeams.forEach(team => {
+          if (team.positions) {
+            team.positions.forEach(position => {
+              const select = document.getElementById('production-' + position.id);
+              if (select) {
+                params[position.id] = select.value || '';
+              }
+            });
+          }
+        });
+      }
+
+      callApi('createScheduledProductions', params, function(result) {
+        hideModal('production-modal');
+        loadProductionPlan();
+        showToast(result && result.message ? result.message : 'Produktion(er) oprettet!', result && result.success ? 'success' : 'error');
+      }, function(error) {
+        showToast('Fejl ved oprettelse: ' + error, 'error');
+      });
+    }
+
+    // Action bar event handlers
+    document.getElementById('refresh-production-btn').onclick = function() {
+      loadProductionPlan();
+      showToast('Produktionsplan opdateret!', 'success');
+    };
+    document.getElementById('create-production-btn').onclick = function() {
+      showProductionModal(false);
+    };
+    document.getElementById('export-production-btn').onclick = function() {
+      exportProductionToExcel();
+    };
+    document.getElementById('send-production-email-btn').onclick = function() {
+      showProductionEmailModal();
+    };
+
+    // Show/hide repeat count based on schedule
+    const scheduleSelect = document.getElementById('production-repeat-type');
+    if (scheduleSelect) {
+      scheduleSelect.onchange = function() {
+        const repeatGroup = document.getElementById('production-repeat-count-group');
+        if (repeatGroup) {
+          repeatGroup.style.display = this.value === 'none' ? 'none' : '';
+        }
+      };
+    }
+
+    // Save production entry (with scheduling)
+    document.getElementById('save-production-btn').onclick = saveProductionEdit;
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOMContentLoaded - Initializing production plan page");
+      
+      // Update user info display
+      updateUserInfoDisplay();
+      
+      // Show loading state
+      const tbody = document.getElementById('production-table-body');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="21" class="text-center">Indlæser produktionsplan...</td></tr>';
+      }
+      
+      // Load production plan data
+      loadProductionPlan();
+      
+      // Load members for dropdowns
+      loadMembers();
+      
+      // Load production teams configuration
+      loadProductionTeams();
+
+      // Setup sidebar navigation
+      const sidebarItems = document.querySelectorAll('.sidebar-item[data-page]');
+      sidebarItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const page = this.dataset.page;
+          if (page) {
+            navigateToPage(page);
+          }
+        });
+      });
+
+      // Setup event handlers
+      document.getElementById('refresh-production-btn').addEventListener('click', function() {
+        loadProductionPlan();
+        showToast('Produktionsplan opdateret!', 'success');
+      });
+      
+      document.getElementById('create-production-btn').addEventListener('click', function() {
+        showProductionModal(false);
+      });
+      
+      document.getElementById('manage-teams-btn').addEventListener('click', function() {
+        showTeamsManagementModal();
+      });
+      
+      document.getElementById('export-production-btn').addEventListener('click', function() {
+        exportProductionToExcel();
+      });
+      
+      document.getElementById('send-production-email-btn').addEventListener('click', function() {
+        showProductionEmailModal();
+      });
+      
+      document.getElementById('save-production-btn').addEventListener('click', saveProductionEntry);
+
+      // Add event listeners for custom input handling
+      const dropdownIds = [
+        'edit-mc', 'edit-media', 'edit-forsanger', 'edit-piano', 
+        'edit-guitar', 'edit-trommer', 'edit-bas', 'edit-kidz',
+        'edit-cafe1', 'edit-cafe2', 'edit-host1', 'edit-host2'
+      ];
+      
+      dropdownIds.forEach(id => {
+        const dropdown = document.getElementById(id);
+        if (dropdown) {
+          dropdown.addEventListener('change', function() {
+            handleCustomInput(this);
+          });
+        }
+      });
+
+      // Close modals when clicking outside
+      window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.style.display = 'none';
+        }
+      });
+
+      // Attach event listeners
+      document.getElementById('select-all-productions').onclick = function(e) {
+        const checked = e.target.checked;
+        document.querySelectorAll('.production-checkbox').forEach(cb => { cb.checked = checked; });
+        updateSendEmailButtonState();
+      };
+
+      // Remove direct event listeners for .edit-btn, .delete-btn, and .production-checkbox here
+      // Only call addProductionTableEventListeners after table render
+      // (addProductionTableEventListeners is already called after renderProductionTable in loadProductionPlan)
+    });
+
+    function addProductionTableEventListeners() {
+      // Attach edit button listeners
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.onclick = function() {
+          const rowIndex = parseInt(this.getAttribute('data-row'), 10);
+          const rowData = productionPlan[rowIndex];
+          openEditProductionModal(rowIndex, rowData);
+        };
+      });
+
+      // Attach notes button listeners
+      document.querySelectorAll('.notes-btn').forEach(btn => {
+        btn.onclick = function() {
+          const rowIndex = parseInt(this.getAttribute('data-row'), 10);
+          const date = this.getAttribute('data-date');
+          const rowData = productionPlan[rowIndex];
+          openProductionNotesModal(rowIndex, date, rowData);
+        };
+      });
+
+      // Bulk delete (Slet valgte)
+      const deleteBtn = document.getElementById('delete-selected-productions');
+      const checkboxes = document.querySelectorAll('.production-checkbox');
+
+      function updateDeleteSelectedButton() {
+        const selected = document.querySelectorAll('.production-checkbox:checked').length;
+        deleteBtn.textContent = selected > 0 ? `Slet valgte (${selected})` : 'Slet valgte';
+        deleteBtn.disabled = selected === 0;
+      }
+
+      checkboxes.forEach(cb => {
+        cb.onchange = updateDeleteSelectedButton;
+      });
+      updateDeleteSelectedButton(); // Kør ved opstart
+
+      deleteBtn.onclick = function() {
+        const selectedRows = Array.from(checkboxes)
+          .filter(cb => cb.checked)
+          .map(cb => parseInt(cb.getAttribute('data-row'), 10));
+        if (selectedRows.length === 0) {
+          showToast('Vælg mindst én produktion for at slette.', 'warning');
+          return;
+        }
+        if (!confirm(`Slet ${selectedRows.length} produktion(er)?`)) return;
+        // Delete one at a time, from bottom up
+        selectedRows.sort((a, b) => b - a);
+        function deleteNext() {
+          if (selectedRows.length === 0) {
+            loadProductionPlan();
+            showToast('Valgte produktioner slettet!', 'success');
+            return;
+          }
+          const rowIndex = selectedRows.shift();
+          callApi('deleteProductionEntry', { rowIndex: rowIndex }, deleteNext, function(error) {
+            showToast('Fejl ved sletning: ' + error, 'error');
+            deleteNext();
+          });
+        }
+        deleteNext();
+      };
+    }
+
+    // Edit modal logic
+    function openEditProductionModal(rowIndex, rowData) {
+      console.log('Opening edit modal for row:', rowIndex, 'Data:', rowData);
+      
+      // First, set the date, name, and color
+      document.getElementById('production-date').value = formatDateForInput(rowData.date);
+      document.getElementById('production-name').value = rowData.name || rowData.production_name || '';
+      
+      const color = rowData.color || rowData.production_color || '';
+      document.getElementById('production-color').value = color;
+      
+      // Update color selection visual
+      document.querySelectorAll('.color-option').forEach(opt => {
+        opt.style.border = '3px solid transparent';
+        opt.style.transform = 'scale(1)';
+        if (opt.getAttribute('data-color') === color) {
+          opt.style.border = '3px solid #333';
+          opt.style.transform = 'scale(1.1)';
+        }
+      });
+      
+      // Store rowIndex in modal for save/delete
+      document.getElementById('production-modal').setAttribute('data-row', rowIndex);
+      
+      // Set save button to update
+      document.getElementById('save-production-btn').onclick = saveProductionEdit;
+      
+      // Set delete button to delete
+      document.getElementById('delete-production-btn').onclick = function() {
+        if (!confirm('Er du sikker på at du vil slette denne produktion?')) return;
+        callApi('deleteProductionEntry', { rowIndex }, function(result) {
+          hideModal('production-modal');
+          loadProductionPlan();
+          showToast(result && result.message ? result.message : 'Produktion slettet!', result && result.success ? 'success' : 'error');
+        }, function(error) {
+          showToast('Fejl ved sletning: ' + error, 'error');
+        });
+      };
+      
+      // Build selected data object for all positions
+      const selectedData = {
+        mc: rowData.mc || '',
+        media: rowData.media || '',
+        lyd: rowData.lyd || '',
+        kamera: rowData.kamera || '',
+        forsanger: rowData.forsanger || '',
+        piano: rowData.piano || '',
+        guitar: rowData.guitar || '',
+        trommer: rowData.trommer || '',
+        bas: rowData.bas || '',
+        forkynder: rowData.forkynder || '',
+        oversaetter: rowData.oversaetter || '',
+        forsamling: rowData.forsamling || '',
+        kidz: rowData.kidz || '',
+        kidz2: rowData.kidz2 || '',
+        cafe_1: rowData.cafe_1 || rowData.cafe1 || '',
+        cafe_2: rowData.cafe_2 || rowData.cafe2 || '',
+        host_1: rowData.host_1 || rowData.host1 || '',
+        host_2: rowData.host_2 || rowData.host2 || ''
+      };
+      
+      // Add dynamic team positions
+      if (productionTeams && productionTeams.length > 0) {
+        productionTeams.forEach(team => {
+          if (team.positions) {
+            team.positions.forEach(position => {
+              selectedData[position.id] = rowData[position.id] || '';
+            });
+          }
+        });
+      }
+      
+      // Ensure teams are rendered in modal
+      renderProductionModalTeams();
+      
+      // Populate dropdowns first, then set values after they're populated
+      setTimeout(() => {
+        populateRoleDropdowns(selectedData);
+        
+        // Wait a bit for dropdowns to populate, then set values
+        setTimeout(function() {
+          // Set all dropdown values
+          Object.keys(selectedData).forEach(field => {
+            const element = document.getElementById('production-' + field);
+            if (element) {
+              const value = selectedData[field];
+              if (value) {
+                // Check if option exists, if not add it
+                if (!Array.from(element.options).some(opt => opt.value === value)) {
+                  const option = document.createElement('option');
+                  option.value = value;
+                  option.textContent = value;
+                  element.appendChild(option);
+                }
+                element.value = value;
+              } else {
+                element.value = '';
+              }
+            }
+          });
+          console.log('Values set in edit modal');
+        }, 300); // Wait 300ms for async dropdown population
+      }, 200);
+      
+      showModal('production-modal');
+    }
+
+    // Save edit
+    // Production Notes Functions
+    let currentUser = null;
+    let currentUserTeams = [];
+
+    // Get current user info from session
+    function getCurrentUser() {
+      // Try to get user from sessionManager if available
+      if (typeof sessionManager !== 'undefined' && sessionManager.getCurrentUser) {
+        return sessionManager.getCurrentUser();
+      }
+      // Fallback - get from window if set
+      if (window.currentUser) {
+        return window.currentUser;
+      }
+      // Default fallback
+      return {
+        username: '',
+        fullName: '',
+        teams: []
+      };
+    }
+
+    function openProductionNotesModal(rowIndex, date, rowData) {
+      console.log('Opening notes modal for:', date, rowData);
+      
+      // Store date and index
+      document.getElementById('notes-production-date').value = date;
+      document.getElementById('notes-production-index').value = rowIndex;
+      
+      // Get current user and teams
+      currentUser = getCurrentUser();
+      console.log('Current user:', currentUser);
+      
+      // Check which teams user belongs to based on rowData
+      currentUserTeams = checkUserTeams(rowData);
+      console.log('User teams:', currentUserTeams);
+      
+      // Load existing notes
+      callApi('getProductionNotes', { date: date }, function(result) {
+        if (result && result.success && result.notes) {
+          const notes = result.notes;
+          
+          // Populate form fields
+          document.getElementById('notes-start-song').value = notes.startSong || '';
+          document.getElementById('notes-info-mc').value = notes.infoMC || '';
+          document.getElementById('notes-worship-leader').value = notes.worshipLeader || '';
+          document.getElementById('notes-preacher').value = notes.preacher || '';
+          document.getElementById('notes-sermon-topic').value = notes.sermonTopic || '';
+          document.getElementById('notes-collection-song').value = notes.collectionSong || '';
+          document.getElementById('notes-collection-who').value = notes.collectionWho || '';
+          document.getElementById('notes-other').value = notes.other || '';
+          
+          // Populate info items
+          const infoContainer = document.getElementById('notes-info-items');
+          infoContainer.innerHTML = '';
+          if (notes.infoItems && notes.infoItems.length > 0) {
+            notes.infoItems.forEach((item, idx) => {
+              addInfoItem(item.text, item.who, item.accepted, idx);
+            });
+          }
+          
+          // Populate songs
+          const songsContainer = document.getElementById('notes-songs-list');
+          songsContainer.innerHTML = '';
+          if (notes.songs && notes.songs.length > 0) {
+            notes.songs.forEach((song, idx) => {
+              addSong(song, idx);
+            });
+          }
+          
+          // Set readonly based on permissions
+          updateFieldPermissions(notes);
+        } else {
+          // Clear all fields for new notes
+          document.getElementById('notes-start-song').value = '';
+          document.getElementById('notes-info-mc').value = '';
+          document.getElementById('notes-worship-leader').value = '';
+          document.getElementById('notes-preacher').value = '';
+          document.getElementById('notes-sermon-topic').value = '';
+          document.getElementById('notes-collection-song').value = '';
+          document.getElementById('notes-collection-who').value = '';
+          document.getElementById('notes-other').value = '';
+          document.getElementById('notes-info-items').innerHTML = '';
+          document.getElementById('notes-songs-list').innerHTML = '';
+        }
+        
+        showModal('production-notes-modal');
+      }, function(error) {
+        console.error('Error loading notes:', error);
+        showToast('Fejl ved indlæsning af noter: ' + error, 'error');
+      });
+    }
+
+    function checkUserTeams(rowData) {
+      // Check if user is in specific teams based on rowData
+      const teams = [];
+      const userFullName = currentUser.fullName || currentUser.username || '';
+      
+      if (!userFullName) {
+        return teams;
+      }
+      
+      // Check if user is MC
+      if (rowData.mc && String(rowData.mc).trim() === userFullName.trim()) {
+        teams.push('mc');
+      }
+      
+      // Check if user is in worship team (forsanger, piano, guitar, trommer, bas)
+      const worshipPositions = ['forsanger', 'piano', 'guitar', 'trommer', 'bas'];
+      worshipPositions.forEach(pos => {
+        if (rowData[pos] && String(rowData[pos]).trim() === userFullName.trim()) {
+          teams.push('worship');
+        }
+      });
+      
+      // Check if user is preacher
+      if (rowData.forkynder && String(rowData.forkynder).trim() === userFullName.trim()) {
+        teams.push('preacher');
+      }
+      
+      // Also check dynamic team positions
+      if (productionTeams && productionTeams.length > 0) {
+        productionTeams.forEach(team => {
+          if (team.positions) {
+            team.positions.forEach(position => {
+              if (rowData[position.id] && String(rowData[position.id]).trim() === userFullName.trim()) {
+                // Map team IDs to permission groups
+                if (team.id === 'worship' || team.name.toLowerCase().includes('worship') || team.name.toLowerCase().includes('lovsang')) {
+                  teams.push('worship');
+                } else if (team.id === 'preacher' || team.name.toLowerCase().includes('forkynder') || team.name.toLowerCase().includes('preacher')) {
+                  teams.push('preacher');
+                } else if (team.id === 'tech' || team.name.toLowerCase().includes('teknisk')) {
+                  // MC is usually in tech team
+                  if (position.id === 'mc' || position.name.toLowerCase() === 'mc') {
+                    teams.push('mc');
+                  }
+                }
+              }
+            });
+          }
+        });
+      }
+      
+      return [...new Set(teams)]; // Remove duplicates
+    }
+
+    function updateFieldPermissions(notes) {
+      // Update readonly status based on permissions
+      const isPreacherTeam = currentUserTeams.includes('preacher');
+      const isMC = currentUserTeams.includes('mc');
+      
+      // Preacher fields - only preacher team can edit
+      document.getElementById('notes-preacher').readOnly = !isPreacherTeam;
+      document.getElementById('notes-sermon-topic').readOnly = !isPreacherTeam;
+      
+      if (!isPreacherTeam) {
+        document.getElementById('notes-preacher').style.background = '#e9ecef';
+        document.getElementById('notes-sermon-topic').style.background = '#e9ecef';
+      } else {
+        document.getElementById('notes-preacher').style.background = '';
+        document.getElementById('notes-sermon-topic').style.background = '';
+      }
+    }
+
+    function addInfoItem(text = '', who = '', accepted = false, index = null) {
+      const container = document.getElementById('notes-info-items');
+      const itemIndex = index !== null ? index : container.children.length;
+      
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'info-item';
+      itemDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+      itemDiv.innerHTML = `
+        <input type="text" class="form-control" placeholder="Hvem?" value="${who}" style="flex: 0 0 150px;" data-info-who="${itemIndex}">
+        <input type="text" class="form-control" placeholder="Info tekst" value="${text}" style="flex: 1;" data-info-text="${itemIndex}">
+        <label style="display: flex; align-items: center; margin: 0; flex: 0 0 auto;">
+          <input type="checkbox" ${accepted ? 'checked' : ''} data-info-accepted="${itemIndex}" style="margin-right: 5px;" ${currentUserTeams.includes('mc') ? '' : 'disabled'}>
+          <small>MC accepteret</small>
+        </label>
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeInfoItem(this)" style="flex: 0 0 auto;">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      container.appendChild(itemDiv);
+    }
+
+    function removeInfoItem(button) {
+      button.closest('.info-item').remove();
+    }
+
+    function addSong(songName = '', index = null) {
+      const container = document.getElementById('notes-songs-list');
+      const songIndex = index !== null ? index : container.children.length;
+      
+      const songDiv = document.createElement('div');
+      songDiv.className = 'song-item';
+      songDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+      songDiv.innerHTML = `
+        <span style="flex: 0 0 20px;">-</span>
+        <input type="text" class="form-control" placeholder="Sang navn" value="${songName}" style="flex: 1;" data-song="${songIndex}">
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeSong(this)" style="flex: 0 0 auto;">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      container.appendChild(songDiv);
+    }
+
+    function removeSong(button) {
+      button.closest('.song-item').remove();
+    }
+
+    function saveProductionNotes() {
+      const date = document.getElementById('notes-production-date').value;
+      const notes = {
+        startSong: document.getElementById('notes-start-song').value,
+        infoMC: document.getElementById('notes-info-mc').value,
+        worshipLeader: document.getElementById('notes-worship-leader').value,
+        preacher: document.getElementById('notes-preacher').value,
+        sermonTopic: document.getElementById('notes-sermon-topic').value,
+        collectionSong: document.getElementById('notes-collection-song').value,
+        collectionWho: document.getElementById('notes-collection-who').value,
+        other: document.getElementById('notes-other').value,
+        infoItems: [],
+        songs: []
+      };
+      
+      // Collect info items
+      document.querySelectorAll('.info-item').forEach(item => {
+        const who = item.querySelector('[data-info-who]')?.value || '';
+        const text = item.querySelector('[data-info-text]')?.value || '';
+        const accepted = item.querySelector('[data-info-accepted]')?.checked || false;
+        if (text || who) {
+          notes.infoItems.push({ who, text, accepted });
+        }
+      });
+      
+      // Collect songs
+      document.querySelectorAll('.song-item').forEach(item => {
+        const song = item.querySelector('[data-song]')?.value || '';
+        if (song) {
+          notes.songs.push(song);
+        }
+      });
+      
+      callApi('saveProductionNotes', { date: date, notes: notes }, function(result) {
+        if (result && result.success) {
+          hideModal('production-notes-modal');
+          showToast('Noter gemt succesfuldt!', 'success');
+        } else {
+          showToast('Fejl ved gemning af noter: ' + (result?.message || 'Ukendt fejl'), 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved gemning af noter: ' + error, 'error');
+      });
+    }
+
+    function saveProductionEdit() {
+      const rowIndex = parseInt(document.getElementById('production-modal').getAttribute('data-row'), 10);
+      const data = {
+        date: document.getElementById('production-date').value,
+        name: document.getElementById('production-name').value || '',
+        color: document.getElementById('production-color').value || ''
+      };
+      
+      // Legacy fields for backward compatibility
+      const legacyFields = ['mc','media','lyd','kamera','forsanger','piano','guitar','trommer','bas','forkynder','oversaetter','forsamling','kidz','kidz2'];
+      legacyFields.forEach(field => {
+        const select = document.getElementById('production-' + field);
+        if (select) {
+          data[field] = select.value || '';
+        }
+      });
+      
+      // Handle cafe and host fields with mapping
+      const cafe1Select = document.getElementById('production-cafe1');
+      const cafe2Select = document.getElementById('production-cafe2');
+      const host1Select = document.getElementById('production-host1');
+      const host2Select = document.getElementById('production-host2');
+      if (cafe1Select) data.cafe_1 = cafe1Select.value || '';
+      if (cafe2Select) data.cafe_2 = cafe2Select.value || '';
+      if (host1Select) data.host_1 = host1Select.value || '';
+      if (host2Select) data.host_2 = host2Select.value || '';
+      
+      // Add all dynamic team positions
+      if (productionTeams && productionTeams.length > 0) {
+        productionTeams.forEach(team => {
+          if (team.positions) {
+            team.positions.forEach(position => {
+              const select = document.getElementById('production-' + position.id);
+              if (select) {
+                // Use position ID as field name, but map to backend format if needed
+                data[position.id] = select.value || '';
+              }
+            });
+          }
+        });
+      }
+      
+      callApi('updateProductionEntry', { rowIndex: rowIndex, data }, function(result) {
+        hideModal('production-modal');
+        loadProductionPlan();
+        showToast(result && result.message ? result.message : 'Produktion opdateret!', result && result.success ? 'success' : 'error');
+      }, function(error) {
+        showToast('Fejl ved opdatering: ' + error, 'error');
+      });
+    }
+
+    // Download Excel template for production
+    function downloadProductionTemplate() {
+      callApi('generateProductionTemplate', {}, function(result) {
+        if (result && result.success) {
+          const headers = result.headers;
+          const exampleRow = result.exampleRow;
+          const personsList = result.personsList || [];
+          
+          const wb = XLSX.utils.book_new();
+          const wsData = [headers, exampleRow];
+          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          ws['!cols'] = headers.map(() => ({ wch: 20 }));
+          
+          // Add persons list as a separate sheet for dropdown validation
+          if (personsList.length > 0) {
+            const personsSheetData = [['Navn'], ...personsList.map(p => [p])];
+            const personsWs = XLSX.utils.aoa_to_sheet(personsSheetData);
+            personsWs['!cols'] = [{ wch: 30 }];
+            XLSX.utils.book_append_sheet(wb, personsWs, 'Medlemmer_Kontakter');
+            
+            // Try to add data validation to person name columns (all columns except 'Dato')
+            try {
+              const personColumns = [];
+              headers.forEach((h, idx) => {
+                if (h !== 'Dato') {
+                  personColumns.push(idx);
+                }
+              });
+              
+              const personsRange = `Medlemmer_Kontakter!$A$2:$A$${personsList.length + 1}`;
+              
+              if (!ws['!dataValidation']) {
+                ws['!dataValidation'] = [];
+              }
+              
+              // Add validation to person name columns (rows 2-100)
+              personColumns.forEach(colIdx => {
+                const colLetter = XLSX.utils.encode_col(colIdx);
+                for (let row = 2; row <= 100; row++) {
+                  const cellRef = colLetter + row;
+                  ws['!dataValidation'].push({
+                    sqref: cellRef,
+                    type: 'list',
+                    formula1: personsRange
+                  });
+                }
+              });
+            } catch (e) {
+              console.log('Data validation not supported, will use helper sheet only:', e);
+            }
+            
+            // Add instructions sheet
+            const instructions = [
+              ['INSTRUKTIONER TIL DROPDOWN VALIDERING'],
+              [''],
+              ['For at tilføje dropdown validering til person-navne kolonnerne:'],
+              ['1. Vælg de celler hvor du vil have dropdowns (alle kolonner undtagen "Dato")'],
+              ['2. Gå til Data > Data Validation'],
+              ['3. Vælg "List" som tilladelse'],
+              ['4. I "Source" feltet, indtast: =Medlemmer_Kontakter!$A$2:$A$' + (personsList.length + 1)],
+              ['5. Klik OK'],
+              [''],
+              ['Nu kan du vælge personer fra dropdown menuen i stedet for at skrive dem manuelt.'],
+              ['Dette sikrer at du vælger korrekte navne fra medlemmer og kontakter.']
+            ];
+            const instructionsWs = XLSX.utils.aoa_to_sheet(instructions);
+            instructionsWs['!cols'] = [{ wch: 80 }];
+            XLSX.utils.book_append_sheet(wb, instructionsWs, 'Instruktioner');
+          }
+          
+          XLSX.utils.book_append_sheet(wb, ws, 'Produktion');
+          XLSX.writeFile(wb, 'Produktion_Skabelon.xlsx');
+          showToast('Skabelon downloadet med medlemmer/kontakter liste', 'success');
+        } else {
+          showToast('Fejl ved download af skabelon: ' + (result.message || 'Ukendt fejl'), 'error');
+        }
+      }, function(error) {
+        showToast('Fejl ved download af skabelon: ' + error, 'error');
+      });
+    }
+    
+    // Process Excel import
+    function processExcelImport(type) {
+      const fileInput = document.getElementById('excel-file-input');
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showToast('Vælg venligst en fil', 'warning');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+          
+          if (jsonData.length === 0) {
+            showToast('Filen er tom', 'warning');
+            return;
+          }
+          
+          document.getElementById('import-progress').style.display = 'block';
+          document.getElementById('import-progress-bar').style.width = '50%';
+          document.getElementById('import-status').textContent = 'Importerer data...';
+          
+          const importFunction = type === 'contacts' ? 'importContactsFromExcel' : 
+                                 type === 'members' ? 'importMembersFromExcel' :
+                                 type === 'production' ? 'importProductionFromExcel' :
+                                 'importTeamsFromExcel';
+          
+          callApi(importFunction, { excelData: jsonData }, function(result) {
+            document.getElementById('import-progress-bar').style.width = '100%';
+            
+            if (result && result.success) {
+              let message = `Import gennemført!<br>`;
+              message += `✓ Importeret: ${result.imported || 0}<br>`;
+              message += `⚠ Dubletter: ${result.duplicates || 0}<br>`;
+              if (result.errors > 0) {
+                message += `✗ Fejl: ${result.errors || 0}<br>`;
+              }
+              
+              document.getElementById('import-status').textContent = 'Import færdig!';
+              document.getElementById('import-results').innerHTML = `<div class="alert alert-success">${message}</div>`;
+              document.getElementById('import-results').style.display = 'block';
+              
+              setTimeout(function() {
+                loadProductionPlan();
+                hideModal('import-excel-modal');
+                showToast('Import gennemført succesfuldt', 'success');
+              }, 2000);
+            } else {
+              document.getElementById('import-results').innerHTML = 
+                `<div class="alert alert-danger">Fejl: ${result.message || 'Ukendt fejl'}</div>`;
+              document.getElementById('import-results').style.display = 'block';
+            }
+          }, function(error) {
+            document.getElementById('import-results').innerHTML = 
+              `<div class="alert alert-danger">Fejl ved import: ${error}</div>`;
+            document.getElementById('import-results').style.display = 'block';
+          });
+        } catch (error) {
+          showToast('Fejl ved læsning af fil: ' + error.toString(), 'error');
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+    
+    // Hjælpefunktion til at formatere dato til input[type=date]
+    function formatDateForInput(dateStr) {
+      if (!dateStr) return '';
+      
+      // Hvis det allerede er i yyyy-mm-dd format, returner det
+      if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        return dateStr.split('T')[0]; // Fjern tid hvis der er
+      }
+      
+      // Prøv at parse som Date objekt
+      try {
+        const date = new Date(dateStr);
+        if (!isNaN(date.getTime())) {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+      } catch (e) {
+        console.error('Error parsing date:', e);
+      }
+      
+      // Prøv dd.mm.yyyy format
+      const parts = String(dateStr).split('.');
+      if (parts.length === 3) {
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+      
+      return '';
+    }
+
+    function exportProductionToExcel() {
+      // Export in the same format as import expects
+      if (!productionPlan || productionPlan.length === 0) {
+        showToast('Ingen data at eksportere', 'warning');
+        return;
+      }
+      
+      // Build headers dynamically - start with Farve, Navn, Dato
+      const headers = ['Farve', 'Navn', 'Dato'];
+      
+      // Add headers from all teams
+      if (productionTeams && productionTeams.length > 0) {
+        productionTeams.forEach(team => {
+          if (team.positions && team.positions.length > 0) {
+            team.positions.forEach(position => {
+              headers.push(position.name);
+            });
+          }
+        });
+      } else {
+        // Fallback to legacy headers if no teams configured
+        headers.push('MC', 'Media', 'Lyd', 'Kamera', 'Forsanger', 'Piano', 'Guitar', 'Trommer', 'Bas', 'Forkynder', 'Oversætter', 'Forsamling', 'Kidz', 'Kidz 2', 'Cafe 1', 'Cafe 2', 'Host 1', 'Host 2');
+      }
+      
+      // Helper function to format date for Excel (YYYY-MM-DD format)
+      const formatDateForExcel = (dateStr) => {
+        if (!dateStr) return '';
+        // If already in YYYY-MM-DD format, return as is
+        if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+          return dateStr.split('T')[0];
+        }
+        // Try to parse as Date
+        try {
+          const date = new Date(dateStr);
+          if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+        } catch (e) {
+          // If parsing fails, try dd.mm.yyyy format
+          const parts = String(dateStr).split('.');
+          if (parts.length === 3) {
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+        return dateStr || '';
+      };
+      
+      // Convert production plan to rows
+      const rows = productionPlan.map(entry => {
+        const row = [
+          entry.color || entry.production_color || '',
+          entry.name || entry.production_name || '',
+          formatDateForExcel(entry.date) || ''
+        ];
+        
+        // Add team positions
+        if (productionTeams && productionTeams.length > 0) {
+          productionTeams.forEach(team => {
+            if (team.positions && team.positions.length > 0) {
+              team.positions.forEach(position => {
+                row.push(entry[position.id] || '');
+              });
+            }
+          });
+        } else {
+          // Fallback to legacy fields
+          row.push(
+            entry.mc || '',
+            entry.media || '',
+            entry.lyd || '',
+            entry.kamera || '',
+            entry.forsanger || '',
+            entry.piano || '',
+            entry.guitar || '',
+            entry.trommer || '',
+            entry.bas || '',
+            entry.forkynder || '',
+            entry.oversaetter || '',
+            entry.forsamling || '',
+            entry.kidz || '',
+            entry.kidz2 || '',
+            entry.cafe_1 || '',
+            entry.cafe_2 || '',
+            entry.host_1 || '',
+            entry.host_2 || ''
+          );
+        }
+        
+        return row;
+      });
+      
+      // Create workbook with headers and data
+      const wb = XLSX.utils.book_new();
+      const wsData = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Set column widths
+      ws['!cols'] = headers.map(() => ({ wch: 15 }));
+      
+      // Add data validation for member/contact names (if we have them)
+      // Note: XLSX library doesn't support data validation directly, but we can add it as a comment
+      // For full validation, users would need to use Excel's Data Validation feature
+      
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const filename = `Produktionsplan_${dateStr}.xlsx`;
+      XLSX.utils.book_append_sheet(wb, ws, 'Produktion');
+      XLSX.writeFile(wb, filename);
+      showToast(`Excel fil "${filename}" er downloadet!`, 'success');
+    }
+
+    function updateSendEmailButtonState() {
+      // Button is always enabled - user can choose to send all or selected productions
+      const btn = document.getElementById('send-production-email-btn');
+      if (btn) {
+        btn.disabled = false;
+      }
+    }
+
+    // Call updateSendEmailButtonState whenever checkboxes change
+    document.addEventListener('change', function(e) {
+      if (e.target.classList.contains('production-checkbox')) {
+        updateSendEmailButtonState();
+        updateSelectedProductionsCount();
+      }
+    });
+
+
+    function showProductionEmailModal() {
+      // Set default date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('schedule-date').value = tomorrow.toISOString().split('T')[0];
+      
+      // Show modal
+      document.getElementById('production-email-modal').style.display = 'block';
+      
+      // Update selected productions count
+      updateSelectedProductionsCount();
+      
+      // Setup event listeners for show/hide schedule options
+      const sendOptions = document.querySelectorAll('input[name="send-option"]');
+      sendOptions.forEach(option => {
+        option.addEventListener('change', function() {
+          const scheduleOptions = document.getElementById('schedule-options');
+          if (this.value === 'schedule') {
+            scheduleOptions.style.display = 'block';
+          } else {
+            scheduleOptions.style.display = 'none';
+          }
+        });
+      });
+      
+      // Setup event listener for repeat checkbox
+      const repeatCheckbox = document.getElementById('schedule-repeat');
+      const repeatOptions = document.getElementById('repeat-options');
+      repeatCheckbox.addEventListener('change', function() {
+        repeatOptions.style.display = this.checked ? 'block' : 'none';
+      });
+      
+      // Setup event listener for recipients dropdown
+      const recipientsSelect = document.getElementById('email-recipients');
+      recipientsSelect.addEventListener('change', function() {
+        const customSection = document.getElementById('custom-recipients-section');
+        if (this.value === 'custom') {
+          customSection.style.display = 'block';
+          populateCustomRecipientsList();
+        } else {
+          customSection.style.display = 'none';
+        }
+      });
+      
+      // Initial state
+      if (recipientsSelect.value === 'custom') {
+        document.getElementById('custom-recipients-section').style.display = 'block';
+        populateCustomRecipientsList();
+      }
+    }
+    
+    function updateSelectedProductionsCount() {
+      const selected = document.querySelectorAll('.production-checkbox:checked').length;
+      const countElement = document.getElementById('selected-productions-count');
+      if (countElement) {
+        if (selected === 0) {
+          countElement.textContent = 'Ingen produktioner valgt - alle produktioner vil blive sendt';
+          countElement.style.color = '#dc3545';
+        } else {
+          countElement.textContent = selected + ' produktion(er) valgt';
+          countElement.style.color = '#14a44d';
+        }
+      }
+    }
+    
+    function populateCustomRecipientsList() {
+      const listContainer = document.getElementById('custom-recipients-list');
+      if (!listContainer) return;
+      
+      // Get all unique names from all productions
+      const allNames = new Set();
+      (window.productionPlan || []).forEach(row => {
+        if (row.mc) allNames.add(row.mc);
+        if (row.media) allNames.add(row.media);
+        if (row.lyd) allNames.add(row.lyd);
+        if (row.kamera) allNames.add(row.kamera);
+        if (row.forsanger) allNames.add(row.forsanger);
+        if (row.piano) allNames.add(row.piano);
+        if (row.guitar) allNames.add(row.guitar);
+        if (row.trommer) allNames.add(row.trommer);
+        if (row.bas) allNames.add(row.bas);
+        if (row.forkynder) allNames.add(row.forkynder);
+        if (row.oversaetter) allNames.add(row.oversaetter);
+        if (row.forsamling) allNames.add(row.forsamling);
+        if (row.kidz) allNames.add(row.kidz);
+        if (row.kidz2) allNames.add(row.kidz2);
+        if (row.cafe_1) allNames.add(row.cafe_1);
+        if (row.cafe_2) allNames.add(row.cafe_2);
+        if (row.host_1) allNames.add(row.host_1);
+        if (row.host_2) allNames.add(row.host_2);
+      });
+      
+      const sortedNames = Array.from(allNames).sort();
+      
+      if (sortedNames.length === 0) {
+        listContainer.innerHTML = '<p style="color: #6c757d; margin: 0;">Ingen personer fundet i produktionsplanen</p>';
+        return;
+      }
+      
+      listContainer.innerHTML = sortedNames.map(name => `
+        <label style="display: flex; align-items: center; cursor: pointer; padding: 4px 0;">
+          <input type="checkbox" class="custom-recipient-checkbox" value="${name}" style="margin-right: 8px;">
+          <span>${name}</span>
+        </label>
+      `).join('');
+    }
+
+    function sendOrScheduleProductionEmail() {
+      const subject = document.getElementById('email-subject').value;
+      const body = document.getElementById('email-body').value;
+      const recipientsType = document.getElementById('email-recipients').value;
+      const sendOption = document.querySelector('input[name="send-option"]:checked').value;
+      const scheduleDate = document.getElementById('schedule-date').value;
+      const scheduleTime = document.getElementById('schedule-time').value;
+      const scheduleRepeat = document.getElementById('schedule-repeat').checked;
+      const repeatInterval = document.getElementById('repeat-interval').value;
+      const repeatCount = document.getElementById('repeat-count').value;
+
+      // Get selected production rows (if any checkboxes are checked)
+      const selectedCheckboxes = document.querySelectorAll('.production-checkbox:checked');
+      const selectedRowIndices = Array.from(selectedCheckboxes).map(cb => parseInt(cb.getAttribute('data-row'), 10));
+
+      // Determine which productions to use
+      let productionsToUse = window.productionPlan || [];
+      let rowIndicesToSend = [];
+      
+      if (selectedRowIndices.length > 0) {
+        // Use only selected productions
+        productionsToUse = selectedRowIndices.map(idx => window.productionPlan[idx]).filter(Boolean);
+        rowIndicesToSend = selectedRowIndices;
+      }
+
+      if (productionsToUse.length === 0) {
+        showToast('Ingen produktioner valgt eller tilgængelige!', 'error');
+        return;
+      }
+
+      // Find recipients based on selection
+      let names = [];
+      if (recipientsType === 'mc') {
+        names = productionsToUse.map(row => row.mc).filter(Boolean);
+      } else if (recipientsType === 'all') {
+        names = productionsToUse.flatMap(row => [
+          row.mc, row.media, row.lyd, row.kamera, row.forsanger, row.piano, row.guitar, row.trommer, row.bas,
+          row.forkynder, row.oversaetter, row.forsamling, row.kidz, row.kidz2, row.cafe_1, row.cafe_2, row.host_1, row.host_2
+        ]).filter(Boolean);
+      } else if (recipientsType === 'custom') {
+        // Get manually selected recipients
+        const customCheckboxes = document.querySelectorAll('.custom-recipient-checkbox:checked');
+        names = Array.from(customCheckboxes).map(cb => cb.value);
+        
+        if (names.length === 0) {
+          showToast('Vælg mindst én modtager!', 'error');
+          return;
+        }
+      }
+      
+      // Remove duplicates
+      names = Array.from(new Set(names));
+
+      if (names.length === 0) {
+        showToast('Ingen personer fundet i de valgte produktioner!', 'error');
+        return;
+      }
+
+      // Validate schedule options if scheduling
+      if (sendOption === 'schedule') {
+        if (!scheduleDate) {
+          showToast('Vælg en dato for planlægning!', 'error');
+          return;
+        }
+        if (scheduleRepeat && (!repeatInterval || (repeatCount && parseInt(repeatCount) < 1))) {
+          showToast('Ugyldige gentagelsesindstillinger!', 'error');
+          return;
+        }
+      }
+
+      // Lookup emails
+      callApi('lookupPersonsInfo', { names: names }, function(recipients) {
+        const validRecipients = recipients.filter(r => r.email);
+        if (validRecipients.length === 0) {
+          showToast('Ingen gyldige emails fundet!', 'error');
+          return;
+        }
+        
+        const payload = {
+          recipients: validRecipients,
+          subject: subject || 'Produktionsplan',
+          body: body || 'Se vedhæftet produktionsplan.',
+          rows: rowIndicesToSend.length > 0 ? rowIndicesToSend : []
+        };
+        
+        let targetFunction;
+        if (sendOption === 'now') {
+          // Send immediately
+          targetFunction = 'sendProductionPlanEmails';
+        } else {
+          // Schedule email
+          targetFunction = 'scheduleProductionEmail';
+          payload.schedule = {
+            date: scheduleDate,
+            time: scheduleTime,
+            repeat: scheduleRepeat,
+            interval: scheduleRepeat ? repeatInterval : null,
+            count: scheduleRepeat && repeatCount ? parseInt(repeatCount) : null
+          };
+        }
+        
+        callApi(targetFunction, payload, function(result) {
+          if (result && result.success) {
+            if (sendOption === 'now') {
+              showToast(result.message || 'Email sendt!', 'success');
+            } else {
+              showToast(result.message || 'Email planlagt!', 'success');
+            }
+          } else {
+            showToast(result.message || 'Fejl ved afsendelse', 'error');
+          }
+          hideModal('production-email-modal');
+        }, function(error) {
+          showToast('Fejl ved afsendelse: ' + error, 'error');
+          hideModal('production-email-modal');
+        });
+      }, function(error) {
+        showToast('Fejl ved opslag af emails: ' + error, 'error');
+      });
+    }
+  </script>
+</body>
+</html>

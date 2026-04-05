@@ -1,0 +1,697 @@
+<!-- Enhanced Sidebar with Events styling -->
+<div class="sidebar" data-current-page="<?!= currentPage || 'dashboard' ?>">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <i class="fas fa-church"></i>
+    </div>
+    <div class="sidebar-title">
+      <h3>HEAVEN CHURCH</h3>
+      <div class="sidebar-subtitle">Admin System</div>
+    </div>
+  </div>
+
+  <div class="sidebar-menu">
+    <button type="button" class="sidebar-item" data-page="dashboard">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <button type="button" class="sidebar-item" data-page="kontakter">
+      <i class="fas fa-address-book"></i>
+      <span>Kontakter</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <button type="button" class="sidebar-item" data-page="medlemmer">
+      <i class="fas fa-users"></i>
+      <span>Medlemmer</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <button type="button" class="sidebar-item" data-page="teams">
+      <i class="fas fa-user-friends"></i>
+      <span>Teams</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <button type="button" class="sidebar-item" data-page="produktion">
+      <i class="fas fa-video"></i>
+      <span>Produktionsplan</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <button type="button" class="sidebar-item" data-page="rengoring">
+      <i class="fas fa-broom"></i>
+      <span>Rengøring</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <button type="button" class="sidebar-item" data-page="grupper">
+      <i class="fas fa-sitemap"></i>
+      <span>Grupper</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <button type="button" class="sidebar-item" data-page="events">
+      <i class="fas fa-calendar-day"></i>
+      <span>Events</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+    
+    <div class="sidebar-divider"></div>
+    
+    <button type="button" class="sidebar-item" data-page="logins">
+      <i class="fas fa-users-cog"></i>
+      <span>Brugerstyring</span>
+      <div class="sidebar-indicator"></div>
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="user-details">
+        <span class="user-name" id="sidebar-username"><?= user && user.username ? user.username : 'Admin' ?></span>
+        <span class="user-role" id="sidebar-userrole"><?= user && user.role ? user.role : 'Administrator' ?></span>
+      </div>
+    </div>
+    
+    <div class="sidebar-actions">
+      <button class="sidebar-action-btn" onclick="logout()" title="Log ud">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+      <button class="sidebar-action-btn" onclick="toggleSidebar()" title="Skjul menu">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Enhanced Sidebar Styling inspired by Events */
+.sidebar {
+  width: var(--sidebar-width);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+  color: #ffffff !important;
+  height: 100vh;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  display: flex !important;
+  flex-direction: column;
+  z-index: 1000 !important;
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.sidebar * {
+  color: inherit;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.02"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.02"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  pointer-events: none;
+}
+
+.sidebar-header {
+  padding: 30px 25px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-logo {
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: white;
+  margin-right: 18px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.sidebar-logo:hover {
+  transform: scale(1.05) rotate(5deg);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+}
+
+.sidebar-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.sidebar-menu {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 25px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 18px 30px;
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  margin: 3px 15px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0 4px 4px 0;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.sidebar-item i {
+  font-size: 20px;
+  width: 28px;
+  text-align: center;
+  margin-right: 18px;
+  transition: all 0.4s ease;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.sidebar-item span {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateX(8px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item:hover::before {
+  opacity: 1;
+}
+
+.sidebar-item:hover i {
+  color: #a8edea;
+  transform: scale(1.15) rotate(5deg);
+}
+
+.sidebar-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-item.active span {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.sidebar-item.active i {
+  color: #a8edea !important;
+}
+
+.sidebar-item.active::before {
+  opacity: 1;
+}
+
+.sidebar-item.active .sidebar-indicator {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sidebar-indicator {
+  position: absolute;
+  right: 20px;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  margin: 25px 30px;
+}
+
+.sidebar-footer {
+  padding: 25px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.user-profile:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.user-avatar {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-size: 18px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #ffffff !important;
+  margin-bottom: 2px;
+}
+
+.user-role {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+}
+
+.sidebar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.sidebar-action-btn {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.95) !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-action-btn:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+</style>
+
+<script>
+// Use hardcoded values to avoid template evaluation issues - NO TEMPLATE VARIABLES
+// These will be set dynamically via JavaScript if needed
+const NAVIGATION_STATE = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbyqf60NKXYCOhimJq7MbutuFJDqOqb5aJVFJXGWSvmfWNd8osWpc0yJ-7ro78VpLK7ljw/exec',
+  currentPage: 'dashboard' // Will be set from URL or data attribute
+};
+
+// Get current page from URL or data attribute
+(function() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageFromUrl = urlParams.get('page');
+    if (pageFromUrl) {
+      NAVIGATION_STATE.currentPage = pageFromUrl;
+    } else {
+      // Try to get from sidebar data attribute
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar && sidebar.dataset.currentPage) {
+        NAVIGATION_STATE.currentPage = sidebar.dataset.currentPage;
+      }
+    }
+  } catch(e) {
+    // Use default
+  }
+})();
+
+// Try to get scriptUrl from server if available
+if (typeof google !== 'undefined' && google.script && google.script.run) {
+  google.script.run.withSuccessHandler(function(url) {
+    if (url) {
+      NAVIGATION_STATE.scriptUrl = url;
+    }
+  }).getScriptUrl();
+}
+
+// Update user info display
+function updateSidebarUserInfo() {
+  // Try to get username from template variable first
+  const templateUsername = '<?= user && user.username ? user.username : "" ?>';
+  const templateRole = '<?= user && user.role ? user.role : "" ?>';
+  
+  // Fallback to localStorage
+  const storedUsername = localStorage.getItem('username') || templateUsername || 'Admin';
+  const storedRole = templateRole || 'Administrator';
+  
+  // Update sidebar username
+  const sidebarUsername = document.getElementById('sidebar-username');
+  if (sidebarUsername) {
+    sidebarUsername.textContent = storedUsername;
+  }
+  
+  // Update sidebar role
+  const sidebarRole = document.getElementById('sidebar-userrole');
+  if (sidebarRole) {
+    sidebarRole.textContent = storedRole;
+  }
+  
+  // If still not set, try to get from session
+  if (storedUsername === 'Admin' || !storedUsername) {
+    const sessionToken = sessionManager.getToken();
+    if (sessionToken) {
+      callApi('validateSessionTokenApi', { sessionToken: sessionToken }, function(result) {
+        if (result && result.success && result.user) {
+          const username = result.user.username || 'Admin';
+          const role = result.user.role || 'Administrator';
+          
+          if (sidebarUsername) sidebarUsername.textContent = username;
+          if (sidebarRole) sidebarRole.textContent = role;
+          
+          // Store in localStorage for next time
+          localStorage.setItem('username', username);
+        }
+      }, function(error) {
+        console.error('Error validating session:', error);
+      });
+    }
+  }
+}
+
+// Enhanced sidebar functionality
+(function() {
+  // Run immediately and on DOMContentLoaded
+  function initSidebar() {
+    highlightCurrentPage();
+    setupSidebarInteractions();
+    setupSidebarAnimations();
+    updateSidebarUserInfo(); // Update user info
+  }
+  
+  // Run immediately if DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebar);
+  } else {
+    initSidebar();
+  }
+  
+  // Also run after a short delay to catch dynamic content
+  setTimeout(initSidebar, 100);
+})();
+
+function highlightCurrentPage() {
+  // Get current page from URL or NAVIGATION_STATE
+  let activePage = 'dashboard';
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageFromUrl = urlParams.get('page');
+    if (pageFromUrl) {
+      activePage = pageFromUrl.toLowerCase();
+    } else {
+      // Try to get from sidebar data attribute
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar && sidebar.dataset.currentPage) {
+        activePage = sidebar.dataset.currentPage.toLowerCase();
+      } else if (typeof NAVIGATION_STATE !== 'undefined' && NAVIGATION_STATE && NAVIGATION_STATE.currentPage) {
+        activePage = NAVIGATION_STATE.currentPage.toLowerCase();
+      }
+    }
+  } catch(e) {
+    console.error('Error detecting current page:', e);
+  }
+  
+  console.log('Highlighting page:', activePage);
+  
+  // Update all sidebar items
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    const itemPage = (item.dataset.page || '').toLowerCase();
+    if (itemPage === activePage) {
+      item.classList.add('active');
+      console.log('Activated sidebar item:', itemPage);
+    } else {
+      item.classList.remove('active');
+    }
+  });
+  
+  // Ensure sidebar has proper styling
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) {
+    sidebar.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+    sidebar.style.color = 'white';
+    // Ensure all text is visible
+    const allText = sidebar.querySelectorAll('span, h3, div, .sidebar-subtitle');
+    allText.forEach(el => {
+      if (el && !el.closest('.sidebar-item.active')) {
+        el.style.color = 'rgba(255, 255, 255, 0.9)';
+      }
+    });
+  }
+}
+
+function setupSidebarInteractions() {
+  // Ensure sidebar is visible
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) {
+    sidebar.style.display = 'flex';
+    sidebar.style.visibility = 'visible';
+    sidebar.style.opacity = '1';
+  }
+  
+  function ensureExecUrl(url) {
+    if (!url) return null;
+    let cleanUrl = url.split('?')[0].split('#')[0];
+    cleanUrl = cleanUrl.replace(/\/$/, '');
+    if (!cleanUrl.endsWith('/exec')) {
+      if (cleanUrl.indexOf('script.google.com') !== -1) {
+        cleanUrl = cleanUrl + '/exec';
+      } else {
+        cleanUrl = cleanUrl.replace(/\/(home|dev)$/, '/exec');
+        if (!cleanUrl.endsWith('/exec')) {
+          cleanUrl = cleanUrl + '/exec';
+        }
+      }
+    }
+    return cleanUrl;
+  }
+  
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      // Add ripple effect
+      const ripple = document.createElement('div');
+      ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+      `;
+      
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      
+      this.appendChild(ripple);
+      
+      setTimeout(() => {
+        ripple.remove();
+      }, 600);
+
+          const targetPage = this.dataset.page;
+          if (targetPage) {
+            setTimeout(() => {
+              // CRITICAL: Always use navigateToPage from CommonJS which handles token properly
+              // This ensures token is always in URL
+              if (typeof navigateToPage === 'function') {
+                console.log('Sidebar: Using navigateToPage for:', targetPage);
+                navigateToPage(targetPage);
+              } else if (window.navigateToPage) {
+                console.log('Sidebar: Using window.navigateToPage for:', targetPage);
+                window.navigateToPage(targetPage);
+              } else {
+                // Fallback: Get token from URL or storage
+                const urlParams = new URLSearchParams(window.location.search);
+                let currentToken = urlParams.get('sessionToken') || '';
+                
+                // If no token in URL, try to get from storage
+                if (!currentToken || currentToken.trim() === '') {
+                  const storedToken = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : (window.sessionToken || '');
+                  if (storedToken && storedToken.trim() !== '') {
+                    console.log('Sidebar: No token in URL, using stored token for navigation');
+                    currentToken = storedToken;
+                    // Add to URL immediately
+                    urlParams.set('sessionToken', storedToken);
+                    const newUrl = window.location.pathname + '?' + urlParams.toString();
+                    try {
+                      window.history.replaceState({}, '', newUrl);
+                    } catch (e) {
+                      console.error('Sidebar: Could not update URL with token:', e);
+                    }
+                  }
+                }
+                
+                // Ensure we have a token before navigation
+                if (!currentToken || currentToken.trim() === '') {
+                  console.error('Sidebar: ERROR - No session token available for navigation!');
+                  alert('Ingen session token fundet. Du bliver omdirigeret til login.');
+                  window.location.href = window.location.pathname + '?page=login';
+                  return;
+                }
+                
+                // Fallback navigation - use current URL's base to ensure same web app
+                const currentBaseUrl = window.location.origin + window.location.pathname;
+                const navParams = new URLSearchParams();
+                navParams.set('page', targetPage);
+                navParams.set('sessionToken', currentToken); // ALWAYS include token
+                const targetUrl = `${currentBaseUrl}?${navParams.toString()}`;
+                console.log('Sidebar navigating to (fallback):', targetUrl);
+                console.log('Token in sidebar navigation:', currentToken.substring(0, 20) + '...');
+                
+                // Store token before navigation
+                if (typeof sessionManager !== 'undefined' && sessionManager.setToken) {
+                  sessionManager.setToken(currentToken);
+                }
+                
+                try {
+                  window.location.href = targetUrl;
+                } catch (error) {
+                  console.error('Sidebar navigation error:', error);
+                  try {
+                    window.location.replace(targetUrl);
+                  } catch (e2) {
+                    window.location = targetUrl;
+                  }
+                }
+              }
+            }, 120);
+          }
+    });
+  });
+}
+
+function setupSidebarAnimations() {
+  // Add CSS for ripple animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
+    .sidebar-item {
+      position: relative;
+      overflow: hidden;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.toggle('collapsed');
+}
+
+window.addEventListener('popstate', highlightCurrentPage);
+</script>
