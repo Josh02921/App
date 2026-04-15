@@ -1,5 +1,6 @@
 import db from '../db'
 import { requireSession } from '../session'
+import { sendEmail, isEmailConfigured } from '../email'
 
 function formatDate(d: Date | null | undefined): string {
   if (!d) return ''
@@ -26,6 +27,22 @@ function contactToObj(c: any, index: number) {
     info_dabmedlem: c.infoDabmedlem,
     samtale_pastor: c.samtalePastor,
   }
+}
+
+// Resolve contact by dbId (preferred) or by 0-based index fallback
+async function findContactRecord(params: any, field: string = 'contactId') {
+  const dbId = params.dbId
+  if (dbId !== undefined && dbId !== null) {
+    const contact = await db.contact.findUnique({ where: { id: Number(dbId) } })
+    if (!contact) throw new Error('Kontakt ikke fundet')
+    return contact
+  }
+  const contactId = params[field] ?? params[0]
+  if (contactId === undefined || contactId === null) throw new Error('Kontakt ID er påkrævet')
+  const all = await db.contact.findMany({ orderBy: { id: 'asc' } })
+  const idx = Number(contactId)
+  if (idx < 0 || idx >= all.length) throw new Error('Kontakt ikke fundet')
+  return all[idx]
 }
 
 export async function getAllContactsSimple(params: any) {
@@ -69,15 +86,8 @@ export async function addContact(params: any) {
 export async function updateContact(params: any) {
   try {
     await requireSession(params)
-    const contactId = params.contactId ?? params[0]
+    const contact = await findContactRecord(params)
     const d = params.contactData || params[1] || params
-
-    // Find the contact by 0-based index
-    const all = await db.contact.findMany({ orderBy: { id: 'asc' } })
-    if (contactId < 0 || contactId >= all.length) {
-      return { success: false, message: 'Kontakt ikke fundet' }
-    }
-    const contact = all[contactId]
 
     await db.contact.update({
       where: { id: contact.id },
@@ -106,13 +116,7 @@ export async function updateContact(params: any) {
 export async function deleteContact(params: any) {
   try {
     await requireSession(params)
-    const contactId = params.contactId !== undefined ? params.contactId : params
-
-    const all = await db.contact.findMany({ orderBy: { id: 'asc' } })
-    if (contactId < 0 || contactId >= all.length) {
-      return { success: false, message: 'Kontakt ikke fundet' }
-    }
-    const contact = all[contactId]
+    const contact = await findContactRecord(params)
     await db.contact.delete({ where: { id: contact.id } })
     return { success: true, message: 'Kontakt slettet succesfuldt' }
   } catch (error: any) {
@@ -123,13 +127,7 @@ export async function deleteContact(params: any) {
 export async function convertContactToMember(params: any) {
   try {
     await requireSession(params)
-    const contactId = params.contactId !== undefined ? params.contactId : params[0]
-
-    const all = await db.contact.findMany({ orderBy: { id: 'asc' } })
-    if (contactId < 0 || contactId >= all.length) {
-      return { success: false, message: 'Kontakt ikke fundet' }
-    }
-    const c = all[contactId]
+    const c = await findContactRecord(params)
 
     await db.member.create({
       data: {
@@ -154,20 +152,90 @@ export async function convertContactToMember(params: any) {
 }
 
 export async function sendFollowUp(params: any) {
-  // Email functionality - stub for now (requires SMTP setup)
   try {
     await requireSession(params)
-    return { success: true, message: '0 follow-up emails sendt (email ikke konfigureret)' }
+    if (!isEmailConfigured()) {
+      return { success: false, message: 'Email er ikke konfigureret. Tilføj SMTP indstillinger i Railway miljøvariabler.' }
+    }
+    const contact = await findContactRecord(params)
+    if (!contact.email) {
+      return { success: false, message: 'Kontakt har ingen email adresse' }
+    }
+
+    const churchName = process.env.CHURCH_NAME || 'Horsens Pinsekirke'
+    const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || ''
+
+    await sendEmail({
+      to: contact.email,
+      subject: `Hej ${contact.fornavn} - Vi er glade for at du kom forbi`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #007bff;">Hej ${contact.fornavn}!</h2>
+          <p>Tak fordi du besøgte ${churchName}.</p>
+          <p>Vi håber du havde en god oplevelse, og vi vil meget gerne se dig igen.</p>
+          <p>Hvis du har spørgsmål eller ønsker mere information, er du meget velkommen til at kontakte os.</p>
+          <br>
+          <p>Mange hilsner</p>
+          <p><strong>${churchName}</strong></p>
+        </div>
+      `
+    })
+
+    return { success: true, message: `Follow-up email sendt til ${contact.email}` }
   } catch (error: any) {
-    return { success: false, message: error.message }
+    return { success: false, message: error.message || 'Fejl ved sending af follow-up email' }
   }
 }
 
 export async function sendBulkContactEmails(params: any) {
   try {
     await requireSession(params)
-    return { success: true, sent: 0, failed: 0, message: 'Email funktionen kræver SMTP konfiguration' }
+    if (!isEmailConfigured()) {
+      return { success: false, sent: 0, failed: 0, message: 'Email er ikke konfigureret. Tilføj SMTP indstillinger i Railway miljøvariabler.' }
+    }
+
+    const subject = params.subject || 'Besked fra kirken'
+    const message = params.message || params.body || ''
+    const onlyNewsletter = params.onlyNewsletter !== false // default: only newsletter subscribers
+
+    if (!message) return { success: false, sent: 0, failed: 0, message: 'Besked tekst er påkrævet' }
+
+    const where = onlyNewsletter ? { nyhedsmail: true } : {}
+    const contacts = await db.contact.findMany({
+      where: { ...where, email: { not: '' } },
+      orderBy: { id: 'asc' }
+    })
+
+    let sent = 0
+    let failed = 0
+    const errors: string[] = []
+
+    for (const c of contacts) {
+      try {
+        await sendEmail({
+          to: c.email,
+          subject,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Kære ${c.fornavn} ${c.efternavn},</p>
+            ${message.replace(/\n/g, '<br>')}
+            <br><p><strong>${process.env.CHURCH_NAME || 'Horsens Pinsekirke'}</strong></p>
+          </div>`
+        })
+        sent++
+      } catch (e: any) {
+        failed++
+        errors.push(`${c.email}: ${e.message}`)
+      }
+    }
+
+    return {
+      success: true,
+      sent,
+      failed,
+      message: `${sent} emails sendt${failed > 0 ? `, ${failed} fejlede` : ''}`,
+      errors: errors.length > 0 ? errors : undefined
+    }
   } catch (error: any) {
-    return { success: false, message: error.message }
+    return { success: false, sent: 0, failed: 0, message: error.message }
   }
 }

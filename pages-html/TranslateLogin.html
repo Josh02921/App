@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oversætter Login - HEAVEN CHURCH</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --dark: #343a40;
+      --white: #ffffff;
+      --light: #f8f9fa;
+      --border: #dee2e6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Login card */
+    .login-card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .login-header { text-align: center; margin-bottom: 32px; }
+    .login-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; font-size: 32px; color: #fff;
+      box-shadow: 0 8px 20px rgba(0,123,255,0.3);
+    }
+    .login-title { font-size: 24px; font-weight: 700; color: var(--dark); }
+    .login-subtitle { color: #6c757d; font-size: 14px; margin-top: 4px; }
+
+    /* Form */
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-weight: 500; color: var(--dark); margin-bottom: 6px; font-size: 14px; }
+    .input-wrap { position: relative; }
+    .input-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #adb5bd; }
+    .form-control {
+      width: 100%; padding: 12px 14px 12px 44px;
+      border: 2px solid var(--border); border-radius: 10px;
+      font-size: 15px; transition: border-color 0.2s;
+    }
+    .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+    .form-control.code-input {
+      font-family: 'Courier New', monospace; font-size: 20px;
+      letter-spacing: 4px; text-align: center; padding-left: 14px;
+      font-weight: 700; text-transform: uppercase;
+    }
+
+    /* Select */
+    select.form-control { padding-left: 44px; cursor: pointer; }
+
+    /* Button */
+    .btn-login {
+      width: 100%; padding: 13px; background: var(--primary); color: #fff;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-login:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,123,255,0.3); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Alert */
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+
+    /* --- Dashboard (shown after login) --- */
+    .dashboard { display: none; }
+    .dashboard-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; background: var(--primary); color: #fff;
+      border-radius: 12px; margin-bottom: 20px;
+    }
+    .dashboard-greeting { font-size: 16px; font-weight: 600; }
+    .dashboard-greeting small { display: block; font-size: 12px; opacity: 0.8; margin-top: 2px; font-weight: 400; }
+    .btn-logout {
+      background: rgba(255,255,255,0.2); border: none; color: #fff;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.35); }
+
+    .info-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .info-card-title { font-size: 13px; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .info-card-value { font-size: 16px; font-weight: 600; color: var(--dark); }
+    .info-card-sub { font-size: 13px; color: #6c757d; margin-top: 4px; }
+
+    .note-box {
+      background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px;
+      padding: 16px; margin-bottom: 16px;
+    }
+    .note-box-title { font-size: 12px; font-weight: 600; color: #856404; text-transform: uppercase; margin-bottom: 6px; }
+    .note-box-text { font-size: 14px; color: #5a4000; line-height: 1.5; }
+
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 16px; background: var(--primary); color: #fff;
+      border-radius: 20px; font-size: 14px; font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 400px) { .service-grid { grid-template-columns: 1fr; } }
+
+    .refresh-note { text-align: center; font-size: 12px; color: #adb5bd; margin-top: 16px; }
+
+    /* Full page translate container */
+    #translate-app {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+    #login-section { display: block; }
+    #dashboard-section { display: none; }
+  </style>
+</head>
+<body>
+<div id="translate-app">
+
+  <!-- LOGIN SECTION -->
+  <div id="login-section">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon"><i class="fas fa-language"></i></div>
+        <h1 class="login-title" id="church-name-title">Heaven Church</h1>
+        <p class="login-subtitle">Oversætter Adgang</p>
+      </div>
+
+      <div id="alert-box"></div>
+
+      <div id="login-form-content">
+        <div class="form-group">
+          <label class="form-label">Dit Navn</label>
+          <div class="input-wrap">
+            <i class="fas fa-user"></i>
+            <input type="text" id="translator-name" class="form-control" placeholder="Fornavn Efternavn" autocomplete="name">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Oversættelsessprog</label>
+          <div class="input-wrap">
+            <i class="fas fa-globe"></i>
+            <select id="language-select" class="form-control">
+              <option value="">-- Vælg sprog --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Adgangskode</label>
+          <div class="input-wrap">
+            <input type="text" id="access-code" class="form-control code-input"
+                   placeholder="KODE" autocomplete="off"
+                   oninput="this.value = this.value.toUpperCase()">
+          </div>
+        </div>
+
+        <button class="btn-login" id="login-btn" onclick="doLogin()">
+          <i class="fas fa-sign-in-alt"></i> Log ind som oversætter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD SECTION (shown after login) -->
+  <div id="dashboard-section">
+    <div style="background: var(--white); border-radius: 16px; box-shadow: 0 24px 48px rgba(0,0,0,0.3); overflow: hidden; width: 100%; max-width: 500px;">
+
+      <div class="dashboard-header">
+        <div class="dashboard-greeting">
+          <span id="greeting-name">Oversætter</span>
+          <small id="greeting-subtitle">Logget ind som oversætter</small>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">
+          <i class="fas fa-sign-out-alt"></i> Log ud
+        </button>
+      </div>
+
+      <div style="padding: 20px;">
+
+        <div id="service-note-box" class="note-box" style="display: none;">
+          <div class="note-box-title"><i class="fas fa-info-circle"></i> Besked fra administratoren</div>
+          <div class="note-box-text" id="service-note-text"></div>
+        </div>
+
+        <div class="role-badge">
+          <i class="fas fa-language"></i>
+          Oversætter: <span id="dash-language">-</span>
+        </div>
+
+        <div id="service-card" class="info-card" style="display: none;">
+          <div class="info-card-title"><i class="fas fa-calendar-alt"></i> Næste Gudstjeneste</div>
+          <div class="service-grid">
+            <div>
+              <div style="font-size: 12px; color: #6c757d;">Dato</div>
+              <div style="font-weight: 600; font-size: 15px;" id="service-dato">-</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #6c757d;">Forkynder</div>
+              <div style="font-weight: 600; font-size: 15px;" id="service-forkynder">-</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #6c757d;">MC / Ordstyrer</div>
+              <div style="font-weight: 600; font-size: 15px;" id="service-mc">-</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #6c757d;">Oversætter (plan)</div>
+              <div style="font-weight: 600; font-size: 15px;" id="service-oversetter">-</div>
+            </div>
+          </div>
+          <div id="service-notes-row" style="display:none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Produktionsnoter</div>
+            <div id="service-notes" style="font-size: 14px; color: var(--dark); line-height: 1.5;"></div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title"><i class="fas fa-headphones"></i> Oversættelsesvejledning</div>
+          <div class="info-card-value" style="font-size: 14px; line-height: 1.6;">
+            Du er tilsluttet som oversætter.<br>
+            Oversæt hvad der siges i mikrofonen fra dansk til <strong id="guide-language">dit valgte sprog</strong>.<br>
+            <br>
+            Log ud og ind igen hvis du skifter sprog.
+          </div>
+        </div>
+
+        <p class="refresh-note">
+          <i class="fas fa-sync-alt"></i> Side opdateres automatisk hvert 5. minut
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const TRANSLATE_TOKEN_KEY = 'translateToken';
+  const TRANSLATE_NAME_KEY = 'translateName';
+  const TRANSLATE_LANG_KEY = 'translateLang';
+
+  // ============================================================
+  // Init
+  // ============================================================
+  window.addEventListener('load', function() {
+    loadLanguages();
+    // Check if already logged in
+    const existing = getTranslateToken();
+    if (existing) {
+      validateExistingSession(existing);
+    }
+
+    // Auto-fill name if remembered
+    const savedName = localStorage.getItem(TRANSLATE_NAME_KEY);
+    if (savedName) document.getElementById('translator-name').value = savedName;
+  });
+
+  function getTranslateToken() {
+    try {
+      // Check URL first
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('translateToken');
+      if (urlToken) return urlToken;
+      return localStorage.getItem(TRANSLATE_TOKEN_KEY) || '';
+    } catch { return ''; }
+  }
+
+  function setTranslateToken(token) {
+    try {
+      if (token) localStorage.setItem(TRANSLATE_TOKEN_KEY, token);
+      else localStorage.removeItem(TRANSLATE_TOKEN_KEY);
+    } catch {}
+  }
+
+  function loadLanguages() {
+    fetch('/api/gas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ function: 'getAvailableLanguages', params: {} })
+    }).then(r => r.json()).then(function(result) {
+      const select = document.getElementById('language-select');
+      if (result.success && result.languages) {
+        result.languages.forEach(function(lang) {
+          const opt = document.createElement('option');
+          opt.value = lang;
+          opt.textContent = lang;
+          select.appendChild(opt);
+        });
+        // Restore saved language
+        const saved = localStorage.getItem(TRANSLATE_LANG_KEY);
+        if (saved) select.value = saved;
+      }
+    }).catch(function() {
+      // Fallback languages
+      ['Engelsk','Arabisk','Dari','Ukrainsk','Russisk'].forEach(function(lang) {
+        const opt = document.createElement('option');
+        opt.value = lang; opt.textContent = lang;
+        document.getElementById('language-select').appendChild(opt);
+      });
+    });
+  }
+
+  function validateExistingSession(token) {
+    fetch('/api/gas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ function: 'validateTranslateToken', params: { translateToken: token } })
+    }).then(r => r.json()).then(function(result) {
+      if (result.success) {
+        showDashboard(result);
+      } else {
+        setTranslateToken('');
+      }
+    }).catch(function() {
+      setTranslateToken('');
+    });
+  }
+
+  // ============================================================
+  // Login
+  // ============================================================
+  function doLogin() {
+    const name = document.getElementById('translator-name').value.trim();
+    const language = document.getElementById('language-select').value;
+    const code = document.getElementById('access-code').value.trim();
+    const btn = document.getElementById('login-btn');
+
+    clearAlert();
+
+    if (!name) { showAlert('Indtast venligst dit navn', 'warning'); return; }
+    if (!language) { showAlert('Vælg venligst et sprog', 'warning'); return; }
+    if (!code) { showAlert('Indtast venligst adgangskoden', 'warning'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logger ind...';
+
+    fetch('/api/gas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        function: 'translateLogin',
+        params: { code, translatorName: name, language }
+      })
+    }).then(r => r.json()).then(function(result) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Log ind som oversætter';
+
+      if (result.success) {
+        setTranslateToken(result.translateToken);
+        localStorage.setItem(TRANSLATE_NAME_KEY, name);
+        localStorage.setItem(TRANSLATE_LANG_KEY, language);
+        document.getElementById('access-code').value = '';
+        showDashboard(result);
+      } else {
+        showAlert(result.message || 'Forkert adgangskode', 'danger');
+        document.getElementById('access-code').value = '';
+        document.getElementById('access-code').focus();
+      }
+    }).catch(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Log ind som oversætter';
+      showAlert('Netværksfejl: ' + err.message, 'danger');
+    });
+  }
+
+  // ============================================================
+  // Dashboard
+  // ============================================================
+  function showDashboard(data) {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('dashboard-section').style.display = 'block';
+
+    // Church name
+    if (data.churchName) {
+      document.getElementById('church-name-title').textContent = data.churchName;
+    }
+
+    // Greeting
+    document.getElementById('greeting-name').textContent = data.translatorName || 'Oversætter';
+    document.getElementById('greeting-subtitle').textContent = 'Sprog: ' + (data.language || 'Ikke valgt');
+    document.getElementById('dash-language').textContent = data.language || '-';
+    document.getElementById('guide-language').textContent = data.language || 'dit valgte sprog';
+
+    // Service note
+    if (data.serviceNote && data.serviceNote.trim()) {
+      document.getElementById('service-note-box').style.display = 'block';
+      document.getElementById('service-note-text').textContent = data.serviceNote;
+    }
+
+    // Upcoming service
+    if (data.upcomingService) {
+      const s = data.upcomingService;
+      document.getElementById('service-card').style.display = 'block';
+      document.getElementById('service-dato').textContent = formatDate(s.dato);
+      document.getElementById('service-forkynder').textContent = s.forkynder || '-';
+      document.getElementById('service-mc').textContent = s.mc || '-';
+      document.getElementById('service-oversetter').textContent = s.oversetterr || s.oversetter || '-';
+      if (s.notes && s.notes.trim()) {
+        document.getElementById('service-notes-row').style.display = 'block';
+        document.getElementById('service-notes').textContent = s.notes;
+      }
+    }
+
+    // Auto-refresh every 5 minutes
+    setTimeout(function() {
+      const token = getTranslateToken();
+      if (token) validateExistingSession(token);
+    }, 5 * 60 * 1000);
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    } catch { return dateStr; }
+  }
+
+  // ============================================================
+  // Logout
+  // ============================================================
+  function doLogout() {
+    const token = getTranslateToken();
+    setTranslateToken('');
+    if (token) {
+      fetch('/api/gas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ function: 'logoutTranslateSession', params: { translateToken: token } })
+      }).catch(() => {});
+    }
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('dashboard-section').style.display = 'none';
+    document.getElementById('access-code').value = '';
+    clearAlert();
+  }
+
+  // ============================================================
+  // Alerts
+  // ============================================================
+  function showAlert(message, type) {
+    const box = document.getElementById('alert-box');
+    box.className = 'alert alert-' + type;
+    box.innerHTML = '<i class="fas fa-' + (type==='danger'?'exclamation-circle':type==='warning'?'exclamation-triangle':'check-circle') + '"></i> ' + message;
+    box.style.display = 'flex';
+  }
+
+  function clearAlert() {
+    const box = document.getElementById('alert-box');
+    box.style.display = 'none';
+    box.innerHTML = '';
+  }
+
+  // Enter key login
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.getElementById('login-section').style.display !== 'none') {
+      doLogin();
+    }
+  });
+</script>
+</body>
+</html>

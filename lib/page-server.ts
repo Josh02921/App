@@ -15,6 +15,10 @@ const PAGE_FILES: Record<string, string> = {
   grupper: 'Grupper.html',
   events: 'Events.html',
   logins: 'UserManagement.html',
+  // Translation admin - requires main admin login
+  translateadmin: 'TranslateAdmin.html',
+  // Translator login - public (uses access code, not admin session)
+  translate: 'TranslateLogin.html',
 }
 
 function readFile(filename: string): string | null {
@@ -39,6 +43,9 @@ function getSidebarHtml(currentPage: string): string {
     .replace(/\<\?=\s*user\s*&&\s*user\.username.*?\?>/g, 'Admin')
     .replace(/\<\?=\s*user\s*&&\s*user\.role.*?\?>/g, 'Administrator')
 }
+
+// Pages that are public (no admin session needed) or have their own auth
+const PUBLIC_PAGES = new Set(['login', 'translate'])
 
 export function serveHtmlPage(page: string): Response {
   const normalizedPage = (page || 'login').toLowerCase()

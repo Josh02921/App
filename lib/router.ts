@@ -8,6 +8,10 @@ import { getProductionPlan, getProductionTeams, updateProductionEntry, saveProdu
 import { getCleaningSchedule, updateCleaningAssignment, generateRandomCleaningSchedule, sendCleaningReminders } from './handlers/cleaning'
 import { getAllUsersWithPermissionsApi, createNewUserApi, updateUserStatusApi, bulkUpdatePermissionsApi, resetUserPasswordApi, deleteUserApi } from './handlers/users'
 import { getDashboardData, getDashboardStats } from './handlers/dashboard'
+import {
+  getTranslateSettings, updateTranslateSettings, kickTranslateSession, testEmailConnection,
+  translateLogin, validateTranslateToken, logoutTranslateSession, getAvailableLanguages
+} from './handlers/translate'
 
 type Handler = (params: any) => Promise<any>
 
@@ -15,6 +19,7 @@ const routes: Record<string, Handler> = {
   // Auth
   processLogin,
   validateSessionTokenApi,
+  validateSessionToken: validateSessionTokenApi,
   logoutUser,
 
   // Contacts
@@ -83,6 +88,18 @@ const routes: Record<string, Handler> = {
   // Dashboard
   getDashboardData,
   getDashboardStats,
+
+  // Translate Admin (requires admin session)
+  getTranslateSettings,
+  updateTranslateSettings,
+  kickTranslateSession,
+  testEmailConnection,
+
+  // Translate Accessor (uses translate code, not admin session)
+  translateLogin,
+  validateTranslateToken,
+  logoutTranslateSession,
+  getAvailableLanguages,
 }
 
 export async function dispatch(functionName: string, params: any): Promise<any> {

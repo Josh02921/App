@@ -211,3 +211,29 @@ model AuditLog {
 
   @@map("audit_logs")
 }
+
+// ============================================================
+// Translation Admin - manages translator access and settings
+// ============================================================
+
+model TranslateSetting {
+  id            Int      @id @default(autoincrement())
+  key           String   @unique
+  value         String   @default("")
+  updatedAt     DateTime @updatedAt
+
+  @@map("translate_settings")
+}
+
+model TranslateSession {
+  id           String   @id @default(uuid())
+  token        String   @unique
+  translatorName String  @default("Oversætter")
+  language     String   @default("")
+  loginTime    DateTime @default(now())
+  lastActivity DateTime @default(now())
+  expiresAt    DateTime
+  isActive     Boolean  @default(true)
+
+  @@map("translate_sessions")
+}

@@ -1,5 +1,6 @@
 import db from '../db'
 import { requireSession } from '../session'
+import { sendEmail, isEmailConfigured } from '../email'
 
 function memberToObj(m: any, index: number) {
   return {
@@ -21,6 +22,22 @@ function memberToObj(m: any, index: number) {
     teams: [],
     cleaning: [],
   }
+}
+
+// Resolve member by dbId (preferred) or by 0-based index fallback
+async function findMemberRecord(params: any, field: string = 'memberId') {
+  const dbId = params.dbId
+  if (dbId !== undefined && dbId !== null) {
+    const member = await db.member.findUnique({ where: { id: Number(dbId) } })
+    if (!member) throw new Error('Medlem ikke fundet')
+    return member
+  }
+  const memberId = params[field] ?? params[0]
+  if (memberId === undefined || memberId === null) throw new Error('Medlem ID er påkrævet')
+  const all = await db.member.findMany({ orderBy: { id: 'asc' } })
+  const idx = Number(memberId)
+  if (idx < 0 || idx >= all.length) throw new Error('Medlem ikke fundet')
+  return all[idx]
 }
 
 export async function getAllMembers(params: any) {
@@ -65,23 +82,18 @@ export async function addMember(params: any) {
 export async function updateMember(params: any) {
   try {
     await requireSession(params)
-    const memberId = params.memberId
+    const member = await findMemberRecord(params)
     const d = params.memberData || params
+
     if (!d.fornavn || !d.efternavn) {
       return { success: false, message: 'Fornavn og efternavn er påkrævet' }
     }
 
-    const all = await db.member.findMany({ orderBy: { id: 'asc' } })
-    if (memberId < 0 || memberId >= all.length) {
-      return { success: false, message: 'Medlem ikke fundet' }
-    }
-    const member = all[memberId]
-
     await db.member.update({
       where: { id: member.id },
       data: {
-        efternavn: d.efternavn,
-        fornavn: d.fornavn,
+        efternavn: d.efternavn ?? member.efternavn,
+        fornavn: d.fornavn ?? member.fornavn,
         adresse: d.adresse_1 || d.adresse || member.adresse,
         postnr: d.postnr ?? member.postnr,
         by: d.by ?? member.by,
@@ -100,13 +112,7 @@ export async function updateMember(params: any) {
 export async function deleteMember(params: any) {
   try {
     await requireSession(params)
-    const memberId = params.memberId !== undefined ? params.memberId : params
-
-    const all = await db.member.findMany({ orderBy: { id: 'asc' } })
-    if (memberId < 0 || memberId >= all.length) {
-      return { success: false, message: 'Medlem ikke fundet' }
-    }
-    const member = all[memberId]
+    const member = await findMemberRecord(params)
     await db.member.delete({ where: { id: member.id } })
     return { success: true, message: 'Medlem slettet succesfuldt' }
   } catch (error: any) {
@@ -136,8 +142,46 @@ export async function removeExampleMembers(params: any) {
 export async function sendBulkMemberEmails(params: any) {
   try {
     await requireSession(params)
-    return { success: true, sent: 0, failed: 0, message: 'Email funktionen kræver SMTP konfiguration' }
+    if (!isEmailConfigured()) {
+      return { success: false, sent: 0, failed: 0, message: 'Email er ikke konfigureret. Tilføj SMTP indstillinger i Railway miljøvariabler.' }
+    }
+
+    const subject = params.subject || 'Besked fra kirken'
+    const message = params.message || params.body || ''
+    if (!message) return { success: false, sent: 0, failed: 0, message: 'Besked tekst er påkrævet' }
+
+    const members = await db.member.findMany({
+      where: { email: { not: '' } },
+      orderBy: { id: 'asc' }
+    })
+
+    let sent = 0
+    let failed = 0
+
+    for (const m of members) {
+      try {
+        await sendEmail({
+          to: m.email,
+          subject,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Kære ${m.fornavn} ${m.efternavn},</p>
+            ${message.replace(/\n/g, '<br>')}
+            <br><p><strong>${process.env.CHURCH_NAME || 'Horsens Pinsekirke'}</strong></p>
+          </div>`
+        })
+        sent++
+      } catch {
+        failed++
+      }
+    }
+
+    return {
+      success: true,
+      sent,
+      failed,
+      message: `${sent} emails sendt til medlemmer${failed > 0 ? `, ${failed} fejlede` : ''}`
+    }
   } catch (error: any) {
-    return { success: false, message: error.message }
+    return { success: false, sent: 0, failed: 0, message: error.message }
   }
 }
