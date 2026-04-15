@@ -139,6 +139,36 @@ export async function removeExampleMembers(params: any) {
   }
 }
 
+export async function updateMemberCleaningPreference(params: any) {
+  try {
+    await requireSession(params)
+    const member = await findMemberRecord(params)
+    const preference = params.preference || params.rengoring || 'NEJ'
+    const val = ['JA', 'NEJ'].includes(preference.toUpperCase()) ? preference.toUpperCase() : 'NEJ'
+    await db.member.update({ where: { id: member.id }, data: { rengoring: val } })
+    return { success: true, message: `Rengøringspræference opdateret til ${val}` }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
+export async function getMembersForCleaningList(params: any) {
+  try {
+    await requireSession(params)
+    const rows = await db.member.findMany({
+      where: { rengoring: 'JA' },
+      orderBy: [{ efternavn: 'asc' }, { fornavn: 'asc' }]
+    })
+    const members = rows.map((m, i) => ({
+      ...memberToObj(m, i),
+      fullName: `${m.fornavn} ${m.efternavn}`.trim(),
+    }))
+    return { success: true, members }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
 export async function sendBulkMemberEmails(params: any) {
   try {
     await requireSession(params)
@@ -146,27 +176,36 @@ export async function sendBulkMemberEmails(params: any) {
       return { success: false, sent: 0, failed: 0, message: 'Email er ikke konfigureret. Tilføj SMTP indstillinger i Railway miljøvariabler.' }
     }
 
-    const subject = params.subject || 'Besked fra kirken'
-    const message = params.message || params.body || ''
+    const emailData = params.emailData || params
+    const subject = emailData.subject || params.subject || 'Besked fra kirken'
+    const message = emailData.body || emailData.message || params.message || params.body || ''
     if (!message) return { success: false, sent: 0, failed: 0, message: 'Besked tekst er påkrævet' }
 
-    const members = await db.member.findMany({
-      where: { email: { not: '' } },
-      orderBy: { id: 'asc' }
-    })
+    let recipients: Array<{ email: string; fornavn: string; efternavn: string }> = []
+    if (emailData.recipients && Array.isArray(emailData.recipients)) {
+      recipients = emailData.recipients
+    } else {
+      const rows = await db.member.findMany({ where: { email: { not: '' } }, orderBy: { id: 'asc' } })
+      recipients = rows.map(m => ({ email: m.email, fornavn: m.fornavn, efternavn: m.efternavn }))
+    }
 
+    const { personalizeText } = await import('../email')
+    const churchName = process.env.CHURCH_NAME || 'Horsens Pinsekirke'
     let sent = 0
     let failed = 0
 
-    for (const m of members) {
+    for (const m of recipients) {
+      if (!m.email) continue
       try {
+        const personalized = personalizeText(message, { firstName: m.fornavn, lastName: m.efternavn })
+        const personalizedSubject = personalizeText(subject, { firstName: m.fornavn, lastName: m.efternavn })
         await sendEmail({
           to: m.email,
-          subject,
+          subject: personalizedSubject,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <p>Kære ${m.fornavn} ${m.efternavn},</p>
-            ${message.replace(/\n/g, '<br>')}
-            <br><p><strong>${process.env.CHURCH_NAME || 'Horsens Pinsekirke'}</strong></p>
+            ${personalized.replace(/\n/g, '<br>')}
+            <br><p><strong>${churchName}</strong></p>
           </div>`
         })
         sent++
@@ -184,4 +223,8 @@ export async function sendBulkMemberEmails(params: any) {
   } catch (error: any) {
     return { success: false, sent: 0, failed: 0, message: error.message }
   }
+}
+
+export async function scheduleBulkMemberEmails(params: any) {
+  return sendBulkMemberEmails(params)
 }

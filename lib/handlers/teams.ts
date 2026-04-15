@@ -114,6 +114,63 @@ export async function updateTeamLeader(params: any) {
   }
 }
 
+export async function renameTeam(params: any) {
+  try {
+    await requireSession(params)
+    const teamId = params.teamId
+    const newName = params.newName || params.name
+    if (!teamId || !newName) return { success: false, message: 'Team ID og nyt navn er påkrævet' }
+    await db.team.update({ where: { id: Number(teamId) }, data: { name: newName } })
+    return { success: true, message: 'Team omdøbt succesfuldt' }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
+export async function bulkRemoveMembersFromTeam(params: any) {
+  try {
+    await requireSession(params)
+    const teamId = params.teamId
+    const memberIds: number[] = params.memberIds || []
+    if (!teamId) return { success: false, message: 'Team ID er påkrævet' }
+    await db.teamMember.deleteMany({
+      where: { teamId: Number(teamId), memberId: { in: memberIds.map(Number) } }
+    })
+    return { success: true, message: `${memberIds.length} medlemmer fjernet fra team` }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
+// Alias for updateTeamLeader
+export async function assignTeamLeader(params: any) {
+  return updateTeamLeader(params)
+}
+
+export async function cleanUpTeamsSheet(params: any) {
+  try {
+    await requireSession(params)
+    // Remove duplicate team members (keep first occurrence)
+    const all = await db.teamMember.findMany({ orderBy: { id: 'asc' } })
+    const seen = new Set<string>()
+    const toDelete: number[] = []
+    for (const tm of all) {
+      const key = `${tm.teamId}-${tm.memberId}`
+      if (seen.has(key)) {
+        toDelete.push(tm.id)
+      } else {
+        seen.add(key)
+      }
+    }
+    if (toDelete.length > 0) {
+      await db.teamMember.deleteMany({ where: { id: { in: toDelete } } })
+    }
+    return { success: true, message: `${toDelete.length} duplikater fjernet fra teams` }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
 export async function sendBulkTeamEmails(params: any) {
   try {
     await requireSession(params)
@@ -121,34 +178,44 @@ export async function sendBulkTeamEmails(params: any) {
       return { success: false, sent: 0, failed: 0, message: 'Email er ikke konfigureret. Tilføj SMTP indstillinger i Railway miljøvariabler.' }
     }
 
-    const teamId = params.teamId
-    const subject = params.subject || 'Besked fra dit team'
-    const message = params.message || params.body || ''
+    const emailData = params.emailData || params
+    const teamId = params.teamId || emailData.teamId
+    const subject = emailData.subject || params.subject || 'Besked fra dit team'
+    const message = emailData.body || emailData.message || params.message || params.body || ''
     if (!message) return { success: false, sent: 0, failed: 0, message: 'Besked tekst er påkrævet' }
 
-    // Get team members (optionally filter by team)
-    const where: any = teamId ? { teamId: Number(teamId) } : {}
-    const teamMembers = await db.teamMember.findMany({
-      where,
-      include: { member: true, team: true }
-    })
+    let recipients: Array<{ email: string; fornavn: string; efternavn: string; teamName: string }> = []
+    if (emailData.recipients && Array.isArray(emailData.recipients)) {
+      recipients = emailData.recipients.map((r: any) => ({ ...r, teamName: r.teamName || '' }))
+    } else {
+      const where: any = teamId ? { teamId: Number(teamId) } : {}
+      const teamMembers = await db.teamMember.findMany({ where, include: { member: true, team: true } })
+      const seen = new Set<string>()
+      for (const tm of teamMembers) {
+        if (!tm.member.email || seen.has(tm.member.email)) continue
+        seen.add(tm.member.email)
+        recipients.push({ email: tm.member.email, fornavn: tm.member.fornavn, efternavn: tm.member.efternavn, teamName: tm.team.name })
+      }
+    }
 
-    const emailsSent = new Set<string>() // avoid duplicates
+    const { personalizeText } = await import('../email')
+    const churchName = process.env.CHURCH_NAME || 'Horsens Pinsekirke'
     let sent = 0
     let failed = 0
 
-    for (const tm of teamMembers) {
-      if (!tm.member.email || emailsSent.has(tm.member.email)) continue
-      emailsSent.add(tm.member.email)
+    for (const r of recipients) {
+      if (!r.email) continue
       try {
+        const personalized = personalizeText(message, { firstName: r.fornavn, lastName: r.efternavn })
+        const personalizedSubject = personalizeText(subject, { firstName: r.fornavn, lastName: r.efternavn })
         await sendEmail({
-          to: tm.member.email,
-          subject,
+          to: r.email,
+          subject: personalizedSubject,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <p>Kære ${tm.member.fornavn} ${tm.member.efternavn},</p>
-            ${message.replace(/\n/g, '<br>')}
-            <br><p style="color:#666; font-size:12px;">Team: ${tm.team.name}</p>
-            <p><strong>${process.env.CHURCH_NAME || 'Horsens Pinsekirke'}</strong></p>
+            <p>Kære ${r.fornavn} ${r.efternavn},</p>
+            ${personalized.replace(/\n/g, '<br>')}
+            ${r.teamName ? `<br><p style="color:#666; font-size:12px;">Team: ${r.teamName}</p>` : ''}
+            <p><strong>${churchName}</strong></p>
           </div>`
         })
         sent++
@@ -166,4 +233,8 @@ export async function sendBulkTeamEmails(params: any) {
   } catch (error: any) {
     return { success: false, sent: 0, failed: 0, message: error.message }
   }
+}
+
+export async function scheduleBulkTeamEmails(params: any) {
+  return sendBulkTeamEmails(params)
 }

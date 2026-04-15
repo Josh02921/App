@@ -187,6 +187,25 @@ export async function sendFollowUp(params: any) {
   }
 }
 
+export async function removeExampleContacts(params: any) {
+  try {
+    await requireSession(params)
+    const result = await db.contact.deleteMany({
+      where: {
+        OR: [
+          { fornavn: { contains: 'eksempel', mode: 'insensitive' } },
+          { efternavn: { contains: 'eksempel', mode: 'insensitive' } },
+          { fornavn: { contains: 'test', mode: 'insensitive' } },
+          { efternavn: { contains: 'test', mode: 'insensitive' } },
+        ]
+      }
+    })
+    return { success: true, message: `${result.count} eksempelkontakt(er) fjernet`, removedCount: result.count }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
 export async function sendBulkContactEmails(params: any) {
   try {
     await requireSession(params)
@@ -194,37 +213,50 @@ export async function sendBulkContactEmails(params: any) {
       return { success: false, sent: 0, failed: 0, message: 'Email er ikke konfigureret. Tilføj SMTP indstillinger i Railway miljøvariabler.' }
     }
 
-    const subject = params.subject || 'Besked fra kirken'
-    const message = params.message || params.body || ''
-    const onlyNewsletter = params.onlyNewsletter !== false // default: only newsletter subscribers
+    const emailData = params.emailData || params
+    const subject = emailData.subject || params.subject || 'Besked fra kirken'
+    const message = emailData.body || emailData.message || params.message || params.body || ''
+    const onlyNewsletter = params.onlyNewsletter !== false
 
     if (!message) return { success: false, sent: 0, failed: 0, message: 'Besked tekst er påkrævet' }
 
-    const where = onlyNewsletter ? { nyhedsmail: true } : {}
-    const contacts = await db.contact.findMany({
-      where: { ...where, email: { not: '' } },
-      orderBy: { id: 'asc' }
-    })
+    // Support explicit recipients list or fetch from DB
+    let recipients: Array<{ email: string; fornavn: string; efternavn: string }> = []
+    if (emailData.recipients && Array.isArray(emailData.recipients)) {
+      recipients = emailData.recipients
+    } else {
+      const where = onlyNewsletter ? { nyhedsmail: true } : {}
+      const contacts = await db.contact.findMany({
+        where: { ...where, email: { not: '' } },
+        orderBy: { id: 'asc' }
+      })
+      recipients = contacts.map(c => ({ email: c.email, fornavn: c.fornavn, efternavn: c.efternavn }))
+    }
 
+    const { personalizeText } = await import('../email')
     let sent = 0
     let failed = 0
     const errors: string[] = []
+    const churchName = process.env.CHURCH_NAME || 'Horsens Pinsekirke'
 
-    for (const c of contacts) {
+    for (const r of recipients) {
+      if (!r.email) continue
       try {
+        const personalized = personalizeText(message, { firstName: r.fornavn, lastName: r.efternavn })
+        const personalizedSubject = personalizeText(subject, { firstName: r.fornavn, lastName: r.efternavn })
         await sendEmail({
-          to: c.email,
-          subject,
+          to: r.email,
+          subject: personalizedSubject,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <p>Kære ${c.fornavn} ${c.efternavn},</p>
-            ${message.replace(/\n/g, '<br>')}
-            <br><p><strong>${process.env.CHURCH_NAME || 'Horsens Pinsekirke'}</strong></p>
+            <p>Kære ${r.fornavn} ${r.efternavn},</p>
+            ${personalized.replace(/\n/g, '<br>')}
+            <br><p><strong>${churchName}</strong></p>
           </div>`
         })
         sent++
       } catch (e: any) {
         failed++
-        errors.push(`${c.email}: ${e.message}`)
+        errors.push(`${r.email}: ${e.message}`)
       }
     }
 
@@ -238,4 +270,9 @@ export async function sendBulkContactEmails(params: any) {
   } catch (error: any) {
     return { success: false, sent: 0, failed: 0, message: error.message }
   }
+}
+
+// In Railway (always-on server), just execute immediately
+export async function scheduleBulkContactEmails(params: any) {
+  return sendBulkContactEmails(params)
 }

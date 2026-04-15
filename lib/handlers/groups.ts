@@ -119,3 +119,8 @@ export async function updateGroup(params: any) {
     return { success: false, message: error.message }
   }
 }
+
+// Alias matching GAS function name
+export async function addGroupRelationship(params: any) {
+  return addMemberToGroup(params)
+}

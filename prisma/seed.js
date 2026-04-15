@@ -33,33 +33,45 @@ async function main() {
     console.log(`ℹ️  Admin user "${adminUsername}" already exists`)
   }
 
-  // ---- Translate Settings ----
-  const translateCode = process.env.TRANSLATE_CODE || 'KIRKE2025'
-  const churchName = process.env.CHURCH_NAME || 'Horsens Pinsekirke'
-
+  // ---- App Settings ----
   const defaultSettings = [
-    { key: 'access_code', value: translateCode },
-    { key: 'church_name', value: churchName },
-    { key: 'service_note', value: 'Oversæt venligst prædikenen til dit valgte sprog. Kontakt pastor ved spørgsmål.' },
-    { key: 'languages', value: JSON.stringify(['Engelsk','Arabisk','Dari','Ukrainsk','Russisk','Spansk','Tysk','Farsi']) },
+    {
+      key: 'PRODUCTION_TEAMS_CONFIG',
+      value: JSON.stringify([
+        { name: 'Lyd & Teknik', positions: ['Lyd', 'Kamera', 'Media/Stream'] },
+        { name: 'Musik', positions: ['Forsanger', 'Piano', 'Guitar', 'Trommer', 'Bas'] },
+        { name: 'Service', positions: ['MC', 'Forsamling', 'Host 1', 'Host 2'] },
+        { name: 'Børn & Cafe', positions: ['Kidz', 'Kidz 2', 'Café 1', 'Café 2'] },
+      ])
+    },
+    {
+      key: 'CLEANING_AREAS',
+      value: JSON.stringify(['Café 1', 'Café 2', 'Salen', 'Toiletter/Gulv/Børnerum'])
+    },
+    {
+      key: 'CLEANING_INSTRUCTIONS',
+      value: 'Sørg for at rengøre dit tildelte område grundigt. Brug de rengøringsmidler der er i skabet under trappen. Kontakt pastor ved spørgsmål.'
+    },
+    {
+      key: 'EVENT_TEMPLATES',
+      value: JSON.stringify([])
+    },
   ]
 
   for (const setting of defaultSettings) {
-    const existingSetting = await prisma.translateSetting.findUnique({ where: { key: setting.key } })
+    const existingSetting = await prisma.appSetting.findUnique({ where: { key: setting.key } })
     if (!existingSetting) {
-      await prisma.translateSetting.create({ data: setting })
-      console.log(`✅ Translate setting "${setting.key}" created`)
+      await prisma.appSetting.create({ data: setting })
+      console.log(`✅ App setting "${setting.key}" created`)
     } else {
-      console.log(`ℹ️  Translate setting "${setting.key}" already exists`)
+      console.log(`ℹ️  App setting "${setting.key}" already exists`)
     }
   }
 
   console.log('\n🎉 Seed completed successfully!')
   console.log(`\n📋 Summary:`)
   console.log(`   Admin login: ${adminUsername} / [your ADMIN_PASSWORD env var]`)
-  console.log(`   Translate URL: https://your-app.railway.app/?page=translate`)
-  console.log(`   Translate code: ${translateCode}`)
-  console.log(`   Translate admin: https://your-app.railway.app/?page=translateadmin`)
+  console.log(`   App URL: https://your-app.railway.app/?page=dashboard`)
 }
 
 main()

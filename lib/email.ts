@@ -15,6 +15,7 @@ export interface EmailOptions {
   cc?: string | string[]
   bcc?: string | string[]
   replyTo?: string
+  attachments?: Array<{ filename: string; content: string | Buffer; contentType?: string }>
 }
 
 // Check if SMTP is configured
@@ -25,6 +26,20 @@ export function isEmailConfigured(): boolean {
     process.env.SMTP_USER &&
     process.env.SMTP_PASS
   )
+}
+
+// Personalize email text - replace {{navn}}, {{fornavn}}, {{dato}} tokens
+export function personalizeText(
+  text: string,
+  recipient: { name?: string; firstName?: string; lastName?: string }
+): string {
+  const today = new Date().toLocaleDateString('da-DK')
+  const fullName = recipient.name || `${recipient.firstName || ''} ${recipient.lastName || ''}`.trim()
+  const firstName = recipient.firstName || recipient.name?.split(' ')[0] || ''
+  return text
+    .replace(/\{\{navn\}\}/gi, fullName)
+    .replace(/\{\{fornavn\}\}/gi, firstName)
+    .replace(/\{\{dato\}\}/gi, today)
 }
 
 // Create transporter - lazy-initialized
@@ -79,6 +94,7 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
       subject: options.subject,
       html: options.html,
       text: options.text || options.html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(),
+      attachments: options.attachments,
     })
 
     console.log(`Email sendt: ${info.messageId} → ${options.to}`)

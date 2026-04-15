@@ -176,3 +176,47 @@ export async function deleteUserApi(params: any) {
     return { success: false, message: error.message }
   }
 }
+
+export async function getUserAuditLog(params: any) {
+  try {
+    await requireAdmin(params)
+    const { username, days } = params
+    const where: any = {}
+    if (username) {
+      where.username = { equals: username, mode: 'insensitive' }
+    }
+    if (days) {
+      const since = new Date()
+      since.setDate(since.getDate() - Number(days))
+      where.timestamp = { gte: since }
+    }
+    const logs = await db.auditLog.findMany({
+      where,
+      orderBy: { timestamp: 'desc' },
+      take: 500,
+    })
+    return {
+      success: true,
+      logs: logs.map(l => ({
+        id: l.id,
+        timestamp: l.timestamp.toISOString(),
+        username: l.username,
+        action: l.action,
+        details: l.details,
+        status: l.status,
+      }))
+    }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
+export async function testEmailConnection(params: any) {
+  try {
+    await requireAdmin(params)
+    const { verifyEmailConnection } = await import('../email')
+    return verifyEmailConnection()
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}

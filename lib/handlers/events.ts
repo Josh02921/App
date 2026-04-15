@@ -1,5 +1,6 @@
 import db from '../db'
 import { requireSession } from '../session'
+import { getSettingJson, setSettingJson } from '../settings'
 
 function eventToObj(e: any) {
   return {
@@ -89,5 +90,51 @@ export async function deleteEvent(params: any) {
     return { success: true, message: 'Event slettet succesfuldt' }
   } catch (error: any) {
     return { success: false, message: error.message || 'Fejl ved sletning af event' }
+  }
+}
+
+// Event templates stored in AppSetting
+export async function getEventTemplates(params: any) {
+  try {
+    await requireSession(params)
+    const templates = await getSettingJson<any[]>('EVENT_TEMPLATES', [])
+    return { success: true, templates }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
+export async function saveEventTemplate(params: any) {
+  try {
+    await requireSession(params)
+    const template = params.template || params
+    if (!template.name) return { success: false, message: 'Skabelon navn er påkrævet' }
+
+    const templates = await getSettingJson<any[]>('EVENT_TEMPLATES', [])
+    const idx = templates.findIndex(t => t.name === template.name)
+    if (idx >= 0) {
+      templates[idx] = template
+    } else {
+      templates.push(template)
+    }
+    await setSettingJson('EVENT_TEMPLATES', templates)
+    return { success: true, message: `Skabelon "${template.name}" gemt` }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
+}
+
+export async function deleteEventTemplate(params: any) {
+  try {
+    await requireSession(params)
+    const name = params.name || params.templateName
+    if (!name) return { success: false, message: 'Skabelon navn er påkrævet' }
+
+    const templates = await getSettingJson<any[]>('EVENT_TEMPLATES', [])
+    const updated = templates.filter(t => t.name !== name)
+    await setSettingJson('EVENT_TEMPLATES', updated)
+    return { success: true, message: `Skabelon "${name}" slettet` }
+  } catch (error: any) {
+    return { success: false, message: error.message }
   }
 }
