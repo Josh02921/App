@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="da">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
@@ -10,1075 +10,974 @@
   <style>
     :root {
       --sidebar-width: 250px;
-      --brand-50: #eef2ff;
-      --brand-100: #c7d2fe;
-      --brand-200: #a5b4fc;
-      --brand-500: #6366f1;
-      --brand-600: #4f46e5;
-      --brand-900: #1e1b4b;
-      --ink-900: #0f172a;
-      --ink-700: #334155;
-      --ink-500: #64748b;
-      --surface: #f4f6fb;
-      --surface-raised: #ffffff;
-      --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.08);
-      --shadow-lg: 0 20px 45px rgba(15, 23, 42, 0.12);
-      --radius-lg: 18px;
-      --radius-md: 14px;
+      --bg: #0f1117;
+      --bg-card: #181c27;
+      --bg-card2: #1e2235;
+      --border: rgba(255,255,255,0.07);
+      --border-accent: rgba(102,126,234,0.3);
+      --text-primary: #f0f2ff;
+      --text-secondary: #8892b0;
+      --text-muted: #4a5270;
+      --accent: #667eea;
+      --accent2: #764ba2;
+      --accent-glow: rgba(102,126,234,0.18);
+      --green: #43d9ad;
+      --green-bg: rgba(67,217,173,0.12);
+      --orange: #ffa94d;
+      --orange-bg: rgba(255,169,77,0.12);
+      --red: #ff6b6b;
+      --red-bg: rgba(255,107,107,0.12);
+      --blue: #74c0fc;
+      --blue-bg: rgba(116,192,252,0.12);
+      --purple: #b197fc;
+      --purple-bg: rgba(177,151,252,0.12);
+      --radius: 16px;
       --radius-sm: 10px;
-      --transition-fast: 0.18s ease;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
 
-    * {
-      box-sizing: border-box;
-      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
       min-height: 100vh;
-      background: var(--surface);
-      color: var(--ink-700);
       display: flex;
     }
 
-    main.page-shell {
+    main.shell {
       margin-left: var(--sidebar-width);
-      padding: 42px 48px 56px;
       width: calc(100% - var(--sidebar-width));
+      padding: 36px 40px 60px;
+      overflow-x: hidden;
     }
 
+    /* ── Top bar ── */
     .topbar {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 24px;
-      margin-bottom: 36px;
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--ink-900);
-      letter-spacing: -0.03em;
-    }
-
-    .topbar p {
-      margin: 6px 0 0;
-      font-size: 16px;
-      color: var(--ink-500);
-    }
-
-    .topbar-meta {
-      display: flex;
       align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
       gap: 16px;
-      color: var(--ink-500);
-      font-size: 14px;
     }
 
-    .ghost-button {
-      border: 1px solid var(--brand-200);
-      background: rgba(99, 102, 241, 0.12);
-      color: var(--brand-600);
-      padding: 10px 18px;
-      border-radius: 999px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: background var(--transition-fast), transform var(--transition-fast);
-    }
-
-    .ghost-button:hover {
-      background: rgba(79, 70, 229, 0.16);
-      transform: translateY(-1px);
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 20px;
-    }
-
-    .metric-card {
-      position: relative;
-      background: var(--surface-raised);
-      border-radius: var(--radius-lg);
-      padding: 22px;
-      display: flex;
-      gap: 18px;
-      align-items: center;
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-    }
-
-    .metric-card::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), transparent 55%);
-      opacity: 0;
-      transition: opacity var(--transition-fast);
-    }
-
-    .metric-card:hover::after {
-      opacity: 1;
-    }
-
-    .metric-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      background: var(--brand-50);
-      color: var(--brand-600);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
-    }
-
-    .metric-content {
-      position: relative;
-      z-index: 1;
-      flex: 1;
-    }
-
-    .metric-title {
-      margin: 0;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ink-500);
-    }
-
-    .metric-value {
-      margin: 6px 0 0;
-      font-size: 30px;
+    .topbar-left h1 {
+      font-size: 28px;
       font-weight: 700;
-      color: var(--ink-900);
       letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, #a8edea 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .metric-sub {
-      margin-top: 6px;
+    .topbar-left .subtitle {
       font-size: 14px;
-      color: var(--ink-500);
-    }
-
-    .section-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 40px 0 18px;
-      color: var(--ink-900);
-    }
-
-    .quick-actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-    }
-
-    .quick-card {
-      background: var(--surface-raised);
-      border: 1px solid rgba(99, 102, 241, 0.14);
-      border-radius: var(--radius-md);
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-    }
-
-    .quick-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .quick-card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: rgba(99, 102, 241, 0.12);
-      color: var(--brand-600);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-
-    .quick-card h4 {
-      margin: 0;
-      font-size: 18px;
-      color: var(--ink-900);
-    }
-
-    .quick-card p {
-      margin: 0;
-      font-size: 14px;
-      color: var(--ink-500);
-      line-height: 1.4;
-    }
-
-    .panels-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
-      margin-top: 10px;
-    }
-
-    .panel-card {
-      background: var(--surface-raised);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .panel-card h3 {
-      margin: 0;
-      font-size: 20px;
-      color: var(--ink-900);
-      letter-spacing: -0.01em;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(99, 102, 241, 0.12);
-      color: var(--brand-600);
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      width: fit-content;
-    }
-
-    .event-title {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--ink-900);
-      margin: 4px 0 0;
-    }
-
-    .event-detail {
-      font-size: 15px;
-      color: var(--ink-500);
+      color: var(--text-secondary);
       margin-top: 4px;
     }
 
-    .panel-meta {
+    .topbar-right {
       display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      color: var(--ink-500);
-      font-size: 14px;
+      align-items: center;
+      gap: 12px;
     }
 
-    .panel-meta span {
-      display: inline-flex;
+    .badge-time {
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 999px;
+      display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .roles-grid {
+    .btn-refresh {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .btn-refresh:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-refresh.loading i { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Stat cards row ── */
+    .stats-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(6, 1fr);
       gap: 14px;
+      margin-bottom: 28px;
     }
 
-    .role-chip {
-      border: 1px solid rgba(99, 102, 241, 0.18);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      background: rgba(99, 102, 241, 0.08);
-      color: var(--brand-900);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: default;
     }
 
-    .role-chip strong {
-      font-size: 13px;
+    .stat-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .stat-card.c-blue::before  { background: linear-gradient(90deg, var(--blue), #448ef6); }
+    .stat-card.c-green::before { background: linear-gradient(90deg, var(--green), #2bcfa0); }
+    .stat-card.c-purple::before{ background: linear-gradient(90deg, var(--purple), var(--accent)); }
+    .stat-card.c-orange::before{ background: linear-gradient(90deg, var(--orange), #ff8c00); }
+    .stat-card.c-accent::before{ background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .stat-card.c-red::before   { background: linear-gradient(90deg, var(--red), #e03030); }
+
+    .stat-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    .c-blue   .stat-icon { background: var(--blue-bg);   color: var(--blue); }
+    .c-green  .stat-icon { background: var(--green-bg);  color: var(--green); }
+    .c-purple .stat-icon { background: var(--purple-bg); color: var(--purple); }
+    .c-orange .stat-icon { background: var(--orange-bg); color: var(--orange); }
+    .c-accent .stat-icon { background: var(--accent-glow); color: var(--accent); }
+    .c-red    .stat-icon { background: var(--red-bg);    color: var(--red); }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--brand-600);
+      letter-spacing: 0.08em;
+      margin-top: 6px;
     }
 
-    .role-chip span {
-      font-size: 15px;
-      color: var(--ink-900);
+    .stat-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.4;
     }
 
-    .cleaning-assignments {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    .assignment-card {
-      background: rgba(15, 23, 42, 0.04);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .assignment-card span:first-child {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--ink-500);
-    }
-
-    .assignment-card span:last-child {
-      font-size: 15px;
-      color: var(--ink-900);
+    .stat-meta .pill {
+      display: inline-block;
+      background: var(--accent-glow);
+      color: var(--accent);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 11px;
       font-weight: 600;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 28px;
-      border: 1px dashed rgba(15, 23, 42, 0.14);
-      border-radius: var(--radius-md);
-      color: var(--ink-500);
+    /* ── Main content grid ── */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 360px;
+      grid-template-rows: auto auto;
+      gap: 18px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
       font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .error-state {
-      background: rgba(220, 76, 100, 0.12);
-      color: #8c1d2a;
-      border-radius: var(--radius-md);
-      padding: 16px 18px;
-      border: 1px solid rgba(220, 76, 100, 0.2);
-      margin-top: 24px;
+    .card-title i {
+      font-size: 14px;
+      color: var(--accent);
     }
 
-    @media (max-width: 1200px) {
-      main.page-shell {
-        padding: 32px 28px 48px;
-      }
+    .card-tag {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
 
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+    .card-tag.green  { background: var(--green-bg);  color: var(--green); }
+    .card-tag.orange { background: var(--orange-bg); color: var(--orange); }
+    .card-tag.blue   { background: var(--blue-bg);   color: var(--blue); }
+    .card-tag.purple { background: var(--purple-bg); color: var(--purple); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border-accent);
+      color: var(--accent);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+      align-self: flex-start;
+    }
+
+    .btn-ghost:hover { background: var(--accent-glow); }
+
+    /* ── Next Event panel ── */
+    .event-countdown {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #667eea, #a8edea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .event-countdown-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .event-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .event-detail-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .event-detail-row span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ── Upcoming events list ── */
+    .event-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .event-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      background: var(--bg-card2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+
+    .event-row:hover { border-color: var(--border-accent); }
+
+    .event-date-badge {
+      min-width: 44px;
+      text-align: center;
+      background: var(--accent-glow);
+      border-radius: 8px;
+      padding: 6px 4px;
+    }
+
+    .event-date-badge .day  { font-size: 18px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .event-date-badge .mon  { font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px; }
+
+    .event-row-info { flex: 1; }
+    .event-row-info .title  { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .event-row-info .detail { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* ── Production panel ── */
+    .prod-date {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .prod-roles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .prod-role {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+
+    .prod-role .role-name {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .prod-role .role-person {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .prod-role .role-person.empty {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    /* ── Cleaning panel ── */
+    .cleaning-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .cleaning-area {
+      background: var(--bg-card2);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+    }
+
+    .cleaning-area .area-name {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .cleaning-area .area-person {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .cleaning-area .area-person.empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    /* ── Activity feed ── */
+    .activity-feed { display: flex; flex-direction: column; gap: 0; }
+
+    .activity-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .activity-dot.success { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .activity-dot.warning { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+    .activity-dot.info    { background: var(--blue);   box-shadow: 0 0 6px var(--blue); }
+    .activity-dot.error   { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+
+    .activity-body { flex: 1; }
+    .activity-body .act-user  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .activity-body .act-action { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+    .activity-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+    /* ── Quick actions ── */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .quick-btn {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s, transform 0.15s;
+      text-align: left;
+    }
+
+    .quick-btn:hover { border-color: var(--border-accent); transform: translateY(-1px); }
+
+    .quick-btn .q-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .quick-btn .q-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .quick-btn .q-desc  { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* ── Empty / loading ── */
+    .loading-shimmer {
+      background: linear-gradient(90deg, var(--bg-card2) 25%, var(--bg-card) 50%, var(--bg-card2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      height: 20px;
+    }
+
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .empty-note {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    /* grid spans */
+    .span-2 { grid-column: span 2; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1300px) {
+      .content-grid { grid-template-columns: 1fr 1fr; }
+      .span-2 { grid-column: span 1; }
+    }
+
+    @media (max-width: 1000px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
     }
 
     @media (max-width: 768px) {
-      :root {
-        --sidebar-width: 0px;
-      }
-
-      main.page-shell {
-        margin-left: 0;
-        padding: 24px 20px 40px;
-      }
-
-      .metrics-grid {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      }
+      :root { --sidebar-width: 0px; }
+      main.shell { margin-left: 0; padding: 20px 16px 40px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .content-grid { grid-template-columns: 1fr; }
+      .span-2 { grid-column: span 1; }
+      .quick-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
   <?!= include('Sidebar'); ?>
 
-  <main class="page-shell">
-    <header class="topbar">
-      <div>
-        <h1>Dashboard</h1>
-        <p>Få overblik over medlemmer, teams og kommende aktiviteter.</p>
+  <main class="shell">
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 id="greeting">Hej, Administrator</h1>
+        <div class="subtitle" id="subtitle-date">Indlæser data...</div>
       </div>
-      <div class="topbar-meta">
-        <span id="meta-generated">Opdateret: --</span>
-        <button class="ghost-button" id="refresh-dashboard"><i class="fas fa-rotate"></i> Opdater data</button>
+      <div class="topbar-right">
+        <div class="badge-time"><i class="fas fa-clock"></i> <span id="last-updated">--</span></div>
+        <button class="btn-refresh" id="btn-refresh"><i class="fas fa-rotate"></i> Opdater</button>
       </div>
-    </header>
+    </div>
 
-    <section class="metrics-grid" aria-label="Nøglemetrikker">
-      <article class="metric-card" data-metric="contacts">
-        <div class="metric-icon"><i class="fas fa-address-book"></i></div>
-        <div class="metric-content">
-          <p class="metric-title">Kontakter</p>
-          <p class="metric-value" id="metric-contacts-total">--</p>
-          <p class="metric-sub" id="metric-contacts-sub">Nye (30 dage): -- · Opfølgning: --</p>
-        </div>
-      </article>
-      <article class="metric-card" data-metric="members">
-        <div class="metric-icon"><i class="fas fa-users"></i></div>
-        <div class="metric-content">
-          <p class="metric-title">Medlemmer</p>
-          <p class="metric-value" id="metric-members-total">--</p>
-          <p class="metric-sub" id="metric-members-sub">I teams: -- · Deltagelse: --%</p>
-        </div>
-      </article>
-      <article class="metric-card" data-metric="teams">
-        <div class="metric-icon"><i class="fas fa-people-group"></i></div>
-        <div class="metric-content">
-          <p class="metric-title">Teams</p>
-          <p class="metric-value" id="metric-teams-total">--</p>
-          <p class="metric-sub" id="metric-teams-sub">Medlemmer: -- · Størst: --</p>
-        </div>
-      </article>
-      <article class="metric-card" data-metric="events">
-        <div class="metric-icon"><i class="fas fa-calendar-star"></i></div>
-        <div class="metric-content">
-          <p class="metric-title">Events</p>
-          <p class="metric-value" id="metric-events-total">--</p>
-          <p class="metric-sub" id="metric-events-sub">Kommende: -- · Næste om: --</p>
-        </div>
-      </article>
-    </section>
-
-    <section aria-label="Genveje">
-      <div class="section-title">
-        <h2>Hurtige handlinger</h2>
-        <span id="quick-actions-meta">Forslag baseret på aktuelle data</span>
+    <!-- Stat cards -->
+    <div class="stats-row">
+      <div class="stat-card c-blue">
+        <div class="stat-icon"><i class="fas fa-address-book"></i></div>
+        <div class="stat-value" id="s-contacts">--</div>
+        <div class="stat-label">Kontakter</div>
+        <div class="stat-meta" id="s-contacts-meta">...</div>
       </div>
-      <div class="quick-actions-grid" id="quick-actions"></div>
-    </section>
+      <div class="stat-card c-green">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-value" id="s-members">--</div>
+        <div class="stat-label">Medlemmer</div>
+        <div class="stat-meta" id="s-members-meta">...</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-icon"><i class="fas fa-people-group"></i></div>
+        <div class="stat-value" id="s-teams">--</div>
+        <div class="stat-label">Teams</div>
+        <div class="stat-meta" id="s-teams-meta">...</div>
+      </div>
+      <div class="stat-card c-orange">
+        <div class="stat-icon"><i class="fas fa-sitemap"></i></div>
+        <div class="stat-value" id="s-groups">--</div>
+        <div class="stat-label">Grupper</div>
+        <div class="stat-meta" id="s-groups-meta">...</div>
+      </div>
+      <div class="stat-card c-accent">
+        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-value" id="s-events">--</div>
+        <div class="stat-label">Events</div>
+        <div class="stat-meta" id="s-events-meta">...</div>
+      </div>
+      <div class="stat-card c-red">
+        <div class="stat-icon"><i class="fas fa-broom"></i></div>
+        <div class="stat-value" id="s-cleaning">--</div>
+        <div class="stat-label">Rengøring</div>
+        <div class="stat-meta" id="s-cleaning-meta">...</div>
+      </div>
+    </div>
 
-    <section class="panels-grid" aria-label="Detaljerede paneler">
-      <article class="panel-card" id="events-panel">
-        <div class="tag"><i class="fas fa-calendar-alt"></i> Næste event</div>
-        <div>
-          <h3 id="event-days">Ingen planlagte events</h3>
-          <div class="event-title" id="event-title">Planlæg næste aktivitet</div>
-          <div class="event-detail" id="event-date">Tilføj et nyt event for at holde menigheden informeret.</div>
+    <!-- Main grid -->
+    <div class="content-grid">
+
+      <!-- Next event (big card) -->
+      <div class="card" id="card-next-event">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-calendar-star"></i> Næste event</div>
+          <span class="card-tag green" id="event-status-tag">Kommende</span>
         </div>
-        <div class="panel-meta" id="event-meta"></div>
-        <button class="ghost-button" data-link="events">Administrer events</button>
-      </article>
-
-      <article class="panel-card" id="production-panel">
-        <div class="tag"><i class="fas fa-video"></i> Søndagens produktion</div>
-        <div>
-          <h3 id="production-date">Ingen kommende produktioner</h3>
+        <div id="next-event-body">
+          <div class="loading-shimmer" style="width:60%;margin-bottom:8px"></div>
+          <div class="loading-shimmer" style="width:40%"></div>
         </div>
-        <div class="roles-grid" id="production-roles"></div>
-        <button class="ghost-button" data-link="produktion">Åbn produktion</button>
-      </article>
+        <button class="btn-ghost" onclick="navigateToPage('events')"><i class="fas fa-arrow-right"></i> Alle events</button>
+      </div>
 
-      <article class="panel-card" id="cleaning-panel">
-        <div class="tag"><i class="fas fa-broom"></i> Rengøring</div>
-        <div>
-          <h3 id="cleaning-week">Ingen rengøringsplan fundet</h3>
-          <p class="event-detail" id="cleaning-summary">Når rengøringsplanen er klar, vises den aktuelle uge her.</p>
+      <!-- Upcoming events list -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-list-ul"></i> Kommende events</div>
+          <span class="card-tag blue" id="upcoming-count-tag">--</span>
         </div>
-        <div class="cleaning-assignments" id="cleaning-assignments"></div>
-        <button class="ghost-button" data-link="rengoring">Åbn rengøring</button>
-      </article>
-    </section>
+        <div id="upcoming-events-list" class="event-list">
+          <div class="loading-shimmer"></div>
+          <div class="loading-shimmer" style="margin-top:8px"></div>
+          <div class="loading-shimmer" style="margin-top:8px"></div>
+        </div>
+        <button class="btn-ghost" onclick="navigateToPage('events')"><i class="fas fa-plus"></i> Tilføj event</button>
+      </div>
 
-    <div id="dashboard-error" class="error-state" style="display:none;"></div>
+      <!-- Activity feed (right column, spans 2 rows) -->
+      <div class="card" style="grid-row: span 2;">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-bolt"></i> Seneste aktivitet</div>
+        </div>
+        <div id="activity-feed" class="activity-feed">
+          <div class="loading-shimmer"></div>
+          <div class="loading-shimmer" style="margin-top:8px"></div>
+          <div class="loading-shimmer" style="margin-top:8px"></div>
+        </div>
+        <button class="btn-ghost" onclick="navigateToPage('logins')"><i class="fas fa-clock-rotate-left"></i> Fuld log</button>
+      </div>
+
+      <!-- Production plan -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-video"></i> Næste produktion</div>
+          <span class="card-tag purple" id="prod-date-tag">--</span>
+        </div>
+        <div id="production-body">
+          <div class="loading-shimmer" style="width:50%;margin-bottom:10px"></div>
+          <div class="loading-shimmer"></div>
+        </div>
+        <button class="btn-ghost" onclick="navigateToPage('produktion')"><i class="fas fa-arrow-right"></i> Åbn produktion</button>
+      </div>
+
+      <!-- Cleaning -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-broom"></i> Rengøring denne uge</div>
+          <span class="card-tag orange" id="cleaning-week-tag">--</span>
+        </div>
+        <div id="cleaning-body">
+          <div class="loading-shimmer" style="width:60%;margin-bottom:10px"></div>
+          <div class="loading-shimmer"></div>
+        </div>
+        <button class="btn-ghost" onclick="navigateToPage('rengoring')"><i class="fas fa-arrow-right"></i> Åbn rengøring</button>
+      </div>
+
+    </div>
+
+    <!-- Quick actions -->
+    <div style="margin-top: 28px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;">
+        <i class="fas fa-bolt" style="color:var(--accent)"></i>&nbsp; Hurtige handlinger
+      </div>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="navigateToPage('kontakter')">
+          <div class="q-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fas fa-user-plus"></i></div>
+          <div><div class="q-label">Tilføj kontakt</div><div class="q-desc">Ny besøgende registrering</div></div>
+        </button>
+        <button class="quick-btn" onclick="navigateToPage('medlemmer')">
+          <div class="q-icon" style="background:var(--green-bg);color:var(--green)"><i class="fas fa-id-card"></i></div>
+          <div><div class="q-label">Administrer medlemmer</div><div class="q-desc">Se og opdater listen</div></div>
+        </button>
+        <button class="quick-btn" onclick="navigateToPage('teams')">
+          <div class="q-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fas fa-people-group"></i></div>
+          <div><div class="q-label">Teams</div><div class="q-desc">Fordel roller & teams</div></div>
+        </button>
+        <button class="quick-btn" onclick="navigateToPage('produktion')">
+          <div class="q-icon" style="background:var(--accent-glow);color:var(--accent)"><i class="fas fa-clapperboard"></i></div>
+          <div><div class="q-label">Produktionsplan</div><div class="q-desc">Planlæg søndagens hold</div></div>
+        </button>
+        <button class="quick-btn" onclick="navigateToPage('rengoring')">
+          <div class="q-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fas fa-broom"></i></div>
+          <div><div class="q-label">Rengøring</div><div class="q-desc">Se & send påmindelser</div></div>
+        </button>
+        <button class="quick-btn" onclick="navigateToPage('events')">
+          <div class="q-icon" style="background:var(--red-bg);color:var(--red)"><i class="fas fa-calendar-plus"></i></div>
+          <div><div class="q-label">Nyt event</div><div class="q-desc">Opret begivenhed</div></div>
+        </button>
+      </div>
+    </div>
   </main>
 
   <script>
-    // Fallback for sessionManager if CommonJS hasn't loaded yet
-    if (typeof sessionManager === 'undefined') {
-      window.sessionManager = {
-        storageKey: 'sessionToken',
-        getToken() {
-          try {
-            if (typeof window === 'undefined') return '';
-            if (window.sessionToken) return window.sessionToken;
-            const token = window.localStorage.getItem(this.storageKey);
-            if (token) {
-              window.sessionToken = token;
-              return token;
-            }
-            return '';
-          } catch (error) {
-            return window.sessionToken || '';
-          }
-        },
-        setToken(value) {
-          try {
-            if (typeof window !== 'undefined') {
-              if (value) {
-                window.localStorage.setItem(this.storageKey, value);
-              } else {
-                window.localStorage.removeItem(this.storageKey);
-              }
-            }
-          } catch (error) {
-            console.error('Error persisting session token:', error);
-          }
-          window.sessionToken = value || '';
-        },
-        clearToken() {
-          this.setToken('');
-        }
-      };
-    }
-    
-    // Fallback for callApi if CommonJS hasn't loaded yet
-    if (typeof callApi !== 'function') {
-      window.callApi = function(functionName, params = {}, successHandler = null, failureHandler = null) {
-        const token = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : '';
-        const payload = { ...params };
-        if (token) {
-          payload.sessionToken = token;
-        }
+  // Session bootstrap
+  (function() {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const t = p.get('sessionToken');
+      if (t && typeof sessionManager !== 'undefined') sessionManager.setToken(t);
+    } catch(e) {}
+  })();
 
-        let runner = google.script.run;
-        if (failureHandler) {
-          runner = runner.withFailureHandler(failureHandler);
-        }
-        if (successHandler) {
-          runner = runner.withSuccessHandler(successHandler);
-        }
+  // ── Helpers ──────────────────────────────────────────────
+  const DA_MONTHS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const DA_MONTHS_FULL = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+  const DA_DAYS = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
 
-        runner[functionName](payload);
-      };
-    }
-    
-    // Read sessionToken from URL and store it
-    (function() {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlToken = urlParams.get('sessionToken');
-        if (urlToken && urlToken.trim() !== '') {
-          if (typeof sessionManager !== 'undefined' && sessionManager.setToken) {
-            sessionManager.setToken(urlToken);
-          }
-          window.sessionToken = urlToken;
-          console.log('Dashboard: Session token loaded from URL');
-        }
-      } catch (e) {
-        console.error('Error reading sessionToken from URL:', e);
-      }
-    })();
-    
-    // Fallback for navigateToPage if CommonJS hasn't loaded yet
-    if (typeof navigateToPage !== 'function') {
-      window.navigateToPage = function(page) {
-        function ensureExecUrl(url) {
-          if (!url) return null;
-          let cleanUrl = url.split('?')[0].split('#')[0];
-          cleanUrl = cleanUrl.replace(/\/$/, '');
-          if (!cleanUrl.endsWith('/exec')) {
-            if (cleanUrl.indexOf('script.google.com') !== -1) {
-              cleanUrl = cleanUrl + '/exec';
-            } else {
-              cleanUrl = cleanUrl.replace(/\/(home|dev)$/, '/exec');
-              if (!cleanUrl.endsWith('/exec')) {
-                cleanUrl = cleanUrl + '/exec';
-              }
-            }
-          }
-          return cleanUrl;
-        }
-        
-        // Get session token from CURRENT URL first, then localStorage as fallback
-        const currentUrlParams = new URLSearchParams(window.location.search);
-        let currentToken = currentUrlParams.get('sessionToken') || '';
-        
-        // If no token in URL, use localStorage (for navigation purposes)
-        if (!currentToken) {
-          const storedToken = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : (window.sessionToken || '');
-          if (storedToken && storedToken.trim() !== '') {
-            console.log('Dashboard navigation: No token in URL, using stored token');
-            currentToken = storedToken;
-          }
-        }
-        
-        const baseUrl = <?!= JSON.stringify(scriptUrl || '') ?>;
-        if (baseUrl) {
-          const finalUrl = ensureExecUrl(baseUrl);
-          if (finalUrl) {
-            const urlParams = new URLSearchParams();
-            urlParams.set('page', page);
-            if (currentToken && currentToken.trim() !== '') {
-              urlParams.set('sessionToken', currentToken);
-            }
-            const targetUrl = `${finalUrl}?${urlParams.toString()}`;
-            console.log('Dashboard navigating to:', targetUrl);
-            try {
-              window.location.replace(targetUrl);
-            } catch (error) {
-              window.location.href = targetUrl;
-            }
-            return;
-          }
-        }
-        // Use current URL's base instead of getting from server (more reliable)
-        const currentBaseUrl = window.location.origin + window.location.pathname;
-        const urlParams = new URLSearchParams();
-        urlParams.set('page', page);
-        if (currentToken && currentToken.trim() !== '') {
-          urlParams.set('sessionToken', currentToken);
-        } else {
-          console.error('Dashboard: CRITICAL - No session token for navigation!');
-        }
-        const targetUrl = `${currentBaseUrl}?${urlParams.toString()}`;
-        console.log('Dashboard navigating to (using current URL):', targetUrl);
-        console.log('Token in dashboard navigation:', currentToken ? currentToken.substring(0, 20) + '...' : 'NONE');
-        
-        // Store token before navigation
-        if (currentToken && currentToken.trim() !== '') {
-          if (typeof sessionManager !== 'undefined' && sessionManager.setToken) {
-            sessionManager.setToken(currentToken);
-          }
-        }
-        
-        try {
-          window.location.href = targetUrl;
-        } catch (error) {
-          console.error('Dashboard navigation error:', error);
-          try {
-            window.location.replace(targetUrl);
-          } catch (e2) {
-            window.location = targetUrl;
-          }
-        }
-      };
+  function fmt(date) {
+    if (!date) return '--';
+    const d = new Date(date);
+    return `${d.getDate()}. ${DA_MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function fmtShort(dateStr) {
+    if (!dateStr) return { day: '--', mon: '--' };
+    const d = new Date(dateStr);
+    return { day: d.getDate(), mon: DA_MONTHS[d.getMonth()] };
+  }
+
+  function timeAgo(isoStr) {
+    const diff = Math.floor((Date.now() - new Date(isoStr).getTime()) / 1000);
+    if (diff < 60) return 'nu';
+    if (diff < 3600) return `${Math.floor(diff/60)} min`;
+    if (diff < 86400) return `${Math.floor(diff/3600)} t`;
+    return `${Math.floor(diff/86400)} d`;
+  }
+
+  function actionLabel(action) {
+    const map = {
+      LOGIN: 'Loggede ind', LOGOUT: 'Loggede ud',
+      LOGIN_FAILED: 'Login mislykkedes', SESSION_EXPIRED: 'Session udløbet',
+      USER_CREATED: 'Oprettede bruger', USER_DELETED: 'Slettede bruger',
+      USER_STATUS_CHANGED: 'Ændrede status', PASSWORD_RESET: 'Nulstillede kodeord',
+      PERMISSIONS_BULK_UPDATE: 'Opdaterede rettigheder',
+    };
+    return map[action] || action.replace(/_/g,' ').toLowerCase();
+  }
+
+  function dotClass(status) {
+    if (!status) return 'info';
+    const s = status.toUpperCase();
+    if (s === 'SUCCESS') return 'success';
+    if (s === 'WARNING') return 'warning';
+    if (s === 'ERROR' || s === 'FAILED') return 'error';
+    return 'info';
+  }
+
+  // ── Render functions ─────────────────────────────────────
+  function renderStats(d) {
+    const s = d.stats;
+
+    // Contacts
+    document.getElementById('s-contacts').textContent = s.contacts.total;
+    document.getElementById('s-contacts-meta').innerHTML =
+      `<span class="pill">+${s.contacts.newLast30Days} ny</span> · ${s.contacts.needsFollowUp} opfølgning`;
+
+    // Members
+    document.getElementById('s-members').textContent = s.members.total;
+    document.getElementById('s-members-meta').innerHTML =
+      `${s.members.inTeams} i teams · <span class="pill">${s.members.teamParticipationPct}%</span>`;
+
+    // Teams
+    document.getElementById('s-teams').textContent = s.teams.total;
+    document.getElementById('s-teams-meta').innerHTML =
+      `${s.teams.totalMembers} samlet · Størst: ${s.teams.largestTeam || '—'}`;
+
+    // Groups
+    document.getElementById('s-groups').textContent = s.groups.total;
+    document.getElementById('s-groups-meta').innerHTML =
+      `${s.groups.totalMembers} deltagere i alt`;
+
+    // Events
+    document.getElementById('s-events').textContent = s.events.total;
+    const dn = s.events.daysToNext;
+    document.getElementById('s-events-meta').innerHTML =
+      `${s.events.upcoming} kommende · ${dn !== null ? `næste om <span class="pill">${dn}d</span>` : 'ingen planlagte'}`;
+
+    // Cleaning
+    const cw = d.cleaning.thisWeek;
+    const assigned = cw ? [cw.cafe1, cw.cafe2, cw.salen, cw.toiletter].filter(Boolean).length : 0;
+    document.getElementById('s-cleaning').textContent = assigned;
+    document.getElementById('s-cleaning-meta').innerHTML =
+      cw ? `Uge ${cw.week} · ${assigned}/4 tildelt` : 'Ingen plan denne uge';
+  }
+
+  function renderNextEvent(d) {
+    const el = document.getElementById('next-event-body');
+    const tag = document.getElementById('event-status-tag');
+    const events = d.upcomingEvents;
+
+    if (!events.length) {
+      el.innerHTML = `<div class="empty-note"><i class="fas fa-calendar-xmark"></i><br>Ingen kommende events</div>`;
+      tag.textContent = 'Ingen';
+      tag.className = 'card-tag orange';
+      return;
     }
 
-    const numberFormatter = new Intl.NumberFormat('da-DK');
-    const percentageFormatter = new Intl.NumberFormat('da-DK', { maximumFractionDigits: 0 });
+    const e = events[0];
+    const dn = d.stats.events.daysToNext;
+    const countdownText = dn === 0 ? 'I dag!' : dn === 1 ? 'I morgen' : `${dn} dage`;
+    tag.textContent = dn === 0 ? 'I dag!' : dn <= 7 ? 'Denne uge' : 'Kommende';
 
-    // Function to ensure sidebar is visible (with retry)
-    function ensureSidebarVisible() {
-      const sidebar = document.querySelector('.sidebar');
-      if (sidebar) {
-        sidebar.style.display = 'flex';
-        sidebar.style.visibility = 'visible';
-        sidebar.style.opacity = '1';
-        sidebar.style.zIndex = '1000';
-        console.log('Sidebar found and made visible');
-        return true;
-      }
-      return false;
-    }
-    
-    // Read session token from URL (with retry for redirect timing)
-    (function() {
-      function readToken() {
-        try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const urlToken = urlParams.get('sessionToken');
-          if (urlToken && urlToken.trim() !== '') {
-            // Store token for API calls (but URL is the source of truth)
-            if (typeof sessionManager !== 'undefined' && sessionManager.setToken) {
-              sessionManager.setToken(urlToken);
-            }
-            window.sessionToken = urlToken;
-            console.log('Dashboard: Session token loaded from URL');
-            return true;
-          } else {
-            // No token in URL - check localStorage
-            const storedToken = (typeof sessionManager !== 'undefined' && sessionManager.getToken) ? sessionManager.getToken() : (window.sessionToken || '');
-            if (storedToken && storedToken.trim() !== '') {
-              // Add token to URL
-              console.log('Dashboard: Token in storage but not URL - adding to URL');
-              urlParams.set('sessionToken', storedToken);
-              const newUrl = window.location.pathname + '?' + urlParams.toString();
-              window.history.replaceState({}, '', newUrl);
-              window.sessionToken = storedToken;
-              console.log('Dashboard: Session token added to URL from storage');
-              return true;
-            } else {
-              // No token anywhere
-              window.sessionToken = '';
-              console.log('Dashboard: No session token in URL or storage');
-              return false;
-            }
-          }
-        } catch (e) {
-          console.error('Error reading sessionToken from URL:', e);
-          return false;
-        }
-      }
-      
-      // Try immediately
-      if (!readToken()) {
-        // Retry after delays (redirect might not have completed yet)
-        setTimeout(() => {
-          if (!readToken()) {
-            setTimeout(() => {
-              if (!readToken()) {
-                setTimeout(readToken, 1000);
-              }
-            }, 500);
-          }
-        }, 100);
-      }
-    })();
+    const details = [
+      e.dato ? `<span><i class="fas fa-calendar"></i> ${fmt(e.dato)}</span>` : '',
+      e.tid  ? `<span><i class="fas fa-clock"></i> ${e.tid}</span>` : '',
+      e.lokation ? `<span><i class="fas fa-location-dot"></i> ${e.lokation}</span>` : '',
+      e.team ? `<span><i class="fas fa-people-group"></i> ${e.team}</span>` : '',
+    ].filter(Boolean).join('');
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Verify session token is in URL (with retry for redirect timing)
-      (function checkToken() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('sessionToken');
-        if (!token || token.trim() === '') {
-          console.warn('No session token in URL after redirect - retrying check...');
-          // Retry a few times in case redirect hasn't completed
-          let retries = 0;
-          const maxRetries = 5;
-          const checkInterval = setInterval(() => {
-            retries++;
-            const currentParams = new URLSearchParams(window.location.search);
-            const currentToken = currentParams.get('sessionToken');
-            if (currentToken && currentToken.trim() !== '') {
-              console.log('Session token found after retry');
-              clearInterval(checkInterval);
-              // Token found, continue initialization
-              initializePage();
-            } else if (retries >= maxRetries) {
-              console.error('No session token found after retries - redirect may have failed');
-              clearInterval(checkInterval);
-              // Still try to initialize, but user might need to login
-              initializePage();
-            }
-          }, 200);
-        } else {
-          console.log('Session token verified in URL');
-          initializePage();
-        }
-      })();
-      
-      function initializePage() {
-        // Try to find sidebar immediately
-        if (!ensureSidebarVisible()) {
-          // Retry after a short delay (sidebar might be loading)
-          setTimeout(() => {
-            if (!ensureSidebarVisible()) {
-              // One more retry after longer delay
-              setTimeout(() => {
-                if (!ensureSidebarVisible()) {
-                  console.error('Sidebar not found in DOM after retries!');
-                }
-              }, 500);
-            }
-          }, 100);
-        }
-        
-        // Update user info in sidebar
-        if (typeof updateUserInfoOnPage === 'function') {
-          updateUserInfoOnPage();
-        } else if (typeof updateSidebarUserInfo === 'function') {
-          updateSidebarUserInfo();
-        }
-        
-        primeSkeleton();
-        loadDashboardData();
-      }
+    el.innerHTML = `
+      <div class="event-countdown">${countdownText}</div>
+      <div class="event-countdown-label">til næste event</div>
+      <div class="event-name" style="margin-top:14px">${e.titel}</div>
+      <div class="event-detail-row" style="margin-top:8px">${details || '<span>Ingen detaljer</span>'}</div>`;
+  }
 
-      const refreshButton = document.getElementById('refresh-dashboard');
-      if (refreshButton) {
-        refreshButton.addEventListener('click', () => {
-          refreshButton.disabled = true;
-          refreshButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opdaterer...';
-          loadDashboardData(() => {
-            refreshButton.disabled = false;
-            refreshButton.innerHTML = '<i class="fas fa-rotate"></i> Opdater data';
-          });
-        });
-      }
+  function renderUpcomingEvents(d) {
+    const el = document.getElementById('upcoming-events-list');
+    const tag = document.getElementById('upcoming-count-tag');
+    const events = d.upcomingEvents;
+    tag.textContent = `${events.length} event${events.length !== 1 ? 's' : ''}`;
 
-      document.querySelectorAll('button[data-link]').forEach(button => {
-        button.addEventListener('click', () => {
-          const page = button.dataset.link;
-          if (page && typeof navigateToPage === 'function') {
-            navigateToPage(page);
-          }
-        });
-      });
-    });
-
-    function primeSkeleton() {
-      setText('metric-contacts-total', '—');
-      setText('metric-contacts-sub', 'Nye (30 dage): — · Opfølgning: —');
-      setText('metric-members-total', '—');
-      setText('metric-members-sub', 'I teams: — · Deltagelse: —%');
-      setText('metric-teams-total', '—');
-      setText('metric-teams-sub', 'Medlemmer: — · Størst: —');
-      setText('metric-events-total', '—');
-      setText('metric-events-sub', 'Kommende: — · Næste om: —');
-      renderQuickActions([]);
-      showEventPanel();
-      showProductionPanel();
-      showCleaningPanel();
+    if (!events.length) {
+      el.innerHTML = `<div class="empty-note">Ingen kommende events planlagt</div>`;
+      return;
     }
 
-    function loadDashboardData(done) {
-      console.log('Loading dashboard data...');
-      callApi('getDashboardData', {}, function(data) {
-        console.log('Dashboard data received:', data);
-        if (typeof done === 'function') done();
-        if (data === null || data === undefined) {
-          console.error('Dashboard data is null or undefined');
-          showErrorState('Ingen data modtaget fra server - tjek execution logs');
-          return;
-        }
-        renderDashboard(data);
-      }, function(error) {
-        console.error('Dashboard data error:', error);
-        if (typeof done === 'function') done();
-        showErrorState('Fejl ved indlæsning: ' + (error || 'Ukendt fejl'));
-      });
+    el.innerHTML = events.map(e => {
+      const {day, mon} = fmtShort(e.dato);
+      const sub = [e.tid, e.lokation].filter(Boolean).join(' · ');
+      return `<div class="event-row">
+        <div class="event-date-badge">
+          <div class="day">${day}</div>
+          <div class="mon">${mon}</div>
+        </div>
+        <div class="event-row-info">
+          <div class="title">${e.titel}</div>
+          ${sub ? `<div class="detail">${sub}</div>` : ''}
+        </div>
+        <span class="card-tag ${e.status === 'Aktiv' ? 'green' : 'orange'}" style="font-size:10px">${e.status}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function renderProduction(d) {
+    const el = document.getElementById('production-body');
+    const tag = document.getElementById('prod-date-tag');
+    const p = d.nextProduction;
+
+    if (!p) {
+      el.innerHTML = `<div class="empty-note"><i class="fas fa-calendar-xmark"></i><br>Ingen produktionsplan oprettet</div>`;
+      tag.textContent = 'Ingen';
+      return;
     }
 
-    function renderDashboard(payload) {
-      if (!payload) {
-        showErrorState('Kunne ikke indlæse dashboard-data.');
-        return;
-      }
+    tag.textContent = fmt(p.dato);
 
-      let errorMessage = null;
-      if (payload.success === false) {
-        errorMessage = payload.message || 'Kunne ikke indlæse dashboard-data.';
-      }
+    const roles = [
+      ['MC', p.mc], ['Forsanger', p.forsanger], ['Lyd', p.lyd],
+      ['Kamera', p.kamera], ['Media', p.media], ['Piano', p.piano],
+      ['Guitar', p.guitar], ['Trommer', p.trommer], ['Bas', p.bas],
+      ['Forkynder', p.forkynder], ['Forsamling', p.forsamling],
+      ['Kidz', p.kidz], ['Café 1', p.cafe1], ['Host 1', p.host1],
+    ];
 
-      const rawData = payload.data || payload;
-      if (!rawData) {
-        showErrorState(errorMessage || 'Kunne ikke indlæse dashboard-data.');
-        return;
-      }
+    const filled = roles.filter(r => r[1] && r[1].trim());
 
-      if (rawData.success === false) {
-        errorMessage = errorMessage || rawData.message || 'Kunne ikke indlæse dashboard-data.';
-      }
+    el.innerHTML = `
+      <div class="prod-date">Søndag d. ${fmt(p.dato)}</div>
+      <div class="prod-roles" style="margin-top:12px">
+        ${filled.map(([role, person]) => `
+          <div class="prod-role">
+            <div class="role-name">${role}</div>
+            <div class="role-person">${person}</div>
+          </div>`).join('')}
+        ${!filled.length ? '<div class="empty-note" style="grid-column:span 2">Ingen roller tildelt endnu</div>' : ''}
+      </div>`;
+  }
 
-      if (errorMessage) {
-        showErrorState(errorMessage);
+  function renderCleaning(d) {
+    const el = document.getElementById('cleaning-body');
+    const tag = document.getElementById('cleaning-week-tag');
+    const cw = d.cleaning.thisWeek;
+
+    if (!cw) {
+      const nw = d.cleaning.nextWeek;
+      if (nw) {
+        tag.textContent = `Uge ${nw.week}`;
+        el.innerHTML = `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">Ingen plan denne uge — viser næste uge</div>
+          ${renderCleaningGrid(nw)}`;
       } else {
-        hideErrorState();
+        el.innerHTML = `<div class="empty-note"><i class="fas fa-broom"></i><br>Ingen rengøringsplan oprettet</div>`;
+        tag.textContent = 'Ingen';
       }
-
-      const data = rawData.data || rawData;
-
-      if (data.generatedAt) {
-        const generated = new Date(data.generatedAt);
-        if (!isNaN(generated.getTime())) {
-          setText('meta-generated', 'Opdateret: ' + generated.toLocaleString('da-DK'));
-        }
-      }
-
-      renderMetrics(data);
-      renderQuickActions(data.quickActions || []);
-      showEventPanel(data.events || {});
-      showProductionPanel(data.production || {});
-      showCleaningPanel(data.cleaning || {});
+      return;
     }
 
-    function renderMetrics(data) {
-      if (data.contacts) {
-        setText('metric-contacts-total', numberFormatter.format(data.contacts.total || 0));
-        const recent = numberFormatter.format(data.contacts.recentContacts || 0);
-        const followUps = numberFormatter.format(data.contacts.followUpsNeeded || 0);
-        setText('metric-contacts-sub', `Nye (30 dage): ${recent} · Opfølgning: ${followUps}`);
-      }
+    tag.textContent = `Uge ${cw.week}`;
+    el.innerHTML = renderCleaningGrid(cw);
+  }
 
-      if (data.members) {
-        setText('metric-members-total', numberFormatter.format(data.members.total || 0));
-        const inTeams = numberFormatter.format(data.members.inTeams || 0);
-        const teamPercent = percentageFormatter.format(data.members.teamPercentage || 0);
-        setText('metric-members-sub', `I teams: ${inTeams} · Deltagelse: ${teamPercent}%`);
-      }
+  function renderCleaningGrid(cw) {
+    const areas = [
+      ['Café 1', cw.cafe1], ['Café 2', cw.cafe2],
+      ['Salen', cw.salen], ['Toiletter', cw.toiletter],
+    ];
+    return `<div class="cleaning-grid">
+      ${areas.map(([area, person]) => `
+        <div class="cleaning-area">
+          <div class="area-name">${area}</div>
+          <div class="area-person ${person ? '' : 'empty'}">${person || 'Ikke tildelt'}</div>
+        </div>`).join('')}
+    </div>`;
+  }
 
-      if (data.teams) {
-        setText('metric-teams-total', numberFormatter.format(data.teams.total || 0));
-        const totalMembers = numberFormatter.format(data.teams.totalMembers || 0);
-        const largestTeam = data.teams.largestTeam && data.teams.largestTeam.name ? data.teams.largestTeam.name : '—';
-        setText('metric-teams-sub', `Medlemmer: ${totalMembers} · Størst: ${sanitize(largestTeam)}`);
-      }
+  function renderActivity(d) {
+    const el = document.getElementById('activity-feed');
+    const logs = d.recentActivity || [];
 
-      if (data.events) {
-        setText('metric-events-total', numberFormatter.format(data.events.total || 0));
-        const upcoming = numberFormatter.format(data.events.upcoming || 0);
-        const daysUntil = data.events.nextEvent && data.events.nextEvent.daysUntil != null
-          ? numberFormatter.format(data.events.nextEvent.daysUntil)
-          : '—';
-        setText('metric-events-sub', `Kommende: ${upcoming} · Næste om: ${daysUntil}`);
-      }
+    if (!logs.length) {
+      el.innerHTML = `<div class="empty-note">Ingen aktivitet registreret</div>`;
+      return;
     }
 
-    function renderQuickActions(actions) {
-      const container = document.getElementById('quick-actions');
-      if (!container) return;
-      container.innerHTML = '';
+    el.innerHTML = logs.map(l => `
+      <div class="activity-item">
+        <div class="activity-dot ${dotClass(l.status)}"></div>
+        <div class="activity-body">
+          <div class="act-user">${l.username}</div>
+          <div class="act-action">${actionLabel(l.action)}</div>
+        </div>
+        <div class="activity-time">${timeAgo(l.timestamp)}</div>
+      </div>`).join('');
+  }
 
-      if (!actions || actions.length === 0) {
-        container.innerHTML = '<div class="empty-state">Ingen forslag lige nu. Når data ændrer sig, foreslår vi relevante handlinger her.</div>';
+  function renderGreeting(d) {
+    const now = new Date();
+    const h = now.getHours();
+    const greeting = h < 5 ? 'God nat' : h < 12 ? 'Godmorgen' : h < 18 ? 'God eftermiddag' : 'God aften';
+    const username = d.user?.username || 'Administrator';
+    document.getElementById('greeting').textContent = `${greeting}, ${username}`;
+
+    const dayName = DA_DAYS[now.getDay()];
+    document.getElementById('subtitle-date').textContent =
+      `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} d. ${fmt(now.toISOString())} — Overblik over kirkens aktiviteter`;
+
+    const updatedAt = new Date(d.generatedAt || Date.now());
+    document.getElementById('last-updated').textContent =
+      `Opdateret ${updatedAt.toLocaleTimeString('da-DK', {hour:'2-digit',minute:'2-digit'})}`;
+  }
+
+  // ── Load dashboard ────────────────────────────────────────
+  function loadDashboard() {
+    const btn = document.getElementById('btn-refresh');
+    btn.classList.add('loading');
+
+    callApi('getDashboardData', {}, function(data) {
+      btn.classList.remove('loading');
+
+      if (!data || !data.success) {
+        console.error('Dashboard error:', data?.message);
         return;
       }
 
-      actions.forEach(action => {
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.className = 'quick-card';
-        card.dataset.link = action.page || '';
-        card.innerHTML = `
-          <div class="quick-card-icon"><i class="fas ${action.icon || 'fa-arrow-right'}"></i></div>
-          <div>
-            <h4>${sanitize(action.label || 'Handling')}</h4>
-            <p>${sanitize(action.description || '')}</p>
-          </div>
-        `;
-        card.addEventListener('click', () => {
-          if (typeof navigateToPage === 'function' && action.page) {
-            navigateToPage(action.page);
-          }
-        });
-        container.appendChild(card);
-      });
-    }
+      renderGreeting(data);
+      renderStats(data);
+      renderNextEvent(data);
+      renderUpcomingEvents(data);
+      renderProduction(data);
+      renderCleaning(data);
+      renderActivity(data);
 
-    function showEventPanel(events = {}) {
-      const daysEl = document.getElementById('event-days');
-      const titleEl = document.getElementById('event-title');
-      const dateEl = document.getElementById('event-date');
-      const metaEl = document.getElementById('event-meta');
+    }, function(err) {
+      btn.classList.remove('loading');
+      console.error('Dashboard load failed:', err);
+    });
+  }
 
-      if (!events.nextEvent) {
-        daysEl.textContent = 'Ingen planlagte events';
-        titleEl.textContent = 'Planlæg næste aktivitet';
-        dateEl.textContent = 'Opret et nyt event for at holde menigheden informeret.';
-        metaEl.innerHTML = '';
-        return;
-      }
+  document.getElementById('btn-refresh').addEventListener('click', loadDashboard);
 
-      const next = events.nextEvent;
-      const daysUntil = next.daysUntil != null ? numberFormatter.format(next.daysUntil) : '—';
-      const formattedDate = next.date ? new Date(next.date).toLocaleString('da-DK', { dateStyle: 'full', timeStyle: 'short' }) : '—';
-
-      daysEl.textContent = `Om ${daysUntil} dag${daysUntil === '1' ? '' : 'e'}`;
-      titleEl.textContent = sanitize(next.title || 'Kommende event');
-      dateEl.textContent = formattedDate;
-
-      metaEl.innerHTML = '';
-      if (next.location) {
-        const span = document.createElement('span');
-        span.innerHTML = `<i class="fas fa-location-dot"></i> ${sanitize(next.location)}`;
-        metaEl.appendChild(span);
-      }
-      if (next.team) {
-        const span = document.createElement('span');
-        span.innerHTML = `<i class="fas fa-people-group"></i> ${sanitize(next.team)}`;
-        metaEl.appendChild(span);
-      }
-    }
-
-    function showProductionPanel(production = {}) {
-      const dateEl = document.getElementById('production-date');
-      const rolesContainer = document.getElementById('production-roles');
-      rolesContainer.innerHTML = '';
-
-      if (!production.upcoming) {
-        dateEl.textContent = 'Ingen kommende produktioner';
-        rolesContainer.innerHTML = '<div class="empty-state">Opdater produktionen for den kommende søndag for at se fordelingen her.</div>';
-        return;
-      }
-
-      const upcoming = production.upcoming;
-      const formattedDate = upcoming.date ? new Date(upcoming.date).toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' }) : '—';
-      dateEl.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-
-      const roles = [
-        { label: 'MC', value: upcoming.mc },
-        { label: 'Media', value: upcoming.media },
-        { label: 'Forsanger', value: upcoming.forsanger },
-        { label: 'Værter', value: [upcoming.host?.host1, upcoming.host?.host2].filter(Boolean).join(' & ') }
-      ];
-
-      ['piano', 'guitar', 'trommer', 'bas'].forEach(instrument => {
-        if (upcoming.band && upcoming.band[instrument]) {
-          const label = instrument.charAt(0).toUpperCase() + instrument.slice(1);
-          roles.push({ label, value: upcoming.band[instrument] });
-        }
-      });
-
-      roles.forEach(role => {
-        if (!role.value) return;
-        const chip = document.createElement('div');
-        chip.className = 'role-chip';
-        chip.innerHTML = `<strong>${sanitize(role.label)}</strong><span>${sanitize(role.value)}</span>`;
-        rolesContainer.appendChild(chip);
-      });
-
-      if (!rolesContainer.hasChildNodes()) {
-        rolesContainer.innerHTML = '<div class="empty-state">Tildel roller i produktionen for at se dem her.</div>';
-      }
-    }
-
-    function showCleaningPanel(cleaning = {}) {
-      const weekEl = document.getElementById('cleaning-week');
-      const summaryEl = document.getElementById('cleaning-summary');
-      const assignmentsEl = document.getElementById('cleaning-assignments');
-      assignmentsEl.innerHTML = '';
-
-      if (!cleaning.current) {
-        weekEl.textContent = 'Ingen rengøringsplan fundet';
-        summaryEl.textContent = 'Når rengøringsplanen er genereret, vises den aktuelle uge her.';
-        assignmentsEl.innerHTML = '<div class="empty-state">Ingen medlemmer er tildelt endnu.</div>';
-        return;
-      }
-
-      const weekLabel = typeof cleaning.current.week === 'number' ? 'Uge ' + cleaning.current.week : cleaning.current.week;
-      weekEl.textContent = sanitize(weekLabel || 'Aktuel uge');
-      summaryEl.textContent = 'Fordeling af rengøring i denne uge.';
-
-      const assignments = cleaning.current.assignments || {};
-      const mapping = [
-        { label: 'Cafe 1', value: assignments.cafe1 },
-        { label: 'Cafe 2', value: assignments.cafe2 },
-        { label: 'Salen', value: assignments.salen },
-        { label: 'Toiletter / Gulv / Børnerum', value: assignments.facilities }
-      ];
-
-      mapping.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'assignment-card';
-        card.innerHTML = `<span>${sanitize(item.label)}</span><span>${sanitize(item.value || 'Ikke tildelt')}</span>`;
-        assignmentsEl.appendChild(card);
-      });
-    }
-
-    function showErrorState(error) {
-      const el = document.getElementById('dashboard-error');
-      if (!el) return;
-      el.style.display = 'block';
-      el.textContent = typeof error === 'string' ? error : 'Der opstod en fejl under indlæsning af dashboard-data.';
-    }
-
-    function hideErrorState() {
-      const el = document.getElementById('dashboard-error');
-      if (!el) return;
-      el.style.display = 'none';
-    }
-
-    function setText(id, value) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    }
-
-    function sanitize(value) {
-      if (value === null || value === undefined) return '';
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+  // Load on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  } else {
+    setTimeout(loadDashboard, 100);
+  }
   </script>
 </body>
 </html>
-
